@@ -79,10 +79,12 @@ const faqSchema = faqs.length > 0 ? {
 
 <div class="max-w-2xl mx-auto">
   <!-- Calculator card -->
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden" id={`calc-card-${formulaId}`}>
-    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-      <h1 class="text-xl font-bold text-white">{title}</h1>
-      <p class="text-blue-100 text-sm mt-1">{description}</p>
+  <div class="bg-white rounded-3xl shadow-xl shadow-blue-100/60 border border-gray-200/80 overflow-hidden" id={`calc-card-${formulaId}`}>
+    <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-6 py-5 relative overflow-hidden">
+      <div class="absolute -top-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-16 bg-indigo-500/20 rounded-full blur-xl pointer-events-none"></div>
+      <h1 class="text-xl font-bold text-white relative">{title}</h1>
+      <p class="text-blue-100/90 text-sm mt-1 relative">{description}</p>
     </div>
 
     <div class="p-6">
@@ -90,14 +92,14 @@ const faqSchema = faqs.length > 0 ? {
       <div class="space-y-4" id={`calc-inputs-${formulaId}`}>
         {inputs.map((input) => (
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1" for={`${formulaId}-${input.id}`}>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5" for={`${formulaId}-${input.id}`}>
               {input.label}{input.unit && <span class="text-gray-400 font-normal ml-1">({input.unit})</span>}
             </label>
             {input.type === 'select' ? (
               <select
                 id={`${formulaId}-${input.id}`}
                 data-input-id={input.id}
-                class="calc-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                class="calc-input w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-shadow hover:shadow"
               >
                 {input.options?.map(opt => (
                   <option value={opt.value} selected={opt.value === String(input.defaultValue)}>{opt.label}</option>
@@ -107,7 +109,7 @@ const faqSchema = faqs.length > 0 ? {
               <textarea
                 id={`${formulaId}-${input.id}`}
                 data-input-id={input.id}
-                class="calc-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                class="calc-input w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y shadow-sm"
                 placeholder={input.placeholder ?? ''}
                 rows={input.rows ?? 4}
               >{input.defaultValue ?? ''}</textarea>
@@ -116,7 +118,7 @@ const faqSchema = faqs.length > 0 ? {
                 type={input.type === 'date' ? 'date' : input.type === 'text' ? 'text' : 'number'}
                 id={`${formulaId}-${input.id}`}
                 data-input-id={input.id}
-                class="calc-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="calc-input w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-shadow hover:shadow"
                 placeholder={input.placeholder ?? ''}
                 min={input.type === 'number' ? input.min : undefined}
                 max={input.type === 'number' ? input.max : undefined}
@@ -131,7 +133,7 @@ const faqSchema = faqs.length > 0 ? {
       <!-- Calculate button -->
       <button
         id={`calc-btn-${formulaId}`}
-        class="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-sm"
+        class="mt-5 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-200 text-sm shadow-md shadow-blue-200 hover:shadow-lg hover:shadow-blue-300 hover:-translate-y-0.5"
       >
         Calculate
       </button>
