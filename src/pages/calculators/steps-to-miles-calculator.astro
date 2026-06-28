@@ -20,7 +20,7 @@ const formulaFn = `
   return {
     value:miles.toFixed(2)+" miles",
     gaugeValue:Math.min((steps/10000)*100,100),
-    breakdown:["Steps: "+steps.toLocaleString(),"Stride length: "+strideLength.toFixed(1)+"\"","Distance: "+miles.toFixed(2)+" miles / "+km.toFixed(2)+"km","Estimated calories: "+Math.round(calories)+" kcal","Steps for 1 mile: ~"+Math.round(5280*12/strideLength)],
+    breakdown:["Steps: "+steps.toLocaleString(),"Stride length: "+strideLength.toFixed(1)+'"',"Distance:"+miles.toFixed(2)+" miles / "+km.toFixed(2)+"km","Estimated calories: "+Math.round(calories)+" kcal","Steps for 1 mile: ~"+Math.round(5280*12/strideLength)],
     stats:[
       {label:"Distance",value:miles.toFixed(2)+" miles"},
       {label:"Kilometers",value:km.toFixed(2)+" km"},

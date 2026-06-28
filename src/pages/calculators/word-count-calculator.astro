@@ -6,12 +6,12 @@ const formulaFn = `
 
   const text = inputs.text||""
   if(!text.trim()) throw new Error("Enter some text to analyze.")
-  const words = text.trim().split(/\s+/).filter(w=>w.length>0)
+  const words = text.trim().split(new RegExp('\\s+')).filter(w=>w.length>0)
   const wordCount = words.length
   const charCount = text.length
-  const charNoSpaces = text.replace(/\s/g,"").length
-  const sentences = (text.match(/[^.!?]+[.!?]+/g)||[]).length || (text.trim()? 1 : 0)
-  const paragraphs = text.split(/\n\s*\n/).filter(p=>p.trim()).length||1
+  const charNoSpaces = text.replace(new RegExp('\\s','g'),"").length
+  const sentences = (text.match(new RegExp('[^.!?]+[.!?]+','g'))||[]).length || (text.trim()? 1 : 0)
+  const paragraphs = text.split(new RegExp('\\n\\s*\\n')).filter(p=>p.trim()).length||1
   const readingTimeMin = wordCount/238
   const avgWordLen = charNoSpaces/Math.max(wordCount,1)
   return {

@@ -2,7 +2,7 @@
 export interface CalcInput {
   id: string
   label: string
-  type: 'number' | 'select' | 'date' | 'text'
+  type: 'number' | 'select' | 'date' | 'text' | 'textarea'
   placeholder?: string
   min?: number
   max?: number
@@ -10,6 +10,7 @@ export interface CalcInput {
   unit?: string
   options?: { value: string; label: string }[]
   defaultValue?: string | number
+  rows?: number
 }
 
 export interface GaugeZone {
@@ -102,6 +103,14 @@ const faqSchema = faqs.length > 0 ? {
                   <option value={opt.value} selected={opt.value === String(input.defaultValue)}>{opt.label}</option>
                 ))}
               </select>
+            ) : input.type === 'textarea' ? (
+              <textarea
+                id={`${formulaId}-${input.id}`}
+                data-input-id={input.id}
+                class="calc-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                placeholder={input.placeholder ?? ''}
+                rows={input.rows ?? 4}
+              >{input.defaultValue ?? ''}</textarea>
             ) : (
               <input
                 type={input.type === 'date' ? 'date' : input.type === 'text' ? 'text' : 'number'}

@@ -6,7 +6,7 @@ const formulaFn = `
 
   const rate = parseFloat(inputs.rate)||8
   const initial = parseFloat(inputs.initial)||0
-  const cashFlows = (inputs.cashFlows||"").split(/[,\n]+/).map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n))
+  const cashFlows = (inputs.cashFlows||"").split(new RegExp('[,\\n]+')).map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n))
   if(cashFlows.length===0) throw new Error("Enter cash flows (comma or newline separated).")
   const r = rate/100
   let npv = -initial
