@@ -19,6 +19,7 @@ const formulaFn = `
   const activityLabels = {'1.2':'Sedentary','1.375':'Lightly active','1.55':'Moderately active','1.725':'Very active','1.9':'Extra active'}
   return {
     value: Math.round(tdee) + ' cal/day',
+    gaugeValue: Math.min(Math.max(tdee, 1000), 4000),
     stats: [
       { label: 'BMR', value: Math.round(bmr) + ' cal' },
       { label: 'Activity Factor', value: activity + 'x' },

@@ -17,6 +17,7 @@ const formulaFn = `
   const interestRatio = (interest / principal * 100).toFixed(1)
   return {
     value: '$' + monthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),
+    gaugeValue: Math.min(rate, 30),
     stats: [
       { label: 'Monthly Payment', value: '$' + monthly.toFixed(2) },
       { label: 'Total Repayment', value: '$' + Math.round(total).toLocaleString() },

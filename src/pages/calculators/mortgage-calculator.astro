@@ -22,6 +22,7 @@ const formulaFn = `
   const downPct = (downPayment / homePrice * 100).toFixed(1)
   return {
     value: '$' + monthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + '/mo',
+    gaugeValue: Math.min(rate / 0.3, 100),
     stats: [
       { label: 'Principal & Interest', value: '$' + monthly.toFixed(2) },
       { label: 'Total Payment (PITI)', value: '$' + totalMonthly.toFixed(0) + '/mo' },

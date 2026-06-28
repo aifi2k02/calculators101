@@ -20,6 +20,7 @@ const formulaFn = `
   const avg = (mifflin + harris) / 2
   return {
     value: Math.round(mifflin) + ' cal/day',
+    gaugeValue: Math.min(Math.max(mifflin, 1000), 3000),
     stats: [
       { label: 'Mifflin-St Jeor', value: Math.round(mifflin) + ' cal' },
       { label: 'Harris-Benedict', value: Math.round(harris) + ' cal' },

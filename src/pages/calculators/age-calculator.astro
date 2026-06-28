@@ -22,6 +22,7 @@ const formulaFn = `
   const birthdayMonth = ['January','February','March','April','May','June','July','August','September','October','November','December'][birth.getMonth()]
   return {
     value: years + ' years old',
+    gaugeValue: Math.min(years, 100),
     stats: [
       { label: 'Exact Age', value: years + 'y ' + months + 'm ' + days + 'd' },
       { label: 'Total Days', value: totalDays.toLocaleString() },

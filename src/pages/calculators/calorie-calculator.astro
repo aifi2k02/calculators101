@@ -29,6 +29,7 @@ const formulaFn = `
   const carbs = Math.round((target - protein * 4 - fat * 9) / 4)
   return {
     value: Math.round(target) + ' cal/day',
+    gaugeValue: Math.min(Math.max(target, 1000), 4000),
     stats: [
       { label: 'BMR', value: Math.round(bmr) + ' cal' },
       { label: 'TDEE', value: Math.round(tdee) + ' cal' },

@@ -24,6 +24,7 @@ const formulaFn = `
   const deficitPct = (dailyCalDiff / tdee * 100).toFixed(0)
   return {
     value: Math.round(targetCalories) + ' cal/day',
+    gaugeValue: Math.min(Math.abs(dailyCalDiff), 1000),
     stats: [
       { label: 'TDEE (maintenance)', value: Math.round(tdee) + ' cal' },
       { label: 'Daily ' + (goal==='lose'?'Deficit':'Surplus'), value: Math.round(dailyCalDiff) + ' cal' },
