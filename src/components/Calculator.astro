@@ -377,12 +377,17 @@ const faqSchema = faqs.length > 0 ? {
       // Stats grid
       renderStats(result.stats)
 
-      // Gauge + zone coloring
+      // Gauge — always update regardless of card/zone
+      updateGauge(result.gaugeValue)
+
+      // Zone coloring on result card
       const zone = findZone(result.gaugeValue)
-      if (zone && resultCard) {
+      if (zone) {
         const theme = getTheme(zone.color)
-        resultCard.style.backgroundColor = theme.bg
-        resultCard.style.borderColor = theme.border
+        if (resultCard) {
+          resultCard.style.backgroundColor = theme.bg
+          resultCard.style.borderColor = theme.border
+        }
         if (resultLabel) resultLabel.style.color = theme.text
         if (zoneBadge && zoneLabel) {
           zoneLabel.textContent = zone.label
@@ -390,9 +395,7 @@ const faqSchema = faqs.length > 0 ? {
           zoneLabel.style.color = theme.badgeText
           zoneBadge.classList.remove('hidden')
         }
-        updateGauge(result.gaugeValue)
       } else {
-        // reset to default blue
         if (resultCard) {
           resultCard.style.backgroundColor = '#eff6ff'
           resultCard.style.borderColor = '#93c5fd'
