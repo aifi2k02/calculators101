@@ -409,25 +409,15 @@ const faqSchema = faqs.length > 0 ? {
     }
   }
 
-  // Button click
+  // Button click only — no auto-run on load or keystrokes
   btn?.addEventListener('click', run)
 
-  // Live calculation — debounced
-  let debounceTimer
+  // Allow Enter key to trigger calculate
   document.querySelectorAll(`[data-input-id]`).forEach(el => {
-    el.addEventListener('input', () => {
-      clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(run, 350)
-    })
-    el.addEventListener('change', () => {
-      clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(run, 100)
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') run()
     })
   })
-
-  // Auto-calculate on load if defaults are set
-  const hasDefaults = Array.from(document.querySelectorAll('[data-input-id]')).some(el => el.value !== '')
-  if (hasDefaults) setTimeout(run, 50)
 
   // AI explain
   aiBtn?.addEventListener('click', async () => {
