@@ -20,8 +20,8 @@ const cat = getCategoryBySlug('fitness')!
 
     <div class="mb-10">
       <div class="flex items-center gap-4 mb-3">
-        <div class="w-14 h-14 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center shadow-sm">
-          <CalcIcon icon={cat.icon} size={28} class="text-green-600" />
+        <div class="w-16 h-16 rounded-2xl bg-green-600 flex items-center justify-center shadow-md shadow-green-200">
+          <CalcIcon icon={cat.icon} size={32} class="text-white" />
         </div>
         <h1 class="text-3xl font-bold text-gray-900">{cat.name} Calculators</h1>
       </div>
@@ -37,8 +37,8 @@ const cat = getCategoryBySlug('fitness')!
             class="bg-white border border-gray-200 hover:border-green-300 hover:shadow-md rounded-xl p-5 transition-all group"
           >
             <div class="flex items-start gap-3">
-              <div class="w-9 h-9 rounded-xl bg-green-50 group-hover:bg-green-100 flex items-center justify-center shrink-0 transition-colors">
-                <CalcIcon icon={calc.icon} size={18} class="text-green-600" />
+              <div class="w-12 h-12 rounded-2xl bg-green-600 group-hover:bg-green-700 flex items-center justify-center shrink-0 transition-colors shadow-sm shadow-green-200">
+                <CalcIcon icon={calc.icon} size={22} class="text-white" />
               </div>
               <div>
                 <div class="font-semibold text-gray-900 group-hover:text-green-700 text-sm mb-1">{calc.name}</div>

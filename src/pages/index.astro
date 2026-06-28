@@ -114,9 +114,9 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
           href={calc.href}
           class="bg-white border border-gray-200 hover:border-blue-400 hover:shadow-lg hover:-translate-y-0.5 rounded-2xl p-4 text-center transition-all duration-200 group"
         >
-          <div class="flex justify-center mb-2.5">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
-              <CalcIcon icon={calc.icon} size={20} class="text-blue-600" />
+          <div class="flex justify-center mb-3">
+            <div class="w-14 h-14 rounded-2xl bg-blue-600 group-hover:bg-blue-700 flex items-center justify-center transition-colors shadow-md shadow-blue-200">
+              <CalcIcon icon={calc.icon} size={28} class="text-white" />
             </div>
           </div>
           <div class="text-xs font-semibold text-gray-700 group-hover:text-blue-700 leading-tight transition-colors">{calc.name}</div>
@@ -131,9 +131,10 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {categories.map(cat => (
         <a href={`/calculators/${cat.slug}`} class={`border rounded-2xl p-6 transition-all duration-200 hover:shadow-xl hover:-translate-y-1 group ${colorMap[cat.color]}`}>
-          <div class="mb-3">
-            <div class="w-12 h-12 rounded-xl bg-white/70 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-              <CalcIcon icon={cat.icon} size={24} class="text-gray-700" />
+          <div class="mb-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shadow-sm"
+              style={`background-color: ${cat.color === 'blue' ? '#2563eb' : cat.color === 'green' ? '#16a34a' : cat.color === 'purple' ? '#7c3aed' : '#d97706'}`}>
+              <CalcIcon icon={cat.icon} size={28} class="text-white" />
             </div>
           </div>
           <div class="font-bold text-gray-900 text-base mb-0.5">{cat.name}</div>

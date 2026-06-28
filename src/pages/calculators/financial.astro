@@ -22,8 +22,8 @@ const cat = getCategoryBySlug('financial')!
     <!-- H1 + intro -->
     <div class="mb-10">
       <div class="flex items-center gap-4 mb-3">
-        <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shadow-sm">
-          <CalcIcon icon={cat.icon} size={28} class="text-blue-600" />
+        <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-200">
+          <CalcIcon icon={cat.icon} size={32} class="text-white" />
         </div>
         <h1 class="text-3xl font-bold text-gray-900">{cat.name} Calculators</h1>
       </div>
@@ -40,8 +40,8 @@ const cat = getCategoryBySlug('financial')!
             class="bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md rounded-xl p-5 transition-all group"
           >
             <div class="flex items-start gap-3">
-              <div class="w-9 h-9 rounded-xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center shrink-0 transition-colors">
-                <CalcIcon icon={calc.icon} size={18} class="text-blue-600" />
+              <div class="w-12 h-12 rounded-2xl bg-blue-600 group-hover:bg-blue-700 flex items-center justify-center shrink-0 transition-colors shadow-sm shadow-blue-200">
+                <CalcIcon icon={calc.icon} size={22} class="text-white" />
               </div>
               <div>
                 <div class="font-semibold text-gray-900 group-hover:text-blue-700 text-sm mb-1">{calc.name}</div>
