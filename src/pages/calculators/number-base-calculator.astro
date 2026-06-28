@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = (inputs.value||"").toString().trim().toUpperCase()
+  const fromBase = parseInt(inputs.fromBase)||10
+  const toBase = parseInt(inputs.toBase)||2
+  if(fromBase<2||fromBase>36) throw new Error("From base must be between 2 and 36.")
+  if(toBase<2||toBase>36) throw new Error("To base must be between 2 and 36.")
+  const DIGITS="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const toDecimal = (v,base) => {
+    let result=0,power=1
+    for(let i=v.length-1;i>=0;i--){
+      const d=DIGITS.indexOf(v[i])
+      if(d<0||d>=base) throw new Error("Digit "+v[i]+" is invalid for base "+base+".")
+      result+=d*power; power*=base
+    }
+    return result
+  }
+  const fromDecimal = (n,base) => {
+    if(n===0) return "0"
+    let result=""
+    while(n>0){result=DIGITS[n%base]+result;n=Math.floor(n/base)}
+    return result
+  }
+  const decimal=toDecimal(value,fromBase)
+  const result=fromDecimal(decimal,toBase)
+  return {
+    value:value+" (base "+fromBase+") = "+result+" (base "+toBase+")",
+    gaugeValue:Math.min(decimal/1000*100,100),
+    breakdown:["Input: "+value+" in base "+fromBase,"Decimal value: "+decimal,"Binary (base 2): "+fromDecimal(decimal,2),"Octal (base 8): "+fromDecimal(decimal,8),"Hex (base 16): "+fromDecimal(decimal,16),"Result in base "+toBase+": "+result],
+    stats:[
+      {label:"Result (base "+toBase+")",value:result},
+      {label:"Decimal",value:String(decimal)},
+      {label:"Binary",value:fromDecimal(decimal,2)},
+      {label:"Hexadecimal",value:fromDecimal(decimal,16)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a number base (radix)?", answer: "A number base (radix) is the number of digits in the numeral system. Base 10 (decimal) uses digits 0-9. Base 2 (binary) uses 0,1. Base 16 (hexadecimal) uses 0-9 and A-F. Base n uses n digits from 0 to n-1, with letters extending beyond 9." },
+  { question: "What is base 36?", answer: "Base 36 uses all 36 alphanumeric characters: 0-9 and A-Z. It is the most compact way to represent numbers using standard keyboard characters. Example: 1000 in decimal = RS in base 36. URL shorteners and ID systems often use base 36 or base 62 for compact, URL-safe IDs." },
+  { question: "How do I convert between bases?", answer: "Two-step method: (1) convert the source number to decimal, (2) convert from decimal to the target base. To decimal: multiply each digit by base^position and sum. From decimal: repeatedly divide by target base, collect remainders bottom-up. This calculator does both steps." },
+  { question: "What is base 60 (sexagesimal)?", answer: "Base 60 was used by ancient Babylonians and is still used for time (60 seconds/minute, 60 minutes/hour) and angles (60 arcminutes/degree). 60 has many divisors (1,2,3,4,5,6,10,12,15,20,30,60), making it convenient for division." },
+  { question: "Why do computers use binary and hexadecimal?", answer: "Computers use binary because electronic circuits have two states: on/off (1/0). Binary is perfect for digital logic. Hexadecimal is used as a compact representation: each hex digit = exactly 4 binary bits, making conversion trivial. One byte (8 bits) = two hex digits. Octal was also used historically (each octal digit = 3 bits)." }
+]
+---
+<Layout
+  title="Number Base Converter: Any Base to Any Base"
+  description="Convert numbers between any numeral system: base 2 to 36. Binary, octal, decimal, hexadecimal, and custom bases. Free base converter."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Number Base Converter", href: "/calculators/number-base-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Number Base Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Number Base Converter"
+          description="Convert numbers between any bases from 2 to 36"
+          formulaId="number-base"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            {id:"value",label:"Number to convert",type:"text",placeholder:"FF",defaultValue:"FF"},
+            {id:"fromBase",label:"Input base (from)",type:"number",placeholder:"16",min:2,max:36,defaultValue:16},
+            {id:"toBase",label:"Output base (to)",type:"number",placeholder:"10",min:2,max:36,defaultValue:10}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small (<256)", color: "#22c55e", from: 0, to: 25 },
+              { label: "Medium (256-1023)", color: "#3b82f6", from: 25, to: 50 },
+              { label: "Large (1024+)", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Binary Calculator", href: "/calculators/binary-calculator" },
+            { name: "Modulo Calculator", href: "/calculators/modulo-calculator" },
+            { name: "Scientific Notation", href: "/calculators/scientific-notation-calculator" },
+            { name: "Roman Numeral Calculator", href: "/calculators/roman-numeral-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common Bases</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Base 2","Binary — computers, logic"],["Base 8","Octal — Unix file permissions"],["Base 10","Decimal — everyday math"],["Base 16","Hex — colors, memory addresses"],["Base 36","Alphanumeric — URL shorteners"],["Base 60","Sexagesimal — time & angles"]].map(([b,d]) => (
+              <div class="border-b border-blue-100 pb-0.5"><span class="font-semibold">{b}:</span> <span>{d}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Number 255 in Various Bases</h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        {[[2,"11111111"],[3,"100110"],[4,"3333"],[5,"2010"],[8,"377"],[10,"255"],[12,"193"],[16,"FF"],[32,"7V"],[36,"73"]].map(r => (
+          <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
+            <span class="text-xs text-gray-500">Base {r[0]}</span>
+            <span class="font-mono font-bold text-blue-700">{r[1]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

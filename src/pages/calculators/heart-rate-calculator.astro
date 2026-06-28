@@ -1,0 +1,154 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const age = parseFloat(inputs.age)
+  const restingHR = parseFloat(inputs.restingHR) || 60
+  if (isNaN(age) || age < 10 || age > 100) throw new Error('Enter a valid age (10–100).')
+  const maxHR = 220 - age
+  const hrr = maxHR - restingHR
+  const z1Low = Math.round(restingHR + hrr * 0.50)
+  const z1High = Math.round(restingHR + hrr * 0.60)
+  const z2Low = Math.round(restingHR + hrr * 0.60)
+  const z2High = Math.round(restingHR + hrr * 0.70)
+  const z3Low = Math.round(restingHR + hrr * 0.70)
+  const z3High = Math.round(restingHR + hrr * 0.80)
+  const z4Low = Math.round(restingHR + hrr * 0.80)
+  const z4High = Math.round(restingHR + hrr * 0.90)
+  const z5Low = Math.round(restingHR + hrr * 0.90)
+  return {
+    value: maxHR + ' bpm',
+    gaugeValue: maxHR,
+    stats: [
+      { label: 'Zone 1 (Warm-up)', value: z1Low + '–' + z1High + ' bpm' },
+      { label: 'Zone 2 (Fat burn)', value: z2Low + '–' + z2High + ' bpm' },
+      { label: 'Zone 3 (Aerobic)', value: z3Low + '–' + z3High + ' bpm' },
+      { label: 'Zone 4 (Anaerobic)', value: z4Low + '–' + z4High + ' bpm' },
+      { label: 'Zone 5 (Max)', value: z5Low + '–' + maxHR + ' bpm' },
+    ],
+    breakdown: [
+      'Age: ' + age + ' → Max HR: ' + maxHR + ' bpm (220 − age)',
+      'Resting HR: ' + restingHR + ' bpm → HRR: ' + hrr + ' bpm',
+      '—',
+      'Zone 1 (50–60%) Warm-up: ' + z1Low + '–' + z1High + ' bpm',
+      'Zone 2 (60–70%) Fat burn: ' + z2Low + '–' + z2High + ' bpm',
+      'Zone 3 (70–80%) Aerobic: ' + z3Low + '–' + z3High + ' bpm',
+      'Zone 4 (80–90%) Anaerobic: ' + z4Low + '–' + z4High + ' bpm',
+      'Zone 5 (90–100%) Max effort: ' + z5Low + '–' + maxHR + ' bpm',
+    ]
+  }
+`
+
+const gauge = {
+  min: 100, max: 220, unit: 'bpm',
+  zones: [
+    { label: 'Zone 1', color: '#60a5fa', from: 100, to: 130 },
+    { label: 'Zone 2', color: '#22c55e', from: 130, to: 155 },
+    { label: 'Zone 3', color: '#facc15', from: 155, to: 175 },
+    { label: 'Zone 4', color: '#f97316', from: 175, to: 195 },
+    { label: 'Zone 5', color: '#ef4444', from: 195, to: 220 },
+  ]
+}
+---
+<Layout
+  title="Heart Rate Calculator: Max HR & 5 Training Zones"
+  description="Calculate your maximum heart rate and all 5 Karvonen training zones for fat burning, aerobic fitness, and peak performance."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"Heart Rate Calculator",href:"/calculators/heart-rate-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <span class="text-gray-900">Heart Rate Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Heart Rate Calculator"
+          description="Max heart rate and 5 Karvonen training zones"
+          formulaId="heart-rate"
+          formulaFn={formulaFn}
+          resultLabel="Maximum Heart Rate"
+          gauge={gauge}
+          inputs={[
+            { id: 'age', label: 'Age', type: 'number', placeholder: '30', min: 10, max: 100, defaultValue: 30 },
+            { id: 'restingHR', label: 'Resting Heart Rate (morning pulse)', type: 'number', placeholder: '60', min: 30, max: 100, defaultValue: 60 },
+          ]}
+          relatedCalcs={[
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
+            { name: 'VO2 Max Calculator', href: '/calculators/vo2max-calculator' },
+            { name: 'Running Calorie Calculator', href: '/calculators/running-calorie-calculator' },
+          ]}
+          faqs={[
+            { question: 'How is maximum heart rate calculated?', answer: 'The standard formula is 220 − age. This is an estimate with ~10–12 bpm standard deviation. The most accurate method is a supervised graded exercise test. The Tanaka formula (208 − 0.7 × age) is also widely used for athletes.' },
+            { question: 'What is the Karvonen formula?', answer: 'Karvonen uses your Heart Rate Reserve (max HR − resting HR) to personalize zones. Zone target = resting HR + (HRR × zone %). A fit person with a low resting HR gets higher absolute zone values than someone less fit at the same age.' },
+            { question: 'What zone is best for fat burning?', answer: 'Zone 2 (60–70% of max HR) is the classic "fat burning zone" because fat is the primary fuel source. However, higher zones burn more total calories. For sustainable long-term fat loss, a mix of Zone 2 and Zone 4 workouts works best.' },
+            { question: 'What is a good resting heart rate?', answer: 'Normal resting HR for adults is 60–100 bpm. Athletes often have 40–60 bpm due to a stronger, more efficient heart. A lower resting HR generally indicates better cardiovascular fitness. Measure it in the morning before getting up.' },
+            { question: 'How do I train in Zone 2?', answer: 'Zone 2 training should feel like you can hold a conversation — breathless but not gasping. For most people this is a brisk walk, light jog, or easy cycling. Aim for 150+ minutes of Zone 2 per week for cardiovascular base building.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Training Zone Guide</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['Zone 1', '50–60%', 'Warm-up / Recovery', '#60a5fa'],
+              ['Zone 2', '60–70%', 'Fat burn / Aerobic base', '#22c55e'],
+              ['Zone 3', '70–80%', 'Aerobic fitness', '#facc15'],
+              ['Zone 4', '80–90%', 'Anaerobic threshold', '#f97316'],
+              ['Zone 5', '90–100%', 'Max effort / Sprint', '#ef4444'],
+            ].map(([zone, pct, label, color]) => (
+              <div class="px-4 py-2.5 flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style={`background:${color}`}></span>
+                <div>
+                  <span class="text-xs font-semibold text-gray-700">{zone} ({pct})</span>
+                  <p class="text-xs text-gray-500">{label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+          <h3 class="font-semibold text-green-900 text-sm mb-2">Resting HR Reference</h3>
+          <div class="space-y-1.5 text-xs text-green-800">
+            <div class="flex justify-between"><span>Elite athletes</span><span>40–50 bpm</span></div>
+            <div class="flex justify-between"><span>Excellent fitness</span><span>50–60 bpm</span></div>
+            <div class="flex justify-between"><span>Good / Average</span><span>60–70 bpm</span></div>
+            <div class="flex justify-between"><span>Above average risk</span><span>70–90 bpm</span></div>
+            <div class="flex justify-between"><span>Consult doctor</span><span>90+ bpm</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Why Heart Rate Zones Matter</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Training in different heart rate zones produces different physiological adaptations. Working out without knowing your zones is like driving without a speedometer — you can get somewhere, but you might be going too fast or too slow to reach your goal efficiently.</p>
+        <p class="text-gray-600 leading-relaxed">Zone 2 training builds your aerobic engine and is the foundation of most elite endurance programs. Zone 4–5 work builds speed and power. A well-rounded program includes both.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">The 80/20 Training Rule</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Research on elite endurance athletes shows they spend approximately 80% of training time in low intensity (Zone 1–2) and 20% in high intensity (Zone 4–5). Most recreational athletes do the opposite — training in the "grey zone" (Zone 3) too much.</p>
+        <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm font-semibold text-gray-700 mb-1">80% Easy (Zone 1–2)</p>
+              <p class="text-xs text-gray-500">Builds aerobic base, recovers well, sustainable volume</p>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-gray-700 mb-1">20% Hard (Zone 4–5)</p>
+              <p class="text-xs text-gray-500">Raises VO2 max, builds speed, interval training</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const x1 = parseFloat(inputs.x1)||0
+  const y1 = parseFloat(inputs.y1)||0
+  const x2 = parseFloat(inputs.x2)||0
+  const y2 = parseFloat(inputs.y2)||0
+  const dx = x2-x1, dy = y2-y1
+  if(dx===0) {
+    return {
+      value:"Undefined (vertical line)",
+      gaugeValue:100,
+      breakdown:["Vertical line: x = "+x1,"Slope is undefined (division by zero)"],
+      stats:[{label:"Line Type",value:"Vertical"},{label:"x = ",value:String(x1)},{label:"Slope",value:"Undefined"},{label:"Angle",value:"90°"}]
+    }
+  }
+  const slope = dy/dx
+  const yIntercept = y1-slope*x1
+  const xIntercept = slope!==0?(-yIntercept/slope):undefined
+  const angle = Math.atan(slope)*180/Math.PI
+  const direction = slope>0?"Positive (rising)":slope<0?"Negative (falling)":"Zero (horizontal)"
+  return {
+    value:"Slope: "+slope.toFixed(4),
+    gaugeValue:Math.min(Math.abs(slope)/10*100,100),
+    breakdown:["Slope: "+slope.toFixed(4)+" ("+direction+")","y-intercept: "+yIntercept.toFixed(4),"x-intercept: "+(xIntercept!==undefined?xIntercept.toFixed(4):"None (horizontal)"),"Equation: y = "+slope.toFixed(4)+"x + "+yIntercept.toFixed(4),"Angle: "+angle.toFixed(2)+"deg"],
+    stats:[
+      {label:"Slope",value:slope.toFixed(4)},
+      {label:"Y-Intercept",value:yIntercept.toFixed(4)},
+      {label:"Angle",value:angle.toFixed(2)+"°"},
+      {label:"Direction",value:direction.split(" ")[0]},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is slope?", answer: "Slope = rise/run = (y2-y1)/(x2-x1). It measures how steep a line is and in which direction it goes. Positive slope: line goes up-right. Negative slope: line goes down-right. Zero slope: horizontal line. Undefined slope: vertical line." },
+  { question: "What is the slope-intercept form?", answer: "y = mx + b, where m is slope and b is y-intercept. This is the most common form of a linear equation. Once you have slope and any point, you can find b: b = y - mx. For point (2,5) with slope 3: b = 5 - 3x2 = -1. Equation: y = 3x - 1." },
+  { question: "What is the point-slope form?", answer: "y - y1 = m(x - x1), where m is slope and (x1,y1) is a known point. Useful when you know slope and one point but not the y-intercept. Example: slope 2, point (3,7): y - 7 = 2(x - 3) → y = 2x + 1." },
+  { question: "How are slopes of parallel and perpendicular lines related?", answer: "Parallel lines have EQUAL slopes. Perpendicular lines have slopes that are negative reciprocals: if slope1 = m, then slope2 = -1/m. Example: slope 2/3 is perpendicular to slope -3/2. This is true for all perpendicular lines except horizontal/vertical." },
+  { question: "What does slope mean in real life?", answer: "Slope is rate of change. A road grade of 6% means rise 6 units per 100 units horizontal (slope = 0.06). A salary that increases $2,000 per year has slope of 2,000. Stock price change over time has slope = price change rate. In physics, slope of a distance-time graph = speed." }
+]
+---
+<Layout
+  title="Slope Calculator: Slope of a Line Between Two Points"
+  description="Calculate the slope, angle, line equation, and x/y intercepts from two points. Free slope calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Slope Calculator", href: "/calculators/slope-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Slope Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Slope Calculator"
+          description="Calculate slope, line equation, and intercepts from two points"
+          formulaId="slope"
+          formulaFn={formulaFn}
+          resultLabel="Slope"
+          inputs={[
+            {id:"x1",label:"Point 1 — X",type:"number",placeholder:"0",step:0.001,defaultValue:0},
+            {id:"y1",label:"Point 1 — Y",type:"number",placeholder:"0",step:0.001,defaultValue:0},
+            {id:"x2",label:"Point 2 — X",type:"number",placeholder:"4",step:0.001,defaultValue:4},
+            {id:"y2",label:"Point 2 — Y",type:"number",placeholder:"8",step:0.001,defaultValue:8}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "slope direction",
+            zones: [
+              { label: "Negative slope", color: "#ef4444", from: 0, to: 50 },
+              { label: "Zero slope", color: "#3b82f6", from: 50, to: 50 },
+              { label: "Positive slope", color: "#22c55e", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Distance Calculator", href: "/calculators/distance-calculator" },
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+            { name: "Z-Score Calculator", href: "/calculators/z-score-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Slope Formula</h3>
+          <div class="text-xs text-blue-800 font-mono bg-blue-100 rounded p-2 mb-2">m = (y2-y1)/(x2-x1)</div>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>m &gt; 0: Rising (positive slope)</div>
+            <div>m &lt; 0: Falling (negative slope)</div>
+            <div>m = 0: Horizontal line</div>
+            <div>m = undefined: Vertical line</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Forms of Linear Equations</h2>
+        <div class="space-y-3">
+          {[
+            {name:"Slope-Intercept",form:"y = mx + b",desc:"m = slope, b = y-intercept. Most common form."},
+            {name:"Point-Slope",form:"y - y1 = m(x - x1)",desc:"Use when you know slope and one point."},
+            {name:"Standard Form",form:"Ax + By = C",desc:"Useful for some algebraic operations."},
+            {name:"Two-Point Form",form:"(y-y1)/(y2-y1) = (x-x1)/(x2-x1)",desc:"Use when you know exactly two points."},
+          ].map(f => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800">{f.name}</div>
+              <div class="text-xs font-mono text-blue-600">{f.form}</div>
+              <div class="text-xs text-gray-500">{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Slope Angle Reference</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Slope</th><th class="text-right p-2 text-xs font-semibold">Angle</th><th class="text-right p-2 text-xs font-semibold">Description</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["0","0°","Horizontal"],["0.268","15°","Gentle slope"],["0.577","30°","Moderate"],["1.0","45°","45-degree"],["1.732","60°","Steep"],["∞","90°","Vertical"]].map(r => (
+              <tr><td class="p-2 text-xs font-mono">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,12 @@
+{
+  "name": "Calculators for Free",
+  "short_name": "CalcFree",
+  "description": "206 free online calculators for finance, fitness, math and more",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

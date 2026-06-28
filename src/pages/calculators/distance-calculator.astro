@@ -1,0 +1,122 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const x1 = parseFloat(inputs.x1)||0
+  const y1 = parseFloat(inputs.y1)||0
+  const x2 = parseFloat(inputs.x2)||0
+  const y2 = parseFloat(inputs.y2)||0
+  const dx = x2-x1, dy = y2-y1
+  const distance = Math.sqrt(dx*dx+dy*dy)
+  const midX = (x1+x2)/2, midY = (y1+y2)/2
+  const angle = Math.atan2(dy,dx)*180/Math.PI
+  return {
+    value:distance.toFixed(6),
+    gaugeValue:Math.min(distance/100*100,100),
+    breakdown:["Point 1: ("+x1+", "+y1+")","Point 2: ("+x2+", "+y2+")","Distance: "+distance.toFixed(6),"Midpoint: ("+midX.toFixed(3)+", "+midY.toFixed(3)+")","Slope: "+(dx!==0?(dy/dx).toFixed(4):"undefined"),"Angle: "+angle.toFixed(2)+"deg"],
+    stats:[
+      {label:"Distance",value:distance.toFixed(4)},
+      {label:"Midpoint X",value:midX.toFixed(3)},
+      {label:"Midpoint Y",value:midY.toFixed(3)},
+      {label:"Angle",value:angle.toFixed(2)+"°"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the distance formula?", answer: "Distance = sqrt((x2-x1)^2 + (y2-y1)^2). This is derived from the Pythagorean theorem: the distance is the hypotenuse of a right triangle with legs (x2-x1) and (y2-y1). For a 3D distance: sqrt((x2-x1)^2 + (y2-y1)^2 + (z2-z1)^2)." },
+  { question: "How do I find the midpoint of two points?", answer: "Midpoint = ((x1+x2)/2, (y1+y2)/2). The midpoint is exactly halfway between the two points. For a line segment from (2,4) to (8,10): midpoint = ((2+8)/2, (4+10)/2) = (5, 7)." },
+  { question: "What is the slope between two points?", answer: "Slope = (y2-y1)/(x2-x1) = rise/run. A positive slope goes up-right. Negative slope goes down-right. Zero slope is horizontal. Undefined slope is vertical (x1=x2). Slope is the m in y = mx + b (slope-intercept form)." },
+  { question: "How do I calculate geographic distance between cities?", answer: "For real-world coordinates (latitude/longitude), use the Haversine formula or spherical law of cosines. The straight-line distance between two lat/lon points is the great-circle distance. Google Maps uses road network distance, which is always longer." },
+  { question: "What is the unit circle?", answer: "A unit circle has center at origin (0,0) and radius 1. Any point on it satisfies x^2 + y^2 = 1. Distance from origin to any point on the unit circle = 1. It is fundamental to trigonometry: cos(theta) = x-coordinate, sin(theta) = y-coordinate for any angle theta." }
+]
+---
+<Layout
+  title="Distance Calculator: Distance Between Two Points"
+  description="Calculate the distance between two points using the distance formula. Convert between miles, km, and more. Free distance calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Distance Calculator", href: "/calculators/distance-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Distance Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Distance Calculator"
+          description="Calculate distance between two points using the distance formula"
+          formulaId="distance"
+          formulaFn={formulaFn}
+          resultLabel="Distance"
+          inputs={[
+            {id:"x1",label:"Point 1 — X coordinate",type:"number",placeholder:"0",step:0.001,defaultValue:0},
+            {id:"y1",label:"Point 1 — Y coordinate",type:"number",placeholder:"0",step:0.001,defaultValue:0},
+            {id:"x2",label:"Point 2 — X coordinate",type:"number",placeholder:"3",step:0.001,defaultValue:3},
+            {id:"y2",label:"Point 2 — Y coordinate",type:"number",placeholder:"4",step:0.001,defaultValue:4}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "distance",
+            zones: [
+              { label: "Short", color: "#3b82f6", from: 0, to: 25 },
+              { label: "Medium", color: "#22c55e", from: 25, to: 75 },
+              { label: "Long", color: "#f59e0b", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+            { name: "Slope Calculator", href: "/calculators/slope-calculator" },
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Pythagorean Theorem Calculator", href: "/calculators/triangle-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Distance Formula</h3>
+          <div class="text-xs text-blue-800 font-mono bg-blue-100 rounded p-2 mb-3">d = sqrt((x2-x1)^2 + (y2-y1)^2)</div>
+          <div class="text-xs text-blue-800"><strong>Example:</strong> (0,0) to (3,4)<br/>d = sqrt(9+16) = sqrt(25) = 5</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Pythagorean Triples</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Point 1</th><th class="text-right p-2 text-xs font-semibold">Point 2</th><th class="text-right p-2 text-xs font-semibold">Distance</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["(0,0)","(3,4)","5"],["(0,0)","(5,12)","13"],["(0,0)","(8,15)","17"],["(0,0)","(7,24)","25"],["(0,0)","(20,21)","29"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-blue-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Related Distance Concepts</h2>
+        <div class="space-y-3">
+          {[
+            {concept:"Manhattan Distance",formula:"d = |x2-x1| + |y2-y1|",use:"Used in grid-based navigation (city blocks)"},
+            {concept:"Euclidean Distance",formula:"d = sqrt(dx^2 + dy^2)",use:"Straight-line distance (this calculator)"},
+            {concept:"Chebyshev Distance",formula:"d = max(|dx|, |dy|)",use:"King moves on chessboard — used in AI"},
+            {concept:"Haversine Distance",formula:"For lat/lon spherical coords",use:"Great-circle distance between GPS points"},
+          ].map(c => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800">{c.concept}</div>
+              <div class="text-xs font-mono text-blue-600">{c.formula}</div>
+              <div class="text-xs text-gray-500">{c.use}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

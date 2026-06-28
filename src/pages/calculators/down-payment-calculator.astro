@@ -1,0 +1,140 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const homePrice = parseFloat(inputs.homePrice)||0
+  const downPct = parseFloat(inputs.downPct)||20
+  const currentSaved = parseFloat(inputs.currentSaved)||0
+  const monthlySavings = parseFloat(inputs.monthlySavings)||500
+  const returnRate = parseFloat(inputs.returnRate)||4
+  if(homePrice<=0) throw new Error("Enter home price.")
+  const downPaymentTarget = homePrice*(downPct/100)
+  const stillNeeded = Math.max(0,downPaymentTarget-currentSaved)
+  const r = returnRate/100/12
+  let months=0, balance=currentSaved
+  while(balance<downPaymentTarget&&months<600){
+    balance=balance*(1+r)+monthlySavings; months++
+  }
+  const years = Math.floor(months/12), mo = months%12
+  const loanAmount = homePrice-downPaymentTarget
+  const pmiSavings = downPct>=20?0:loanAmount*0.008/12
+  return {
+    value:"$"+downPaymentTarget.toLocaleString("en-US",{maximumFractionDigits:0})+" needed",
+    gaugeValue:Math.min((currentSaved/downPaymentTarget)*100,100),
+    breakdown:["Home price: $"+homePrice.toLocaleString("en-US",{maximumFractionDigits:0}),"Down payment ("+downPct+"%): $"+downPaymentTarget.toLocaleString("en-US",{maximumFractionDigits:0}),"Currently saved: $"+currentSaved,"Time to goal: "+years+"y "+mo+"mo","PMI saved (20% down): $"+pmiSavings.toFixed(0)+"/mo"],
+    stats:[
+      {label:"Down Payment Goal",value:"$"+downPaymentTarget.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Currently Saved",value:"$"+currentSaved.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Time to Goal",value:years+"y "+mo+"mo"},
+      {label:"Monthly PMI (if <20%)",value:"$"+pmiSavings.toFixed(0)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How much down payment do I need?", answer: "Minimum: 3% for conventional loans (Fannie/Freddie), 3.5% for FHA, 0% for VA and USDA loans. Recommended: 20% to avoid PMI and get the best rates. Reality: most first-time buyers put down 6-12%. A larger down payment means lower monthly payment, no PMI, and less total interest paid." },
+  { question: "Is 20% down required to buy a house?", answer: "No. You can buy with as little as 3% down on conventional loans. However, under 20% typically means paying PMI (0.5-1.5% of loan annually). FHA loans require only 3.5% down. The tradeoff: smaller down payment = PMI + higher monthly payment + more total interest over the loan life." },
+  { question: "What else do I need beyond the down payment?", answer: "Closing costs: 2-5% of loan amount ($8,000-$20,000 on a $400k home). Moving costs. Initial repairs or furnishings. Emergency fund (you do not want to deplete savings completely for the down payment). Also budget for ongoing homeownership costs: property tax, insurance, HOA, maintenance (~1% of home value/year)." },
+  { question: "Should I use a HYSA or invest my down payment savings?", answer: "For timelines under 3 years: high-yield savings account (HYSA) or CDs — you need capital preservation. For 3-5 years: consider conservative bonds or CDs. Over 5 years: a mix of bonds and stocks may be reasonable. Never invest a near-term down payment in volatile assets — markets can drop 30-40% right when you need the money." },
+  { question: "Can I use gift money for a down payment?", answer: "Yes, for most loan types. FHA allows 100% gifted down payment. Conventional allows gifts but usually requires some of your own funds for down payments over 20%. You need a gift letter stating the funds are not a loan. VA and USDA also allow gifts. The donor may need to document the source of funds." }
+]
+---
+<Layout
+  title="Down Payment Calculator: How Much to Save for a Home"
+  description="Calculate how much to save monthly to reach your home down payment goal. Includes PMI savings and timeline. Free down payment calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Down Payment Calculator", href: "/calculators/down-payment-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Down Payment Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Down Payment Calculator"
+          description="Calculate how long to save for your home down payment"
+          formulaId="down-payment"
+          formulaFn={formulaFn}
+          resultLabel="Down Payment Goal"
+          inputs={[
+            {id:"homePrice",label:"Target Home Price",type:"number",placeholder:"400000",min:0,unit:"$",defaultValue:400000},
+            {id:"downPct",label:"Down Payment Percentage",type:"select",options:[{value:"3",label:"3% (minimum conventional)"},{value:"5",label:"5%"},{value:"10",label:"10%"},{value:"20",label:"20% (no PMI)"},{value:"25",label:"25%"}],defaultValue:"20"},
+            {id:"currentSaved",label:"Amount Already Saved",type:"number",placeholder:"10000",min:0,unit:"$",defaultValue:10000},
+            {id:"monthlySavings",label:"Monthly Savings",type:"number",placeholder:"800",min:0,unit:"$",defaultValue:800},
+            {id:"returnRate",label:"Savings Return Rate",type:"number",placeholder:"4",min:0,max:10,step:0.1,unit:"%",defaultValue:4}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% funded",
+            zones: [
+              { label: "Not Started", color: "#ef4444", from: 0, to: 10 },
+              { label: "Building", color: "#f59e0b", from: 10, to: 40 },
+              { label: "Nearly There", color: "#3b82f6", from: 40, to: 80 },
+              { label: "Ready!", color: "#22c55e", from: 80, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "PMI Calculator", href: "/calculators/pmi-calculator" },
+            { name: "House Affordability Calculator", href: "/calculators/house-affordability-calculator" },
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Down Payment % Comparison</h3>
+          <p class="text-xs text-blue-700 mb-2">$400,000 home, 7% rate, 30-yr:</p>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Down %</th><th class="text-right pb-1">Monthly</th><th class="text-right pb-1">PMI</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["3% ($12k)","$2,568","+$267"],["10% ($40k)","$2,395","+$200"],["20% ($80k)","$2,129","None"],["25% ($100k)","$1,996","None"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">First-Time Buyer Programs</h2>
+        <div class="space-y-3">
+          {[
+            {prog:"FHA Loan",detail:"3.5% down with 580+ credit score. Government-backed. Lower credit requirements but requires mortgage insurance premium (MIP)."},
+            {prog:"Fannie Mae HomeReady",detail:"3% down, income limits apply, homebuyer education required. Good for low-to-moderate income buyers."},
+            {prog:"VA Loan",detail:"0% down for eligible veterans and active military. No PMI. Competitive rates. Best deal for those who qualify."},
+            {prog:"USDA Loan",detail:"0% down for eligible rural/suburban properties. Income limits apply. Competitive rates."},
+            {prog:"State/Local Programs",detail:"Many states offer down payment assistance grants or 0% second mortgages for first-time buyers. Check your state HFA."},
+          ].map(p => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800 mb-0.5">{p.prog}</div>
+              <div class="text-xs text-gray-600">{p.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Full Home Buying Budget</h2>
+        <div class="space-y-2">
+          {[["Down payment (20%)","$80,000"],["Closing costs (3%)","$12,000"],["Home inspection","$400–800"],["Moving costs","$1,000–5,000"],["Initial repairs","$2,000–10,000"],["Emergency fund (keep!)","$15,000+"],["Total needed","$110,000+"]].map(([item,amount]) => (
+            <div class="flex justify-between bg-gray-50 rounded px-3 py-1.5 text-xs">
+              <span class="text-gray-700">{item}</span>
+              <span class="font-medium">{amount}</span>
+            </div>
+          ))}
+          <p class="text-xs text-gray-500 mt-1">Example for $400,000 home</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

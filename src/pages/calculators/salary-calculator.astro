@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const amount = parseFloat(inputs.amount) || 0
+  const period = inputs.period || "annual"
+  const hours = parseFloat(inputs.hours) || 40
+  const taxRate = parseFloat(inputs.tax) || 25
+  if (amount <= 0) throw new Error("Enter a salary amount.")
+  let annual
+  if (period === "hourly") annual = amount * hours * 52
+  else if (period === "daily") annual = amount * 260
+  else if (period === "weekly") annual = amount * 52
+  else if (period === "biweekly") annual = amount * 26
+  else if (period === "monthly") annual = amount * 12
+  else annual = amount
+  const monthly = annual / 12
+  const biweekly = annual / 26
+  const weekly = annual / 52
+  const daily = annual / 260
+  const hourly = annual / (52 * hours)
+  const afterTax = annual * (1 - taxRate / 100)
+  return {
+    value: "$" + annual.toLocaleString("en-US", { maximumFractionDigits: 0 }) + "/year",
+    gaugeValue: Math.min(annual / 2000, 100),
+    breakdown: ["Hourly: $" + hourly.toFixed(2), "Weekly: $" + weekly.toFixed(2), "Biweekly: $" + biweekly.toFixed(2), "Monthly: $" + monthly.toFixed(2), "Annual: $" + annual.toLocaleString("en-US", { maximumFractionDigits: 0 }), "After ~" + taxRate + "% tax: $" + afterTax.toLocaleString("en-US", { maximumFractionDigits: 0 }) + "/yr"],
+    stats: [
+      { label: "Annual Salary", value: "$" + annual.toLocaleString("en-US", { maximumFractionDigits: 0 }) },
+      { label: "Monthly", value: "$" + monthly.toFixed(0) },
+      { label: "Hourly", value: "$" + hourly.toFixed(2) },
+      { label: "After Tax (est.)", value: "$" + afterTax.toLocaleString("en-US", { maximumFractionDigits: 0 }) + "/yr" },
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I convert hourly to annual salary?", answer: "Hourly × Hours per week × 52 weeks. At 40 hours/week: hourly × 2,080 = annual salary. Example: $25/hour × 2,080 = $52,000/year. For 50 weeks (2 vacation weeks): hourly × 2,000." },
+  { question: "What is take-home pay?", answer: "Take-home pay (net pay) is what you receive after taxes and deductions. Federal income tax, state tax, FICA (Social Security 6.2% + Medicare 1.45%), and any benefits contributions are deducted. A $75,000 salary typically nets $52,000-$58,000 depending on state." },
+  { question: "What is a good salary in the US?", answer: "The US median household income is ~$74,000 (2023). Individual median is ~$56,000. Cost of living varies enormously by location — $75k in rural Mississippi is comfortable; $75k in San Francisco is tight. Compare to your local cost of living, not national averages." },
+  { question: "What is the difference between salary and hourly?", answer: "Salaried employees get a fixed annual amount regardless of hours worked (though overtime rules vary). Hourly employees are paid per hour worked and typically receive overtime (1.5x) for hours over 40/week. Salaried positions often include more benefits." },
+  { question: "What is the $15 minimum wage worth annually?", answer: "$15/hour × 40 hours/week × 52 weeks = $31,200/year gross. After estimated 18% taxes (FICA + some federal): ~$25,580 take-home, or ~$2,132/month. This barely covers median 1-bedroom rent in most US cities." }
+]
+---
+<Layout
+  title="Salary Calculator: Annual, Monthly & Hourly Pay"
+  description="Convert salary to hourly, daily, weekly, monthly, or annual pay. Calculate take-home pay with tax estimate. Free salary calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Salary Calculator", href: "/calculators/salary-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Salary Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Salary Calculator"
+          description="Convert any pay period to annual, monthly, and hourly rates with take-home estimate"
+          formulaId="salary"
+          formulaFn={formulaFn}
+          resultLabel="Annual Salary"
+          inputs={[
+            { id: "amount", label: "Pay Amount", type: "number", placeholder: "75000", min: 0, defaultValue: 75000 },
+            { id: "period", label: "Pay Period", type: "select", options: [{ value: "hourly", label: "Hourly" },{ value: "daily", label: "Daily" },{ value: "weekly", label: "Weekly" },{ value: "biweekly", label: "Bi-weekly" },{ value: "monthly", label: "Monthly" },{ value: "annual", label: "Annual" }], defaultValue: "annual" },
+            { id: "hours", label: "Hours per Week", type: "number", placeholder: "40", min: 1, max: 80, defaultValue: 40 },
+            { id: "tax", label: "Estimated Tax Rate", type: "number", placeholder: "25", min: 0, max: 50, unit: "%", defaultValue: 25 }
+          ]}
+          gauge={{min: 0, max: 100, unit: "% income level",
+            zones: [
+              { label: "Under $50k", color: "#94a3b8", from: 0, to: 25 },
+              { label: "$50k–$100k", color: "#3b82f6", from: 25, to: 50 },
+              { label: "$100k–$150k", color: "#22c55e", from: 50, to: 75 },
+              { label: "$150k+", color: "#f59e0b", from: 75, to: 100 },
+            ]}}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Paycheck Calculator", href: "/calculators/paycheck-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+            { name: "Income Tax Calculator", href: "/calculators/income-tax-calculator" }
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Quick Salary Reference</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left pb-1">Hourly</th><th class="text-right pb-1">Annual (40hr)</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["$15","$31,200"],["$20","$41,600"],["$25","$52,000"],["$30","$62,400"],["$40","$83,200"],["$50","$104,000"],["$75","$156,000"],["$100","$208,000"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">US Salary Percentiles (2023)</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Percentile</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Annual Income</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["25th (bottom quarter)","Under $35,000"],["50th (median)","~$56,000"],["75th","~$95,000"],["90th","~$145,000"],["95th","~$200,000"],["99th","~$430,000+"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Negotiating Your Salary</h2>
+        <div class="space-y-2">
+          {[
+            "Research market rate on Glassdoor, Levels.fyi, LinkedIn Salary, and BLS data",
+            "Ask for 10-20% above your target — you can always come down",
+            "Never give the first number; ask about the budget range first",
+            "Negotiate the full package: base, bonus, equity, PTO, remote flexibility",
+            "Get any verbal offer in writing before making major decisions",
+            "Consider the cost-of-living index if relocating for a role",
+          ].map(tip => (
+            <div class="flex gap-2 text-xs text-gray-600">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>{tip}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,139 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const input = (inputs.color||"").trim()
+  let r,g,b
+  if(input.startsWith("#")){
+    const hex=input.slice(1)
+    if(hex.length===3){r=parseInt(hex[0]+hex[0],16);g=parseInt(hex[1]+hex[1],16);b=parseInt(hex[2]+hex[2],16)}
+    else{r=parseInt(hex.slice(0,2),16);g=parseInt(hex.slice(2,4),16);b=parseInt(hex.slice(4,6),16)}
+  } else if(input.toLowerCase().startsWith("rgb")){
+    const m=input.match(/\d+/g)
+    if(!m||m.length<3) throw new Error("Invalid RGB. Use: rgb(255,100,0) or 255,100,0")
+    r=parseInt(m[0]);g=parseInt(m[1]);b=parseInt(m[2])
+  } else if(input.includes(",")){
+    const parts=input.split(",")
+    r=parseInt(parts[0]);g=parseInt(parts[1]);b=parseInt(parts[2])
+  } else throw new Error("Enter HEX (#FF6B35) or RGB (255,107,53)")
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b))
+  const hex="#"+[r,g,b].map(x=>x.toString(16).padStart(2,"0")).join("").toUpperCase()
+  const rp=r/255,gp=g/255,bp=b/255
+  const max=Math.max(rp,gp,bp),min=Math.min(rp,gp,bp),delta=max-min
+  const l=(max+min)/2
+  const s=delta===0?0:(l<0.5?delta/(max+min):delta/(2-max-min))
+  let h=0
+  if(delta!==0){
+    if(max===rp) h=((gp-bp)/delta%6)*60
+    else if(max===gp) h=((bp-rp)/delta+2)*60
+    else h=((rp-gp)/delta+4)*60
+    if(h<0) h+=360
+  }
+  const brightness=Math.round((r*299+g*587+b*114)/1000)
+  return {
+    value:hex,
+    gaugeValue:brightness/255*100,
+    breakdown:["HEX: "+hex,"RGB: rgb("+r+", "+g+", "+b+")","HSL: hsl("+h.toFixed(0)+", "+Math.round(s*100)+"%, "+Math.round(l*100)+"%)","Brightness: "+brightness+"/255","Is dark: "+(brightness<128?"Yes":"No")],
+    stats:[
+      {label:"HEX",value:hex},
+      {label:"RGB",value:r+", "+g+", "+b},
+      {label:"HSL",value:h.toFixed(0)+"°, "+Math.round(s*100)+"%, "+Math.round(l*100)+"%"},
+      {label:"Brightness",value:brightness+"/255"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the difference between RGB and HEX color codes?", answer: "RGB and HEX are two formats for the same color. RGB uses three decimal values (0-255): rgb(255, 107, 53). HEX uses hexadecimal: #FF6B35. They are identical: 255 in decimal = FF in hex, 107 = 6B, 53 = 35. HEX is compact for HTML/CSS. RGB is easier to understand intuitively." },
+  { question: "What is HSL color format?", answer: "HSL stands for Hue (0-360 degrees on the color wheel), Saturation (0-100%, gray to vivid), and Lightness (0-100%, black to white). HSL is more intuitive for design: to make a color lighter, increase L. To desaturate, decrease S. Pure red = hsl(0, 100%, 50%)." },
+  { question: "How do I find the complementary color?", answer: "The complementary color is directly opposite on the color wheel: rotate hue by 180 degrees. If your color is hsl(30, 80%, 50%) (orange), the complement is hsl(210, 80%, 50%) (blue). In RGB, the complement is (255-r, 255-g, 255-b). Complementary colors create strong contrast." },
+  { question: "What colors are best for accessibility (contrast)?", answer: "WCAG AA requires a contrast ratio of at least 4.5:1 for normal text. Contrast ratio = (L1 + 0.05) / (L2 + 0.05) where L1 is the lighter color relative luminance. Dark text on white (#FFFFFF) or light text on very dark backgrounds works well. Avoid light gray on white, or yellow on white." },
+  { question: "What is CMYK color?", answer: "CMYK (Cyan, Magenta, Yellow, Black) is used in printing. Unlike RGB (additive — mixing light), CMYK is subtractive — mixing inks. White paper = no ink (0,0,0,0). Black = K=100 (key plate). Formula: C=(1-R/255), M=(1-G/255), Y=(1-B/255), K=min(C,M,Y), then subtract K from each. RGB is for screens, CMYK for print." }
+]
+---
+<Layout
+  title="Color Converter: HEX, RGB, HSL, HSV & CSS Colors"
+  description="Convert colors between HEX, RGB, HSL, HSV, and CMYK formats. Preview colors instantly. Free color converter and picker."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Color Converter", href: "/calculators/color-converter-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Color Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Color Converter"
+          description="Convert colors between HEX, RGB, and HSL formats"
+          formulaId="color-converter"
+          formulaFn={formulaFn}
+          resultLabel="HEX Color"
+          inputs={[
+            {id:"color",label:"Color (HEX like #FF6B35 or RGB like 255,107,53)",type:"text",placeholder:"#FF6B35",defaultValue:"#FF6B35"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "brightness",
+            zones: [
+              { label: "Dark color", color: "#1e293b", from: 0, to: 30 },
+              { label: "Mid-tone", color: "#6366f1", from: 30, to: 70 },
+              { label: "Light color", color: "#fbbf24", from: 70, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+            { name: "Number Base Calculator", href: "/calculators/number-base-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common CSS Colors</h3>
+          <div class="grid grid-cols-2 gap-1 text-xs">
+            {[["#FF0000","Red"],["#00FF00","Lime"],["#0000FF","Blue"],["#FFFF00","Yellow"],["#FF6600","Orange"],["#800080","Purple"],["#000000","Black"],["#FFFFFF","White"]].map(([hex,name]) => (
+              <div class="flex items-center gap-1.5">
+                <div class="w-4 h-4 rounded border" style={"background:"+hex}></div>
+                <span class="font-mono text-blue-800">{hex}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Color Model Comparison</h2>
+        <div class="space-y-2">
+          {[
+            {m:"RGB",u:"Screens, web, digital",r:"0-255 per channel (16M colors)"},
+            {m:"HEX",u:"CSS, HTML, design tools",r:"#RRGGBB (same as RGB in hex)"},
+            {m:"HSL",u:"Design, color relationships",r:"Hue 0-360°, Sat/Light 0-100%"},
+            {m:"HSV/HSB",u:"Photo editing (Photoshop)",r:"Hue 0-360°, Sat/Value 0-100%"},
+            {m:"CMYK",u:"Print, physical materials",r:"0-100% per channel"},
+          ].map(c => (
+            <div class="bg-gray-50 rounded-lg p-2"><div class="font-semibold text-xs text-blue-700">{c.m} — {c.u}</div><div class="text-xs text-gray-600">{c.r}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Color Psychology</h2>
+        <div class="space-y-2">
+          {["Red — urgency, passion, danger (#FF0000)","Orange — energy, warmth, creativity (#FF6600)","Yellow — optimism, attention, warning (#FFFF00)","Green — nature, growth, safety (#00AA44)","Blue — trust, calm, professional (#0066CC)","Purple — luxury, mystery, spiritual (#8800CC)"].map(a => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{a}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

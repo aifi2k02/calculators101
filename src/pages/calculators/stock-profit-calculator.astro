@@ -1,0 +1,127 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const shares = parseFloat(inputs.shares)||0
+  const buyPrice = parseFloat(inputs.buyPrice)||0
+  const sellPrice = parseFloat(inputs.sellPrice)||0
+  const buyCommission = parseFloat(inputs.buyCommission)||0
+  const sellCommission = parseFloat(inputs.sellCommission)||0
+  if(shares<=0||buyPrice<=0) throw new Error("Enter shares and buy price.")
+  const totalCost = shares*buyPrice+buyCommission
+  const totalProceeds = shares*sellPrice-sellCommission
+  const profit = totalProceeds-totalCost
+  const returnPct = (profit/totalCost)*100
+  const dividends = parseFloat(inputs.dividends)||0
+  const totalReturn = profit+dividends
+  const totalReturnPct = (totalReturn/totalCost)*100
+  return {
+    value:"$"+profit.toFixed(2)+" ("+(returnPct>0?"+":"")+returnPct.toFixed(2)+"%)",
+    gaugeValue:Math.min(Math.max(returnPct+50,0),100),
+    breakdown:["Shares: "+shares,"Buy: $"+buyPrice+" × "+shares+" = $"+totalCost.toFixed(2),"Sell: $"+sellPrice+" × "+shares+" = $"+totalProceeds.toFixed(2),"Profit/Loss: $"+profit.toFixed(2),"Return: "+returnPct.toFixed(2)+"%","Total return (with dividends): $"+totalReturn.toFixed(2)],
+    stats:[
+      {label:"Profit / Loss",value:"$"+profit.toFixed(2)},
+      {label:"Return %",value:(returnPct>0?"+":"")+returnPct.toFixed(2)+"%"},
+      {label:"Total Invested",value:"$"+totalCost.toFixed(2)},
+      {label:"Net Proceeds",value:"$"+totalProceeds.toFixed(2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How is stock profit calculated?", answer: "Stock Profit = (Sell Price × Shares) - (Buy Price × Shares) - Commissions. Return % = Profit / Total Cost × 100. If you received dividends, add those to get total return. Most modern brokers charge $0 commissions, so cost basis is simply purchase price × shares." },
+  { question: "What is cost basis and why does it matter for taxes?", answer: "Cost basis = total amount paid for shares including commissions. Capital gains = Sale proceeds - Cost basis. This determines your taxable gain. Keep records of all purchases, reinvested dividends, and stock splits, as they adjust your cost basis. Wrong cost basis can mean overpaying taxes." },
+  { question: "How are stock gains taxed?", answer: "Short-term gains (held under 1 year): taxed as ordinary income (10-37%). Long-term gains (over 1 year): 0%, 15%, or 20% depending on income. Most middle-income investors pay 15% long-term capital gains tax. Always know your holding period before selling." },
+  { question: "What is a wash sale and how does it affect stock losses?", answer: "If you sell a stock at a loss and buy the same or substantially identical stock within 30 days before or after the sale, it is a wash sale. You cannot deduct that loss — it is added to the new stock cost basis instead. Wait 31 days before rebuying the same stock to preserve the tax loss." },
+  { question: "How do I track multiple purchases of the same stock?", answer: "For tax purposes, you must identify which shares you are selling. Methods: FIFO (first in, first out — default), LIFO (last in, first out), specific identification (choose which shares to sell for tax optimization), or average cost basis (common for mutual funds). Specific identification gives most control over tax outcomes." }
+]
+---
+<Layout
+  title="Stock Profit Calculator: Investment Return & Capital Gains"
+  description="Calculate your profit, loss, and return percentage from buying and selling stocks. Includes commission costs. Free stock profit calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Stock Profit Calculator", href: "/calculators/stock-profit-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Stock Profit Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Stock Profit Calculator"
+          description="Calculate your stock investment profit, return %, and total return"
+          formulaId="stock-profit"
+          formulaFn={formulaFn}
+          resultLabel="Stock Profit / Loss"
+          inputs={[
+            {id:"shares",label:"Number of Shares",type:"number",placeholder:"100",min:0,defaultValue:100},
+            {id:"buyPrice",label:"Buy Price Per Share",type:"number",placeholder:"50",min:0,unit:"$",step:0.01,defaultValue:50},
+            {id:"sellPrice",label:"Sell Price Per Share",type:"number",placeholder:"75",min:0,unit:"$",step:0.01,defaultValue:75},
+            {id:"buyCommission",label:"Buy Commission",type:"number",placeholder:"0",min:0,unit:"$",step:0.01,defaultValue:0},
+            {id:"sellCommission",label:"Sell Commission",type:"number",placeholder:"0",min:0,unit:"$",step:0.01,defaultValue:0},
+            {id:"dividends",label:"Total Dividends Received",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% (50=breakeven)",
+            zones: [
+              { label: "Big loss (>-25%)", color: "#ef4444", from: 0, to: 25 },
+              { label: "Small loss/flat", color: "#f59e0b", from: 25, to: 50 },
+              { label: "Gain (0-50%)", color: "#3b82f6", from: 50, to: 75 },
+              { label: "Big gain (>50%)", color: "#22c55e", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Capital Gains Calculator", href: "/calculators/capital-gains-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "DCA Calculator", href: "/calculators/dca-calculator" },
+            { name: "Dividend Calculator", href: "/calculators/dividend-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Stock Return Calculation</h3>
+          <div class="text-xs text-blue-800 space-y-1 font-mono">
+            <div>Profit = (Sell - Buy) × Shares</div>
+            <div>Return % = Profit / Cost × 100</div>
+            <div class="mt-2 font-sans">Example: Buy 100 shares at $50, sell at $75</div>
+            <div>Profit = ($75-$50) × 100 = $2,500</div>
+            <div>Return = $2,500 / $5,000 = 50%</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Return Required to Break Even After Loss</h2>
+        <p class="text-xs text-gray-600 mb-3">This is why avoiding large losses matters more than big gains:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Loss</th><th class="text-right p-2 text-xs font-semibold">Gain to Break Even</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["−10%","+11.1%"],["−20%","+25%"],["−33%","+50%"],["−50%","+100%"],["−75%","+300%"]].map(r => (
+              <tr><td class="p-2 text-xs text-red-600">{r[0]}</td><td class="p-2 text-xs text-right font-medium text-blue-700">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Tax Optimization Strategies</h2>
+        <div class="space-y-2">
+          {["Hold shares 366+ days to qualify for lower long-term capital gains rate","Harvest losses in December to offset gains taken earlier in the year","Use tax-advantaged accounts (IRA, 401k) for most active trading","Donate appreciated stock to charity — avoid capital gains entirely","Gift appreciated stock to family members in lower tax brackets","Specify tax lots when selling to choose highest-basis shares first"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

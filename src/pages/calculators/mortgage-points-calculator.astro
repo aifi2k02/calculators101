@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const loanAmount = parseFloat(inputs.loanAmount)||0
+  const currentRate = parseFloat(inputs.currentRate)||7
+  const points = parseFloat(inputs.points)||1
+  const rateReduction = parseFloat(inputs.rateReduction)||0.25
+  if(loanAmount<=0) throw new Error("Enter loan amount.")
+  const n=360, r1=currentRate/100/12
+  const payment1 = loanAmount*r1*Math.pow(1+r1,n)/(Math.pow(1+r1,n)-1)
+  const newRate = currentRate-rateReduction
+  const r2 = newRate/100/12
+  const payment2 = loanAmount*r2*Math.pow(1+r2,n)/(Math.pow(1+r2,n)-1)
+  const pointsCost = loanAmount*(points/100)
+  const monthlySavings = payment1-payment2
+  const breakEvenMonths = Math.ceil(pointsCost/monthlySavings)
+  const breakEvenYears = Math.floor(breakEvenMonths/12)
+  const breakEvenMo = breakEvenMonths%12
+  const savingsOver30yr = monthlySavings*360-pointsCost
+  return {
+    value:"Break-even: "+breakEvenYears+"y "+breakEvenMo+"mo",
+    gaugeValue:Math.min(breakEvenMonths/360*100,100),
+    breakdown:["Points cost: $"+pointsCost.toFixed(0)+" ("+points+" pt)","Rate: "+currentRate+"% → "+newRate+"%","Monthly savings: $"+monthlySavings.toFixed(2),"Break-even: "+breakEvenMonths+" months","30yr net savings: $"+savingsOver30yr.toFixed(0)],
+    stats:[
+      {label:"Points Cost",value:"$"+pointsCost.toFixed(0)},
+      {label:"Monthly Savings",value:"$"+monthlySavings.toFixed(2)},
+      {label:"Break-Even",value:breakEvenYears+"y "+breakEvenMo+"mo"},
+      {label:"30yr Net Savings",value:"$"+savingsOver30yr.toFixed(0)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What are mortgage discount points?", answer: "One discount point costs 1% of the loan amount and typically reduces your interest rate by 0.125-0.25%. On a $350,000 loan, 1 point = $3,500. The rate reduction varies by lender and market conditions. Points are paid at closing and may be tax-deductible as prepaid mortgage interest." },
+  { question: "Should I buy mortgage points?", answer: "The key question: how long will you stay in the home? If you sell or refinance before the break-even period, you lose money. If you stay longer, you save money. Rule of thumb: only buy points if you plan to stay in the home for at least 5-7 years AND you have cash for closing costs plus points." },
+  { question: "Are mortgage points tax-deductible?", answer: "Yes, for primary residences. Discount points paid on a purchase mortgage are typically fully deductible in the year paid. Points on a refinance must be deducted over the life of the loan (amortized). Consult a tax advisor for your specific situation, as rules can be complex." },
+  { question: "What is the break-even period for points?", answer: "Break-even = Points cost / Monthly payment savings. Example: 1 point on $350k loan = $3,500 cost; reduces rate 0.25%, saving $57/month. Break-even = $3,500 / $57 = 61 months (~5.1 years). If you stay longer than 5 years, points pay off. Shorter? Skip them." },
+  { question: "Can I negotiate points with the lender?", answer: "Yes. You can often negotiate the rate-to-point relationship. Some lenders offer better rate reductions per point. Get quotes from multiple lenders. You can also ask for lender credits (negative points) to reduce closing costs in exchange for a higher rate — the opposite tradeoff if you plan to move soon." }
+]
+---
+<Layout
+  title="Mortgage Points Calculator: Should You Buy Down Your Rate?"
+  description="Calculate if buying mortgage discount points makes financial sense. Find your break-even period. Free mortgage points calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Mortgage Points Calculator", href: "/calculators/mortgage-points-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Mortgage Points Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Mortgage Points Calculator"
+          description="Find out if buying mortgage discount points makes financial sense"
+          formulaId="mortgage-points"
+          formulaFn={formulaFn}
+          resultLabel="Break-Even Period"
+          inputs={[
+            {id:"loanAmount",label:"Loan Amount",type:"number",placeholder:"350000",min:0,unit:"$",defaultValue:350000},
+            {id:"currentRate",label:"Current Interest Rate",type:"number",placeholder:"7",min:0,max:15,step:0.1,unit:"%",defaultValue:7},
+            {id:"points",label:"Number of Discount Points",type:"number",placeholder:"1",min:0.25,max:4,step:0.25,defaultValue:1},
+            {id:"rateReduction",label:"Rate Reduction Per Point",type:"number",placeholder:"0.25",min:0.1,max:0.5,step:0.05,unit:"%",defaultValue:0.25}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Quick break-even <3yr", color: "#22c55e", from: 0, to: 10 },
+              { label: "Good 3-5yr", color: "#3b82f6", from: 10, to: 17 },
+              { label: "Moderate 5-7yr", color: "#f59e0b", from: 17, to: 23 },
+              { label: "Long >7yr", color: "#ef4444", from: 23, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "Refinance Calculator", href: "/calculators/refinance-calculator" },
+            { name: "APR Calculator", href: "/calculators/apr-calculator" },
+            { name: "House Affordability Calculator", href: "/calculators/house-affordability-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Points Decision Framework</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            <div class="font-medium">Buy points if:</div>
+            <div>✓ Staying 7+ years in the home</div>
+            <div>✓ Have cash beyond closing costs</div>
+            <div>✓ Break-even is under 5 years</div>
+            <div class="font-medium mt-2">Skip points if:</div>
+            <div>✗ May sell or refinance within 5 years</div>
+            <div>✗ Need cash for other purposes</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">$350,000 Loan — Points vs Rate Savings</h2>
+      <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-50"><tr><th class="text-left p-3 text-xs font-semibold">Points Paid</th><th class="text-right p-3 text-xs font-semibold">Cost</th><th class="text-right p-3 text-xs font-semibold">Rate Reduction</th><th class="text-right p-3 text-xs font-semibold">Monthly Savings</th><th class="text-right p-3 text-xs font-semibold">Break-Even</th></tr></thead>
+        <tbody class="divide-y divide-gray-100">
+          {[["0 points","$0","0%","$0","N/A"],["0.5 points","$1,750","0.125%","$28","62 months"],["1 point","$3,500","0.25%","$57","61 months"],["2 points","$7,000","0.5%","$114","61 months"],["3 points","$10,500","0.75%","$170","62 months"]].map(r => (
+            <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right text-green-600">{r[3]}</td><td class="p-2 text-xs text-right font-medium">{r[4]}</td></tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="text-xs text-gray-500 mt-2">Assumes 0.25% rate reduction per point. Actual reductions vary by lender and market conditions.</p>
+    </div>
+  </div>
+</Layout>

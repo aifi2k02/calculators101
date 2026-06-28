@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = parseFloat(inputs.value)||0
+  const from = inputs.from||"degrees"
+  let radians
+  if(from==="degrees") radians=value*Math.PI/180
+  else if(from==="radians") radians=value
+  else if(from==="gradians") radians=value*Math.PI/200
+  else if(from==="turns") radians=value*2*Math.PI
+  else if(from==="arcminutes") radians=value*Math.PI/10800
+  else if(from==="arcseconds") radians=value*Math.PI/648000
+  else throw new Error("Unknown unit.")
+  const degrees=radians*180/Math.PI
+  const gradians=radians*200/Math.PI
+  const turns=radians/(2*Math.PI)
+  const arcmins=degrees*60
+  const arcsecs=degrees*3600
+  return {
+    value:degrees.toFixed(6)+" degrees",
+    gaugeValue:((degrees%360)+360)%360/360*100,
+    breakdown:["Input: "+value+" "+from,"Degrees: "+degrees.toFixed(6),"Radians: "+radians.toFixed(6),"Gradians: "+gradians.toFixed(6),"Turns: "+turns.toFixed(6),"Arcminutes: "+arcmins.toFixed(4),"Arcseconds: "+arcsecs.toFixed(2)],
+    stats:[
+      {label:"Degrees",value:degrees.toFixed(4)},
+      {label:"Radians",value:radians.toFixed(6)},
+      {label:"Gradians",value:gradians.toFixed(4)},
+      {label:"Turns",value:turns.toFixed(6)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I convert degrees to radians?", answer: "Multiply degrees by pi/180. Example: 90 degrees = 90 x pi/180 = pi/2 radians ≈ 1.5708. Or use the proportion: degrees/180 = radians/pi. Key angles: 30deg=pi/6, 45deg=pi/4, 60deg=pi/3, 90deg=pi/2, 180deg=pi, 360deg=2pi." },
+  { question: "What are gradians (gons)?", answer: "A gradian divides a full circle into 400 gradians (100 per right angle). Used mainly in surveying: a right angle = 100 gradians. Conversion: gradians = degrees x 400/360 = degrees x 10/9. A 90-degree angle = 100 gradians. Gradians make compass bearings easier to calculate." },
+  { question: "What is an arcminute and arcsecond?", answer: "1 degree = 60 arcminutes (symbol: prime). 1 arcminute = 60 arcseconds (symbol: double-prime). These tiny units measure precise angles in astronomy and navigation. The moon is about 0.5 degrees = 30 arcminutes in diameter. GPS accuracy is expressed in arcseconds." },
+  { question: "Why do we use radians in calculus?", answer: "Radians make calculus simpler: d/dx[sin(x)] = cos(x) only holds when x is in radians. If you use degrees, you get d/dx[sin(x)] = (pi/180)cos(x). Radians also give natural values: arc length = r x theta (in radians). Period of sin: 2pi radians, not 360 degrees." },
+  { question: "What are the major angle benchmarks?", answer: "0 deg = no rotation. 30 deg = pi/6 rad (1/12 circle). 45 deg = pi/4 rad (1/8 circle). 60 deg = pi/3 rad (1/6 circle). 90 deg = pi/2 rad (1/4 circle = right angle). 180 deg = pi rad (straight line). 270 deg = 3pi/2 rad. 360 deg = 2pi rad (full circle)." }
+]
+---
+<Layout
+  title="Angle Converter: Degrees, Radians, Gradians, Turns"
+  description="Convert angles between degrees, radians, gradians, turns, and arcminutes/arcseconds. Free angle converter calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Angle Converter", href: "/calculators/angle-converter-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Angle Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Angle Converter"
+          description="Convert angles between degrees, radians, gradians, and more"
+          formulaId="angle-converter"
+          formulaFn={formulaFn}
+          resultLabel="Degrees"
+          inputs={[
+            {id:"value",label:"Angle value",type:"number",placeholder:"90",step:0.0001,defaultValue:90},
+            {id:"from",label:"Convert from",type:"select",options:[
+              {value:"degrees",label:"Degrees (°)"},
+              {value:"radians",label:"Radians (rad)"},
+              {value:"gradians",label:"Gradians (gon)"},
+              {value:"turns",label:"Turns (full rotations)"},
+              {value:"arcminutes",label:"Arcminutes (')"},
+              {value:"arcseconds",label:"Arcseconds (arc-sec)"},
+            ],defaultValue:"degrees"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Acute (0-90)", color: "#22c55e", from: 0, to: 25 },
+              { label: "Right/Obtuse (90-180)", color: "#3b82f6", from: 25, to: 50 },
+              { label: "Reflex (180-360)", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+            { name: "Distance Calculator", href: "/calculators/distance-calculator" },
+            { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+            { name: "Law of Cosines Calculator", href: "/calculators/law-of-cosines-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Key Conversions</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left">Degrees</th><th class="text-right">Radians</th><th class="text-right">Gradians</th></tr></thead>
+            <tbody class="font-mono text-blue-900">
+              {[[30,"π/6","33.3"],[45,"π/4","50"],[60,"π/3","66.7"],[90,"π/2","100"],[180,"π","200"],[360,"2π","400"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}°</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Angle Types</h2>
+        <div class="space-y-2">
+          {[{t:"Acute",r:"0° to 90°",d:"Smaller than a right angle"},
+            {t:"Right",r:"Exactly 90°",d:"Quarter turn, forms an L shape"},
+            {t:"Obtuse",r:"90° to 180°",d:"Larger than right angle"},
+            {t:"Straight",r:"Exactly 180°",d:"Half turn, forms a straight line"},
+            {t:"Reflex",r:"180° to 360°",d:"More than half a turn"},
+            {t:"Full",r:"360°",d:"Complete rotation"}].map(a => (
+            <div class="bg-gray-50 rounded-lg p-2"><div class="font-semibold text-xs text-blue-700">{a.t} <span class="text-gray-500">({a.r})</span></div><div class="text-xs text-gray-600">{a.d}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Trig Values at Key Angles</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Angle</th><th class="p-2 text-xs text-right">sin</th><th class="p-2 text-xs text-right">cos</th><th class="p-2 text-xs text-right">tan</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["0°","0","1","0"],["30°","0.5","0.866","0.577"],["45°","0.707","0.707","1"],["60°","0.866","0.5","1.732"],["90°","1","0","∞"],["180°","0","−1","0"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right">{r[3]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

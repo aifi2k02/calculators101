@@ -1,0 +1,150 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const balance = parseFloat(inputs.balance) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  const payment = parseFloat(inputs.payment) || 0
+  if (balance <= 0) throw new Error('Enter a balance.')
+  if (payment <= 0) throw new Error('Enter a monthly payment.')
+  const r = rate / 100 / 12
+  const minPayment = Math.max(balance * 0.02, 25)
+  if (payment < minPayment && payment < balance) throw new Error('Payment too low — minimum is ~2% of balance or $25.')
+  let months = 0, totalInterest = 0, bal = balance
+  while (bal > 0 && months < 600) {
+    const interest = bal * r
+    totalInterest += interest
+    bal = bal + interest - payment
+    if (bal < 0) bal = 0
+    months++
+  }
+  const score = Math.max(0, Math.min(100, 100 - (months / 6)))
+  return {
+    value: months >= 600 ? 'Never (increase payment)' : months + ' months to pay off',
+    gaugeValue: score,
+    breakdown: [
+      'Payoff time: ' + Math.floor(months/12) + 'y ' + (months%12) + 'm',
+      'Total interest paid: $' + totalInterest.toFixed(2),
+      'Total paid: $' + (balance + totalInterest).toFixed(2),
+    ],
+    stats: [
+      { label: 'Months to Payoff', value: String(months) },
+      { label: 'Total Interest', value: '$' + totalInterest.toFixed(2) },
+      { label: 'Total Paid', value: '$' + (balance + totalInterest).toFixed(2) },
+      { label: 'Interest %', value: ((totalInterest/balance)*100).toFixed(0) + '% extra' },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is the minimum credit card payment?', answer: 'Most cards require a minimum payment of 1–2% of the balance or $25–35, whichever is greater. Paying only the minimum on a $5,000 balance at 20% APR could take 27+ years and cost over $7,000 in interest.' },
+  { question: 'How does credit card interest work?', answer: 'Credit card APR is divided by 365 (daily periodic rate). Interest accrues on your average daily balance. If you pay in full each month, you pay zero interest. If you carry a balance, interest compounds daily.' },
+  { question: 'What is a good credit card APR?', answer: 'The average credit card APR in 2025 is ~21%. Cards for excellent credit may offer 15–18%. Store cards can reach 25–30%. If you carry a balance, look for cards with low APRs or 0% promotional periods.' },
+  { question: 'Avalanche vs snowball: which debt payoff method is better?', answer: 'Avalanche (highest rate first) saves more money in interest. Snowball (smallest balance first) provides psychological wins and motivation. Studies show snowball leads to higher completion rates despite costing slightly more.' },
+  { question: 'Does paying more than the minimum really help?', answer: 'Dramatically. On a $5,000 balance at 20% APR, paying $100/month takes 94 months and $4,311 in interest. Paying $200/month takes 32 months and $1,163 in interest. Double the payment, save 3× the interest.' },
+]
+---
+<Layout
+  title="Credit Card Payoff Calculator: Time & Interest to Pay Off Debt"
+  description="See how long it takes to pay off your credit card debt and how much interest you\'ll pay. Free credit card payoff calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Credit Card Calculator', href: '/calculators/credit-card-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Credit Card Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Credit Card Payoff Calculator"
+          description="Find out how long it takes to pay off your credit card and how much interest you\'ll pay"
+          formulaId="credit-card"
+          formulaFn={formulaFn}
+          resultLabel="Payoff Time"
+          inputs={[
+            { id: 'balance', label: 'Current Balance', type: 'number', placeholder: '5000', min: 0, unit: '$', defaultValue: 5000 },
+            { id: 'rate', label: 'Annual Interest Rate (APR)', type: 'number', placeholder: '20', min: 0, max: 50, step: 0.1, unit: '%', defaultValue: 20 },
+            { id: 'payment', label: 'Monthly Payment', type: 'number', placeholder: '200', min: 0, unit: '$', defaultValue: 200 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% speed score',
+            zones: [
+              { label: 'Very Slow', color: '#ef4444', from: 0, to: 25 },
+              { label: 'Slow', color: '#f59e0b', from: 25, to: 50 },
+              { label: 'Good Pace', color: '#3b82f6', from: 50, to: 75 },
+              { label: 'Fast', color: '#22c55e', from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Debt Payoff Calculator', href: '/calculators/debt-payoff-calculator' },
+            { name: 'Loan Calculator', href: '/calculators/loan-calculator' },
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+            { name: 'APR Calculator', href: '/calculators/apr-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-5">
+          <h3 class="font-bold text-red-900 mb-3">$5,000 Balance at 20% APR</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-red-700"><th class="text-left pb-1">Payment</th><th class="text-right pb-1">Months</th><th class="text-right pb-1">Interest</th></tr></thead>
+            <tbody class="text-red-900">
+              {[['Min (~$100)','94','$4,311'],['$150','50','$2,264'],['$200','32','$1,163'],['$500','11','$285']].map(r => (
+                <tr class="border-t border-red-100"><td class="py-1">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Payoff Strategies</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            <div><strong>Avalanche:</strong> Pay highest APR first. Saves most interest.</div>
+            <div><strong>Snowball:</strong> Pay smallest balance first. Best for motivation.</div>
+            <div><strong>Balance Transfer:</strong> Move to 0% promo card. Pay aggressively during promo.</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How Credit Card Interest Works</h2>
+        <p class="text-gray-600 text-sm mb-3">Credit card APR is applied daily. Your average daily balance × (APR ÷ 365) = daily interest. This compounds throughout the month. If you pay your full statement balance by the due date, you pay zero interest (the grace period).</p>
+        <div class="grid grid-cols-2 gap-3">
+          {[
+            { label: 'Grace Period', detail: 'Pay in full by due date = no interest charged' },
+            { label: 'Daily Rate', detail: 'APR ÷ 365. At 20% APR: 0.0548%/day' },
+            { label: 'Min Payment Trap', detail: 'Minimum keeps you in debt for decades' },
+            { label: '0% Promo', detail: 'Balance transfers buy time — pay off before promo ends' },
+          ].map(c => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-gray-800 text-xs mb-1">{c.label}</div>
+              <div class="text-xs text-gray-600">{c.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Average Credit Card APRs (2025)</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr>
+            <th class="text-left p-3 text-xs font-semibold text-gray-700">Credit Score</th>
+            <th class="text-right p-3 text-xs font-semibold text-gray-700">Typical APR</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[['Excellent (750+)','15–18%'],['Good (700–749)','18–22%'],['Fair (650–699)','22–26%'],['Poor (below 650)','26–30%+'],['Store cards (any)','25–35%']].map(r => (
+              <tr><td class="p-3 text-xs">{r[0]}</td><td class="p-3 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

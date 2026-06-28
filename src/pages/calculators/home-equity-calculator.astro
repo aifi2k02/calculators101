@@ -1,0 +1,122 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const homeValue = parseFloat(inputs.homeValue)||0
+  const mortgageBalance = parseFloat(inputs.mortgageBalance)||0
+  const secondMortgage = parseFloat(inputs.secondMortgage)||0
+  const maxLtv = parseFloat(inputs.maxLtv)||80
+  if(homeValue<=0) throw new Error("Enter home value.")
+  const equity = homeValue-mortgageBalance-secondMortgage
+  const ltv = ((mortgageBalance+secondMortgage)/homeValue)*100
+  const maxBorrow = homeValue*(maxLtv/100)-(mortgageBalance+secondMortgage)
+  const availableCredit = Math.max(0,maxBorrow)
+  const equityPct = (equity/homeValue)*100
+  return {
+    value:"$"+equity.toLocaleString("en-US",{maximumFractionDigits:0})+" equity",
+    gaugeValue:Math.min(equityPct,100),
+    breakdown:["Home value: $"+homeValue.toLocaleString("en-US",{maximumFractionDigits:0}),"Mortgage balance: $"+mortgageBalance.toLocaleString("en-US",{maximumFractionDigits:0}),"Home equity: $"+equity.toLocaleString("en-US",{maximumFractionDigits:0}),"LTV ratio: "+ltv.toFixed(1)+"%","Max HELOC (at "+maxLtv+"% LTV): $"+availableCredit.toLocaleString("en-US",{maximumFractionDigits:0})],
+    stats:[
+      {label:"Home Equity",value:"$"+equity.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Equity %",value:equityPct.toFixed(1)+"%"},
+      {label:"LTV Ratio",value:ltv.toFixed(1)+"%"},
+      {label:"Available HELOC",value:"$"+availableCredit.toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is home equity?", answer: "Home equity = Current home value - All mortgage balances. If your home is worth $450,000 and you owe $280,000, you have $170,000 in equity. Equity grows as you pay down the mortgage and as home values appreciate. It is your ownership stake in the property." },
+  { question: "What is a HELOC and how does it work?", answer: "A HELOC (Home Equity Line of Credit) is a revolving credit line secured by your home, similar to a credit card. You draw from it during the draw period (5-10 years), then repay during the repayment period (10-20 years). Interest is variable. Rates are typically much lower than personal loans or credit cards." },
+  { question: "How much can I borrow against my home equity?", answer: "Most lenders allow combined LTV (your mortgage + HELOC) up to 80-85% of home value. If your home is worth $450k and you owe $280k, and the lender allows 80% CLTV: $450k x 80% = $360k max combined. $360k - $280k mortgage = $80k available HELOC." },
+  { question: "HELOC vs home equity loan: which is better?", answer: "HELOC: variable rate, flexible draw (use only what you need), better for ongoing projects. Home equity loan: fixed rate, lump sum, predictable payments, better for one-time expenses. HELOC is more common. Both use your home as collateral — default risks foreclosure." },
+  { question: "What can I use home equity for?", answer: "Home improvements (often tax-deductible interest), debt consolidation (caution: converts unsecured to secured debt), college, emergencies. Not recommended: vacations, luxury purchases, investing in stocks (double risk — if market drops, home could be at risk too). Use equity loans for value-adding purposes only." }
+]
+---
+<Layout
+  title="Home Equity Calculator: HELOC & Home Equity Loan Eligibility"
+  description="Calculate your home equity, loan-to-value ratio, and HELOC borrowing limit. Free home equity calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Home Equity Calculator", href: "/calculators/home-equity-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Home Equity Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Home Equity Calculator"
+          description="Calculate your home equity and available HELOC credit"
+          formulaId="home-equity"
+          formulaFn={formulaFn}
+          resultLabel="Home Equity"
+          inputs={[
+            {id:"homeValue",label:"Current Home Value",type:"number",placeholder:"450000",min:0,unit:"$",defaultValue:450000},
+            {id:"mortgageBalance",label:"First Mortgage Balance",type:"number",placeholder:"280000",min:0,unit:"$",defaultValue:280000},
+            {id:"secondMortgage",label:"Second Mortgage Balance",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"maxLtv",label:"Max Combined LTV",type:"select",options:[{value:"75",label:"75% (conservative)"},{value:"80",label:"80% (standard)"},{value:"85",label:"85% (some lenders)"},{value:"90",label:"90% (maximum)"}],defaultValue:"80"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% equity",
+            zones: [
+              { label: "Under 20% equity", color: "#ef4444", from: 0, to: 20 },
+              { label: "20-40% equity", color: "#f59e0b", from: 20, to: 40 },
+              { label: "40-60% equity", color: "#3b82f6", from: 40, to: 60 },
+              { label: "60%+ equity", color: "#22c55e", from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "Refinance Calculator", href: "/calculators/refinance-calculator" },
+            { name: "PMI Calculator", href: "/calculators/pmi-calculator" },
+            { name: "Net Worth Calculator", href: "/calculators/net-worth-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">HELOC vs Home Equity Loan</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Rate","Variable","Fixed"],["Structure","Line of credit","Lump sum"],["Payments","Interest-only (draw)","Fixed P+I"],["Flexibility","Draw what you need","Set amount"],["Best for","Ongoing projects","One-time expense"]].map(([f,h,he]) => (
+              <div class="grid grid-cols-3 gap-1 border-b border-blue-100 pb-1">
+                <span class="font-medium">{f}</span><span>{h} (HELOC)</span><span>{he} (HEL)</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Home Equity Growth Over Time</h2>
+        <p class="text-xs text-gray-600 mb-3">$400k home, $320k mortgage (7%, 30yr), 4% annual appreciation:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Year</th><th class="text-right p-2 text-xs font-semibold">Home Value</th><th class="text-right p-2 text-xs font-semibold">Equity</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Now","$400k","$80k"],["5 yrs","$486k","$174k"],["10 yrs","$592k","$305k"],["15 yrs","$720k","$487k"],["20 yrs","$876k","$720k"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-green-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Ways to Build Equity Faster</h2>
+        <div class="space-y-2">
+          {["Make bi-weekly mortgage payments (one extra payment per year)","Apply windfalls (bonuses, tax refunds) to principal","Choose a 15-year mortgage for faster equity build","Make extra principal-only payments whenever possible","Buy in an appreciating area (location is the biggest driver)","Improve the property to increase appraised value"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

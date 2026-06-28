@@ -1,0 +1,116 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const base = parseFloat(inputs.base)
+  const exp = parseFloat(inputs.exp)
+  if(isNaN(base)||isNaN(exp)) throw new Error("Enter base and exponent.")
+  const result=Math.pow(base,exp)
+  if(!isFinite(result)) throw new Error("Result is too large or undefined.")
+  const sqRoot=base>0?Math.sqrt(base):NaN
+  const cubeRoot=Math.cbrt(base)
+  return {
+    value:base+"^"+exp+" = "+result,
+    gaugeValue:Math.min(Math.abs(result)/1000000*100,100),
+    breakdown:[base+"^"+exp+" = "+result,"Square root of base: "+(base>0?sqRoot.toFixed(6):"undefined (negative)"),"Cube root of base: "+cubeRoot.toFixed(6),"log base: "+(base>0?Math.log(base).toFixed(4):"N/A"),"Result in sci notation: "+result.toExponential(4)],
+    stats:[
+      {label:"Result",value:result.toLocaleString(undefined,{maximumFractionDigits:6})},
+      {label:"Scientific Notation",value:result.toExponential(4)},
+      {label:"Square Root of Base",value:base>0?sqRoot.toFixed(6):"N/A"},
+      {label:"Cube Root of Base",value:cubeRoot.toFixed(6)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is an exponent?", answer: "An exponent (power) says how many times to multiply the base by itself. 2^3 = 2 x 2 x 2 = 8. The base is the number being multiplied, the exponent is how many times. Notation: a^n, a^n, or pow(a,n). Special cases: a^0 = 1, a^1 = a, a^-1 = 1/a." },
+  { question: "What are negative exponents?", answer: "a^(-n) = 1/a^n. Example: 2^(-3) = 1/2^3 = 1/8 = 0.125. Negative exponents represent fractions/reciprocals. 10^(-3) = 0.001 (milli-). In scientific notation: 1.5 x 10^(-6) = 0.0000015 (1.5 microseconds)." },
+  { question: "What are fractional exponents?", answer: "a^(1/2) = sqrt(a). a^(1/3) = cube root of a. a^(m/n) = nth root of a^m = (nth root of a)^m. Examples: 9^(1/2) = 3, 8^(1/3) = 2, 16^(3/4) = (16^(1/4))^3 = 2^3 = 8. Fractional exponents connect powers and roots." },
+  { question: "What are the exponent rules?", answer: "Product: a^m x a^n = a^(m+n). Quotient: a^m / a^n = a^(m-n). Power of power: (a^m)^n = a^(mn). Power of product: (ab)^n = a^n x b^n. Zero exponent: a^0 = 1 (for a ≠ 0). Negative: a^(-n) = 1/a^n." },
+  { question: "What does it mean to square or cube a number?", answer: "Squaring a number means raising it to the power 2: n^2 = n x n. The result is the area of a square with side n. Cubing means n^3 = n x n x n — the volume of a cube with side n. Perfect squares: 1,4,9,16,25,36... Perfect cubes: 1,8,27,64,125..." }
+]
+---
+<Layout
+  title="Exponent Calculator: Powers, Roots, Nth Powers"
+  description="Calculate any exponent or power: a^b, square roots, cube roots, fractional exponents. Free exponent calculator with steps."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Exponent Calculator", href: "/calculators/exponent-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Exponent Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Exponent Calculator"
+          description="Calculate any exponent or power with step-by-step breakdown"
+          formulaId="exponent"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            {id:"base",label:"Base (a)",type:"number",placeholder:"2",step:0.001,defaultValue:2},
+            {id:"exp",label:"Exponent (n)",type:"number",placeholder:"10",step:0.001,defaultValue:10}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small result", color: "#22c55e", from: 0, to: 10 },
+              { label: "Medium result", color: "#3b82f6", from: 10, to: 50 },
+              { label: "Large result", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Logarithm Calculator", href: "/calculators/logarithm-calculator" },
+            { name: "Scientific Notation", href: "/calculators/scientific-notation-calculator" },
+            { name: "Square Root Calculator", href: "/calculators/square-root-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Exponent Rules</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-1">
+            <div>a^m × a^n = a^(m+n)</div>
+            <div>a^m ÷ a^n = a^(m−n)</div>
+            <div>(a^m)^n = a^(mn)</div>
+            <div>a^0 = 1</div>
+            <div>a^(-n) = 1/a^n</div>
+            <div>a^(1/n) = nth root of a</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Powers of 2</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">n</th><th class="p-2 text-xs font-semibold text-right">2^n</th><th class="p-2 text-xs font-semibold text-right">Meaning</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[0,1,"1"],[1,2,"2"],[8,256,"1 byte"],[10,1024,"1 KB"],[20,"1,048,576","1 MB"],[30,"1,073,741,824","1 GB"],[32,"4,294,967,296","32-bit max"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-mono">{r[1]}</td><td class="p-2 text-xs text-right text-gray-500">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Powers</h2>
+        <div class="space-y-2">
+          {["Perfect squares: 1,4,9,16,25,36,49,64,81,100","Perfect cubes: 1,8,27,64,125,216,343","e^1 = 2.71828... (Euler number)","10^6 = 1 million, 10^9 = 1 billion","2^10 ≈ 10^3 (handy approximation for memory)","phi^2 = phi + 1 where phi = golden ratio"].map(p => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{p}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,196 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const tdee = parseFloat(inputs.tdee)
+  const goal = inputs.goal
+  const rate = parseFloat(inputs.rate)
+  const currentWeight = parseFloat(inputs.currentWeight)
+  const targetWeight = parseFloat(inputs.targetWeight)
+  const unit = inputs.unit
+  if (isNaN(tdee)||tdee<=0) throw new Error('Enter your TDEE (use the TDEE Calculator if needed).')
+  if (isNaN(rate)||rate<=0) throw new Error('Enter a valid rate.')
+  if (isNaN(currentWeight)||currentWeight<=0) throw new Error('Enter your current weight.')
+  const calsPerUnit = unit==='lb' ? 3500 : 7700
+  const weeklyCalDiff = rate * calsPerUnit
+  const dailyCalDiff = weeklyCalDiff / 7
+  const targetCalories = goal==='lose' ? tdee - dailyCalDiff : tdee + dailyCalDiff
+  if (targetCalories < 1200 && goal==='lose') {
+    throw new Error('That rate drops calories below 1,200/day. Reduce to ' + ((tdee-1200)/calsPerUnit*7).toFixed(2) + ' ' + unit + '/week max.')
+  }
+  const weightDiff = Math.abs(currentWeight - (isNaN(targetWeight)||targetWeight<=0 ? currentWeight : targetWeight))
+  const weeksToGoal = weightDiff > 0 ? weightDiff / rate : null
+  const deficitPct = (dailyCalDiff / tdee * 100).toFixed(0)
+  return {
+    value: Math.round(targetCalories) + ' cal/day',
+    stats: [
+      { label: 'TDEE (maintenance)', value: Math.round(tdee) + ' cal' },
+      { label: 'Daily ' + (goal==='lose'?'Deficit':'Surplus'), value: Math.round(dailyCalDiff) + ' cal' },
+      { label: 'Deficit %', value: deficitPct + '% of TDEE' },
+      { label: 'Rate', value: rate + ' ' + unit + '/week' },
+      { label: 'Goal timeline', value: weeksToGoal ? Math.ceil(weeksToGoal) + ' weeks' : '—' },
+    ],
+    breakdown: [
+      'TDEE (maintenance): ' + Math.round(tdee) + ' cal/day',
+      'Goal: ' + (goal==='lose'?'Lose':'Gain') + ' ' + rate + ' ' + unit + '/week',
+      'Daily ' + (goal==='lose'?'deficit':'surplus') + ': ' + Math.round(dailyCalDiff) + ' cal (' + deficitPct + '% of TDEE)',
+      'Target daily intake: ' + Math.round(targetCalories) + ' cal/day',
+      '—',
+      !isNaN(targetWeight) && targetWeight > 0 ? 'Weight to ' + (goal==='lose'?'lose':'gain') + ': ' + weightDiff.toFixed(1) + ' ' + unit : '',
+      weeksToGoal ? 'Time to goal: ~' + Math.ceil(weeksToGoal) + ' weeks (' + (weeksToGoal/4.33).toFixed(1) + ' months)' : '',
+    ].filter(Boolean)
+  }
+`
+
+const gauge = {
+  min: 0, max: 1000, unit: 'cal deficit',
+  zones: [
+    { label: 'Small 0-250', color: '#3b82f6', from: 0, to: 250 },
+    { label: 'Moderate 250-500', color: '#22c55e', from: 250, to: 500 },
+    { label: 'Large 500-750', color: '#f59e0b', from: 500, to: 750 },
+    { label: 'Very Large 750+', color: '#ef4444', from: 750, to: 1000 },
+  ]
+}
+---
+<Layout title="Caloric Deficit Calculator — Daily Calorie Target for Weight Loss" description="Calculate your caloric deficit or surplus for weight loss or gain. Enter your TDEE and weight loss rate to get daily calorie targets and realistic timelines.">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <span class="text-gray-900">Caloric Deficit Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Caloric Deficit Calculator"
+          description="Daily calorie target and weight loss/gain timeline"
+          formulaId="caloric-deficit"
+          formulaFn={formulaFn}
+          resultLabel="Daily Calorie Target"
+          inputs={[
+            { id: 'tdee', label: 'Your TDEE (maintenance calories)', type: 'number', placeholder: '2200', min: 1000, defaultValue: 2200 },
+            { id: 'goal', label: 'Goal', type: 'select', options: [
+              {value:'lose',label:'Lose weight (calorie deficit)'},
+              {value:'gain',label:'Gain weight (calorie surplus)'},
+            ], defaultValue: 'lose' },
+            { id: 'rate', label: 'Rate of change', type: 'select', options: [
+              {value:'0.5',label:'0.5 lb/week (mild, sustainable)'},
+              {value:'1',label:'1 lb/week (moderate)'},
+              {value:'1.5',label:'1.5 lbs/week (aggressive)'},
+              {value:'2',label:'2 lbs/week (very aggressive)'},
+            ], defaultValue: '1' },
+            { id: 'unit', label: 'Weight unit', type: 'select', options: [
+              {value:'lb',label:'Pounds (lb)'},{value:'kg',label:'Kilograms (kg)'},
+            ], defaultValue: 'lb' },
+            { id: 'currentWeight', label: 'Current Weight', type: 'number', placeholder: '180', min: 1, defaultValue: 180 },
+            { id: 'targetWeight', label: 'Target Weight (optional)', type: 'number', placeholder: '165', min: 0, defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          relatedCalcs={[
+            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
+            { name: 'Macro Calculator', href: '/calculators/macro-calculator' },
+          ]}
+          faqs={[
+            { question: 'What is a caloric deficit?', answer: 'A caloric deficit means eating fewer calories than your TDEE. Since your body needs energy, it draws on stored fat to make up the difference. A deficit of 3,500 calories over time leads to approximately 1 lb of fat loss.' },
+            { question: 'How big should my caloric deficit be?', answer: 'A 500 cal/day deficit (1 lb/week) is the standard recommendation — aggressive enough for results, conservative enough to preserve muscle and sustain long-term. A 20–25% deficit is the practical safe maximum for most people.' },
+            { question: 'Will a large deficit lose weight faster?', answer: 'A very large deficit (>1,000 cal/day) increases muscle loss, slows metabolism, causes fatigue, and is hard to sustain. Studies show moderate deficits result in similar fat loss to aggressive ones but preserve more muscle.' },
+            { question: 'Should I eat back exercise calories?', answer: 'If your TDEE already includes your activity level, no. If you used BMR as your base and are adding exercise on top, add back 50–75% of estimated exercise calories, since burn estimates from exercise are often inflated.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Deficit Size Guide</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['−250 cal/day', '0.5 lb/week', 'Mild, very sustainable'],
+              ['−500 cal/day', '1 lb/week', 'Moderate, recommended'],
+              ['−750 cal/day', '1.5 lbs/week', 'Aggressive, short-term'],
+              ['−1000 cal/day', '2 lbs/week', 'Limit — monitor health'],
+            ].map(([deficit, rate, desc]) => (
+              <div class="px-4 py-2.5">
+                <div class="flex justify-between items-baseline">
+                  <span class="text-xs font-semibold text-gray-700">{deficit}</span>
+                  <span class="text-xs font-medium text-blue-600">{rate}</span>
+                </div>
+                <p class="text-xs text-gray-500">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+          <h3 class="font-semibold text-green-900 text-sm mb-2">Don't Know Your TDEE?</h3>
+          <p class="text-xs text-green-700 mb-3">Calculate your maintenance calories first, then come back here.</p>
+          <a href="/calculators/tdee-calculator" class="inline-block bg-green-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors">Calculate TDEE →</a>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-2">Minimum Safe Calories</h3>
+          <div class="space-y-1.5 text-xs text-amber-800">
+            <div class="flex justify-between"><span>Women (general)</span><span>≥ 1,200 cal/day</span></div>
+            <div class="flex justify-between"><span>Men (general)</span><span>≥ 1,500 cal/day</span></div>
+            <div class="flex justify-between"><span>Athletes</span><span>BMR or higher</span></div>
+          </div>
+          <p class="text-xs text-amber-700 mt-2">Going below these thresholds long-term risks muscle loss and metabolic adaptation.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">What is a Caloric Deficit?</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">A caloric deficit occurs when you consume fewer calories than your body burns in a day (your TDEE). To compensate for the energy shortfall, your body draws on stored energy — primarily body fat — resulting in weight loss over time.</p>
+        <p class="text-gray-600 leading-relaxed">The relationship is straightforward: 1 lb of body fat contains approximately 3,500 calories. A daily deficit of 500 calories creates a weekly deficit of 3,500 calories, leading to ~1 lb of fat loss per week. This estimate is approximate — actual results vary by individual metabolism, muscle mass, and hormonal factors.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Why Moderate Deficits Win Long-Term</h2>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {[
+            ['Preserves muscle mass', 'Aggressive deficits (>750 cal/day) cause your body to break down muscle for energy. Moderate deficits combined with protein intake and resistance training preserve lean mass.'],
+            ['Sustainable adherence', 'Crash diets are abandoned 85% of the time within weeks. A mild deficit of 250–500 cal/day is barely noticeable in daily life, making it far easier to maintain.'],
+            ['Prevents metabolic adaptation', 'Severely cutting calories triggers metabolic slowdown — your TDEE drops in response. Moderate deficits and diet breaks prevent this adaptation.'],
+            ['Better mood and energy', 'Large deficits cause fatigue, brain fog, irritability, and poor sleep — all of which sabotage compliance. Moderate deficits have minimal impact on daily energy.'],
+          ].map(([title, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="font-semibold text-gray-800 text-sm mb-1">{title}</p>
+              <p class="text-xs text-gray-600 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How to Break a Weight Loss Plateau</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">As you lose weight, your TDEE decreases — your body needs fewer calories to maintain a smaller frame. This is why fat loss often stalls after several weeks. The math hasn\'t broken; your target calories need to be recalculated.</p>
+        <div class="space-y-2">
+          {[
+            ['Recalculate TDEE', 'Every 5–10 lbs lost, recalculate your TDEE and adjust your calorie target accordingly.'],
+            ['Take a diet break', '1–2 weeks eating at maintenance resets leptin levels and can kick-start fat loss again.'],
+            ['Increase activity (NEAT)', 'Adding steps, standing more, or light exercise raises TDEE without formal workouts.'],
+            ['Track more accurately', 'Studies show most people undercount calories by 20–40%. Precise logging can reveal hidden intake.'],
+          ].map(([title, desc]) => (
+            <div class="flex gap-3 bg-gray-50 rounded-lg p-3.5 border border-gray-100">
+              <span class="font-semibold text-sm text-blue-700 shrink-0 w-44">{title}</span>
+              <span class="text-sm text-gray-600">{desc}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "What is a caloric deficit?", "acceptedAnswer": { "@type": "Answer", "text": "A caloric deficit means eating fewer calories than you burn (your TDEE). Your body uses stored body fat to make up the difference, leading to weight loss. A deficit of 3,500 calories equals approximately 1 lb of fat loss." } },
+      { "@type": "Question", "name": "How large should my caloric deficit be?", "acceptedAnswer": { "@type": "Answer", "text": "A 500 calorie/day deficit is the standard recommendation, producing ~1 lb/week of fat loss while preserving muscle. A 20–25% deficit from TDEE is the safe maximum for most people. Never go below 1,200 cal/day (women) or 1,500 cal/day (men)." } },
+      { "@type": "Question", "name": "Why did my weight loss stall?", "acceptedAnswer": { "@type": "Answer", "text": "As you lose weight, your TDEE decreases because there is less body mass to maintain. Recalculate your TDEE every 5–10 lbs lost and adjust your calorie target. A 1–2 week diet break at maintenance can also help break a plateau." } },
+    ]
+  })} />
+</Layout>

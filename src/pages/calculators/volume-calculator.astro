@@ -1,0 +1,143 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const shape = inputs.shape||"cube"
+  const a = parseFloat(inputs.a)||0
+  const b = parseFloat(inputs.b)||0
+  const c = parseFloat(inputs.c)||0
+  let volume, surfaceArea, formula
+  if(shape==="cube"){
+    if(a<=0) throw new Error("Enter side length.")
+    volume=a*a*a; surfaceArea=6*a*a; formula="V = s^3"
+  } else if(shape==="box"){
+    if(a<=0||b<=0||c<=0) throw new Error("Enter all dimensions.")
+    volume=a*b*c; surfaceArea=2*(a*b+b*c+a*c); formula="V = l x w x h"
+  } else if(shape==="sphere"){
+    if(a<=0) throw new Error("Enter radius.")
+    volume=(4/3)*Math.PI*a*a*a; surfaceArea=4*Math.PI*a*a; formula="V = 4/3 pi r^3"
+  } else if(shape==="cylinder"){
+    if(a<=0||b<=0) throw new Error("Enter radius and height.")
+    volume=Math.PI*a*a*b; surfaceArea=2*Math.PI*a*(a+b); formula="V = pi r^2 h"
+  } else if(shape==="cone"){
+    if(a<=0||b<=0) throw new Error("Enter radius and height.")
+    const slant=Math.sqrt(a*a+b*b)
+    volume=(1/3)*Math.PI*a*a*b; surfaceArea=Math.PI*a*(a+slant); formula="V = 1/3 pi r^2 h"
+  } else if(shape==="pyramid"){
+    if(a<=0||b<=0||c<=0) throw new Error("Enter base length, base width, and height.")
+    volume=(1/3)*a*b*c; surfaceArea=a*b+a*Math.sqrt((b/2)*(b/2)+c*c)+b*Math.sqrt((a/2)*(a/2)+c*c); formula="V = 1/3 l x w x h"
+  } else throw new Error("Unknown shape")
+  return {
+    value:volume.toFixed(4)+" cubic units",
+    gaugeValue:Math.min(volume/1000*100,100),
+    breakdown:["Shape: "+shape,"Formula: "+formula,"Volume: "+volume.toFixed(4)+" cubic units","Surface area: "+surfaceArea.toFixed(4)+" sq units"],
+    stats:[
+      {label:"Volume",value:volume.toFixed(4)},
+      {label:"Surface Area",value:surfaceArea.toFixed(4)},
+      {label:"Shape",value:shape.charAt(0).toUpperCase()+shape.slice(1)},
+      {label:"Formula",value:formula},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the volume formula for a cylinder?", answer: "V = pi x r^2 x h. A cylinder with radius 5 and height 10 has volume = pi x 25 x 10 = 785.4 cubic units. The base area is pi x r^2 (a circle), and you multiply by height." },
+  { question: "What is the volume formula for a sphere?", answer: "V = (4/3) x pi x r^3. A sphere with radius 3: V = (4/3) x pi x 27 = 113.1 cubic units. Surface area = 4 x pi x r^2." },
+  { question: "How does a cone volume compare to a cylinder?", answer: "A cone has exactly 1/3 the volume of a cylinder with the same base and height. V_cone = (1/3) x pi x r^2 x h. This is a useful fact: it takes 3 cone-fulls to fill a cylinder." },
+  { question: "How do I convert cubic units?", answer: "1 cubic foot = 1,728 cubic inches. 1 cubic yard = 27 cubic feet. 1 cubic meter = 1,000 liters. 1 gallon = 231 cubic inches = 3.785 liters. 1 liter = 1,000 milliliters = 1,000 cubic centimeters." },
+  { question: "What is the volume of a rectangular box?", answer: "V = length x width x height. A box 10 x 5 x 3 = 150 cubic units. Surface area = 2(lw + lh + wh). A cube is a special box where all sides are equal: V = s^3." }
+]
+---
+<Layout
+  title="Volume Calculator: Cube, Sphere, Cylinder & More"
+  description="Calculate volume of any 3D shape: cube, sphere, cylinder, cone, pyramid, rectangular prism. Free volume calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Volume Calculator", href: "/calculators/volume-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Volume Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Volume Calculator"
+          description="Calculate volume and surface area of any 3D shape"
+          formulaId="volume"
+          formulaFn={formulaFn}
+          resultLabel="Volume"
+          inputs={[
+            {id:"shape",label:"3D Shape",type:"select",options:[
+              {value:"cube",label:"Cube"},
+              {value:"box",label:"Rectangular Box"},
+              {value:"sphere",label:"Sphere"},
+              {value:"cylinder",label:"Cylinder"},
+              {value:"cone",label:"Cone"},
+              {value:"pyramid",label:"Square Pyramid"},
+            ],defaultValue:"cylinder"},
+            {id:"a",label:"Dimension A (side / radius / length)",type:"number",placeholder:"5",min:0,step:0.001,defaultValue:5},
+            {id:"b",label:"Dimension B (width / height)",type:"number",placeholder:"10",min:0,step:0.001,defaultValue:10},
+            {id:"c",label:"Dimension C (height for box/pyramid)",type:"number",placeholder:"3",min:0,step:0.001,defaultValue:3}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small", color: "#3b82f6", from: 0, to: 10 },
+              { label: "Medium", color: "#22c55e", from: 10, to: 50 },
+              { label: "Large", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+            { name: "Circle Calculator", href: "/calculators/circle-calculator" },
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Volume Formulas</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-1">
+            <div>Cube: V = s^3</div>
+            <div>Box: V = l x w x h</div>
+            <div>Sphere: V = 4/3 pi r^3</div>
+            <div>Cylinder: V = pi r^2 h</div>
+            <div>Cone: V = 1/3 pi r^2 h</div>
+            <div>Pyramid: V = 1/3 l x w x h</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Common Volume Conversions</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Unit</th><th class="p-2 text-xs font-semibold text-right">Equivalent</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["1 cubic foot","1,728 cu in"],["1 cubic yard","27 cu ft"],["1 liter","1,000 mL"],["1 cubic meter","1,000 liters"],["1 gallon","3.785 liters"],["1 fl oz","29.57 mL"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <h3 class="font-bold text-sm text-gray-800 mb-3">Volume Key Facts</h3>
+          <div class="text-xs text-gray-600 space-y-2">
+            <div>A cone holds 1/3 the volume of the same-sized cylinder</div>
+            <div>A sphere has 2/3 the volume of its circumscribed cylinder</div>
+            <div>Doubling radius quadruples circle area but cubes sphere volume</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,149 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const mode = inputs.mode||"to_roman"
+  const value = inputs.value||""
+  if(mode==="to_roman"){
+    const num=parseInt(value)||0
+    if(num<1||num>3999) throw new Error("Enter a number from 1 to 3999.")
+    const vals=[1000,900,500,400,100,90,50,40,10,9,5,4,1]
+    const syms=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"]
+    let n=num, result=""
+    for(let i=0;i<vals.length;i++){while(n>=vals[i]){result+=syms[i];n-=vals[i]}}
+    const breakdown=[num+" = "+result]
+    let temp=num
+    for(let i=0;i<vals.length;i++){
+      while(temp>=vals[i]){breakdown.push(syms[i]+" ("+vals[i]+")");temp-=vals[i]}
+    }
+    return {
+      value:result,
+      gaugeValue:Math.min(num/3999*100,100),
+      breakdown,
+      stats:[
+        {label:"Roman Numeral",value:result},
+        {label:"Arabic Number",value:String(num)},
+        {label:"Length",value:result.length+" symbols"},
+        {label:"Largest symbol",value:result[0]||"-"},
+      ]
+    }
+  } else {
+    const str=(value||"").toUpperCase().trim()
+    if(!/^[IVXLCDM]+$/.test(str)) throw new Error("Enter valid Roman numerals (I, V, X, L, C, D, M).")
+    const vals={I:1,V:5,X:10,L:50,C:100,D:500,M:1000}
+    let total=0
+    for(let i=0;i<str.length;i++){
+      const curr=vals[str[i]],next=vals[str[i+1]]
+      if(next&&curr<next) total-=curr
+      else total+=curr
+    }
+    return {
+      value:String(total),
+      gaugeValue:Math.min(total/3999*100,100),
+      breakdown:[str+" = "+total,"Parsed symbol by symbol: "+str.split("").map((c,i)=>{const curr=vals[c],next=vals[str[i+1]];return c+"("+(next&&curr<next?"-":"+")+(vals[c])+")"}).join(" ")],
+      stats:[
+        {label:"Arabic Number",value:String(total)},
+        {label:"Roman Numeral",value:str},
+        {label:"Valid",value:"Yes"},
+        {label:"Length",value:str.length+" symbols"},
+      ]
+    }
+  }
+
+`
+
+const faqs = [
+  { question: "How do Roman numerals work?", answer: "Roman numerals use letters: I=1, V=5, X=10, L=50, C=100, D=500, M=1000. Read left to right adding values. When a smaller numeral precedes a larger one, subtract it: IV=4 (5-1), IX=9 (10-1), XL=40, XC=90, CD=400, CM=900. Example: 2024 = MMXXIV = 1000+1000+10+10+4." },
+  { question: "What is the largest number in Roman numerals?", answer: "Standard Roman numerals go to 3,999 (MMMCMXCIX). For larger numbers, a bar over a letter multiplied by 1,000: V-bar = 5,000, X-bar = 10,000, M-bar = 1,000,000. This is called vinculum notation and allows representation of millions." },
+  { question: "What are the Roman numeral rules?", answer: "Maximum 3 of same symbol in a row (III is valid, IIII is not — use IV). Subtraction: only I before V or X, X before L or C, C before D or M. Never subtract more than one symbol at once (not IIX for 8 — use VIII). Symbols decrease in value from left to right (except subtractive pairs)." },
+  { question: "When are Roman numerals used today?", answer: "Clock faces (some use IIII instead of IV). Movie copyright dates and sequel numbering (Rocky IV). Super Bowl and Olympic Games numbering. Chapter numbers in books and outlines. Building inscriptions. Monarchs and popes (Henry VIII, Pope Francis I). Astronomy (planetary moons: Io, Europa, etc. are Jupiter I, II)." },
+  { question: "Why did the Romans not have a zero?", answer: "Roman numeral systems developed as a counting notation — tallying quantities that exist. Zero represents the absence of quantity, which was not needed for Roman commerce or administration. Zero was developed independently in ancient India and the Maya civilization. Arab traders brought Indian zero to Europe in the Middle Ages." }
+]
+---
+<Layout
+  title="Roman Numeral Converter: Numbers to Roman Numerals"
+  description="Convert numbers to Roman numerals and Roman numerals to numbers. Supports 1-3,999. Free Roman numeral calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Roman Numeral Converter", href: "/calculators/roman-numeral-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Roman Numeral Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Roman Numeral Converter"
+          description="Convert between numbers and Roman numerals"
+          formulaId="roman-numeral"
+          formulaFn={formulaFn}
+          resultLabel="Roman Numeral"
+          inputs={[
+            {id:"mode",label:"Direction",type:"select",options:[
+              {value:"to_roman",label:"Number → Roman Numerals"},
+              {value:"to_arabic",label:"Roman Numerals → Number"},
+            ],defaultValue:"to_roman"},
+            {id:"value",label:"Value to convert",type:"text",placeholder:"2024 or MMXXIV",defaultValue:"2024"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small (I-XIX)", color: "#22c55e", from: 0, to: 5 },
+              { label: "Medium (XX-C)", color: "#3b82f6", from: 5, to: 30 },
+              { label: "Large (C-M)", color: "#f59e0b", from: 30, to: 80 },
+              { label: "Very large (M+)", color: "#ef4444", from: 80, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Number to Words Calculator", href: "/calculators/number-to-words-calculator" },
+            { name: "Number Base Calculator", href: "/calculators/number-base-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Roman Numeral Symbols</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left">Symbol</th><th class="text-right">Value</th></tr></thead>
+            <tbody class="text-blue-900 font-mono">
+              {[["I",1],["V",5],["X",10],["L",50],["C",100],["D",500],["M",1000]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5 font-bold">{r[0]}</td><td class="text-right">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Roman Numeral Examples</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Roman</th><th class="p-2 text-xs font-semibold text-right">Number</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["I",1],["IV",4],["IX",9],["XIV",14],["XL",40],["XC",90],["CD",400],["CM",900],["MMXXIV",2024],["MMMDCCCLXXXVIII",3888]].map(r => (
+              <tr><td class="p-2 text-xs font-mono font-bold">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Subtractive Pairs</h2>
+        <div class="space-y-2">
+          {[["IV","4 (5-1)"],["IX","9 (10-1)"],["XL","40 (50-10)"],["XC","90 (100-10)"],["CD","400 (500-100)"],["CM","900 (1000-100)"]].map(([r,v]) => (
+            <div class="flex justify-between bg-gray-50 rounded-lg px-3 py-1.5 text-xs"><span class="font-mono font-bold text-blue-700">{r}</span><span class="text-gray-600">= {v}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

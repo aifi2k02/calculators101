@@ -1,0 +1,147 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const balance = parseFloat(inputs.balance) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  const payment = parseFloat(inputs.payment) || 0
+  const extra = parseFloat(inputs.extra) || 0
+  if (balance <= 0) throw new Error('Enter a debt balance.')
+  if (payment <= 0) throw new Error('Enter a monthly payment.')
+  const r = rate / 100 / 12
+  const totalPayment = payment + extra
+  let months = 0, interest = 0, bal = balance
+  while (bal > 0.01 && months < 600) {
+    const int = bal * r
+    interest += int
+    bal = bal + int - totalPayment
+    if (bal < 0) bal = 0
+    months++
+  }
+  let monthsBase = 0, interestBase = 0, balBase = balance
+  while (balBase > 0.01 && monthsBase < 600) {
+    const int = balBase * r
+    interestBase += int
+    balBase = balBase + int - payment
+    if (balBase < 0) balBase = 0
+    monthsBase++
+  }
+  const saved = interestBase - interest
+  const timeSaved = monthsBase - months
+  return {
+    value: months + ' months to debt-free',
+    gaugeValue: Math.max(0, Math.min(100, 100 - months / 3)),
+    breakdown: [
+      'Payoff: ' + Math.floor(months/12) + 'y ' + (months%12) + 'm',
+      'Total interest: $' + interest.toFixed(2),
+      extra > 0 ? 'Interest saved vs base: $' + saved.toFixed(2) : '',
+      extra > 0 ? 'Time saved: ' + timeSaved + ' months' : '',
+    ].filter(Boolean),
+    stats: [
+      { label: 'Payoff Time', value: Math.floor(months/12) + 'y ' + (months%12) + 'm' },
+      { label: 'Total Interest', value: '$' + interest.toFixed(0) },
+      { label: 'Interest Saved', value: extra > 0 ? '$' + saved.toFixed(0) : 'N/A' },
+      { label: 'Months Saved', value: extra > 0 ? String(timeSaved) : 'N/A' },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is the debt avalanche method?', answer: 'Pay minimum payments on all debts, then put every extra dollar toward the highest-interest debt first. Once paid off, roll that payment into the next highest. This minimizes total interest paid.' },
+  { question: 'What is the debt snowball method?', answer: 'Pay minimum payments on all debts, then put extra money toward the smallest balance first. Once paid, roll that payment into the next smallest. Provides psychological wins that improve follow-through.' },
+  { question: 'How much extra should I pay toward debt?', answer: 'Even $50–$100 extra per month makes a significant difference. On a $10,000 loan at 8%, adding $100/month extra cuts payoff time from 10 years to 7 years and saves ~$2,000 in interest.' },
+  { question: 'Should I use savings to pay off debt?', answer: 'If debt interest > savings return, yes. Using a 5% savings account to pay off 20% credit card debt is a guaranteed 15% return. Keep a $1,000 emergency fund minimum before aggressively paying debt.' },
+  { question: 'What is debt consolidation?', answer: 'Combining multiple debts into a single loan, ideally at a lower interest rate. Options include personal loans, balance transfer cards (0% promo), home equity loans (HELOC), and debt management plans. Compare total cost, not just monthly payment.' },
+]
+---
+<Layout
+  title="Debt Payoff Calculator: Time & Interest with Extra Payments"
+  description="Calculate how long it takes to pay off debt and how much extra payments save. Free debt payoff calculator with avalanche and snowball support."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Debt Payoff Calculator', href: '/calculators/debt-payoff-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Debt Payoff Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Debt Payoff Calculator"
+          description="See how extra payments eliminate debt faster and save you money"
+          formulaId="debt-payoff"
+          formulaFn={formulaFn}
+          resultLabel="Payoff Time"
+          inputs={[
+            { id: 'balance', label: 'Current Balance', type: 'number', placeholder: '10000', min: 0, unit: '$', defaultValue: 10000 },
+            { id: 'rate', label: 'Annual Interest Rate', type: 'number', placeholder: '18', min: 0, max: 50, step: 0.1, unit: '%', defaultValue: 18 },
+            { id: 'payment', label: 'Monthly Payment', type: 'number', placeholder: '250', min: 0, unit: '$', defaultValue: 250 },
+            { id: 'extra', label: 'Extra Monthly Payment', type: 'number', placeholder: '100', min: 0, unit: '$', defaultValue: 100 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% speed score',
+            zones: [
+              { label: 'Very Slow', color: '#ef4444', from: 0, to: 25 },
+              { label: 'Slow', color: '#f59e0b', from: 25, to: 50 },
+              { label: 'Good', color: '#3b82f6', from: 50, to: 75 },
+              { label: 'Fast', color: '#22c55e', from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Credit Card Calculator', href: '/calculators/credit-card-calculator' },
+            { name: 'Loan Calculator', href: '/calculators/loan-calculator' },
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+            { name: 'Net Worth Calculator', href: '/calculators/net-worth-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-5">
+          <h3 class="font-bold text-red-900 mb-3">Power of Extra Payments</h3>
+          <p class="text-xs text-red-700 mb-2">$10,000 at 18% APR, $250 base payment:</p>
+          <table class="w-full text-xs">
+            <thead><tr class="text-red-700"><th class="text-left pb-1">Extra/mo</th><th class="text-right pb-1">Payoff</th><th class="text-right pb-1">Saved</th></tr></thead>
+            <tbody class="text-red-900">
+              {[['$0','63 mo','—'],['$50','51 mo','$781'],['$100','43 mo','$1,321'],['$250','31 mo','$2,287']].map(r => (
+                <tr class="border-t border-red-100"><td class="py-1">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Avalanche vs Snowball</h3>
+          <div class="text-xs text-blue-800 space-y-2">
+            <div><strong>Avalanche:</strong> Highest rate first → saves most money</div>
+            <div><strong>Snowball:</strong> Smallest balance first → most motivating</div>
+            <div class="text-blue-600 mt-1">Studies show snowball has higher completion rates</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Debt Payoff Strategies Compared</h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        {[
+          { name: 'Avalanche Method', desc: 'Pay highest interest rate first', pros: 'Saves the most money in interest over time', cons: 'Can feel slow if high-rate debt has a large balance', best: 'Mathematically optimal' },
+          { name: 'Snowball Method', desc: 'Pay smallest balance first', pros: 'Quick wins keep you motivated', cons: 'May pay more total interest', best: 'Best for motivation' },
+          { name: 'Consolidation', desc: 'Combine debts at lower rate', pros: 'Simplifies payments, may lower rate', cons: 'Requires good credit; may extend term', best: 'Good for multiple high-rate debts' },
+        ].map(s => (
+          <div class="bg-gray-50 rounded-xl p-5">
+            <div class="font-bold text-gray-900 mb-1">{s.name}</div>
+            <div class="text-xs text-gray-500 mb-2">{s.desc}</div>
+            <div class="text-xs text-green-700 mb-1">✓ {s.pros}</div>
+            <div class="text-xs text-red-600 mb-1">✗ {s.cons}</div>
+            <div class="text-xs font-medium text-blue-600 mt-2">{s.best}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,118 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const monthly = parseFloat(inputs.monthly)||0
+  const months = parseInt(inputs.months)||6
+  const current = parseFloat(inputs.current)||0
+  if(monthly<=0) throw new Error("Enter monthly expenses.")
+  const target = monthly*months
+  const needed = Math.max(0,target-current)
+  const funded = Math.min((current/target)*100,100)
+  const monthsToFull = needed>0&&inputs.savingRate?(needed/parseFloat(inputs.savingRate)):0
+  return {
+    value:"$"+target.toLocaleString("en-US",{maximumFractionDigits:0})+" target",
+    gaugeValue:funded,
+    breakdown:["Monthly expenses: $"+monthly,"Months coverage: "+months,"Target fund: $"+target.toLocaleString("en-US",{maximumFractionDigits:0}),"Current saved: $"+current,"Still needed: $"+needed.toLocaleString("en-US",{maximumFractionDigits:0}),"Funded: "+funded.toFixed(1)+"%"],
+    stats:[
+      {label:"Target Fund",value:"$"+target.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Currently Saved",value:"$"+current.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Still Needed",value:"$"+needed.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"% Funded",value:funded.toFixed(1)+"%"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How many months of expenses should I save?", answer: "3 months: absolute minimum for stable employment. 6 months: standard recommendation for most people. 9-12 months: recommended for self-employed, freelancers, commission-based income, single-income households, or those with health issues." },
+  { question: "What counts as monthly expenses for an emergency fund?", answer: "Only essential expenses: rent/mortgage, food, utilities, transportation, minimum debt payments, insurance, and basic healthcare. Do NOT include entertainment, dining out, or discretionary spending. This makes your fund go further." },
+  { question: "Where should I keep my emergency fund?", answer: "High-yield savings account (HYSA): 4-5% APY, FDIC insured, easy access. Money market accounts are also good. Avoid investing emergency funds in stocks — they can drop 30-50% when you need the money most (job loss often correlates with market downturns)." },
+  { question: "Should I build an emergency fund or pay off debt first?", answer: "Build a small $1,000 starter emergency fund first, then focus on high-interest debt (credit cards). Once high-interest debt is gone, build full 3-6 month fund. The exception: if debt interest is lower than HYSA rate, build fund first." },
+  { question: "Can I use a credit card instead of an emergency fund?", answer: "Credit cards are a backstop, not a substitute. During true emergencies (job loss), issuers sometimes reduce limits or close accounts — exactly when you need them most. Also, credit card debt at 20% APR turns a $3,000 emergency into an ongoing financial burden." }
+]
+---
+<Layout
+  title="Emergency Fund Calculator: How Much Should You Save?"
+  description="Calculate your ideal emergency fund size based on monthly expenses and job stability. Free emergency fund calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Emergency Fund Calculator", href: "/calculators/emergency-fund-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Emergency Fund Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Emergency Fund Calculator"
+          description="Find your ideal emergency fund size and track your progress"
+          formulaId="emergency-fund"
+          formulaFn={formulaFn}
+          resultLabel="Emergency Fund Target"
+          inputs={[
+            {id:"monthly",label:"Monthly Essential Expenses",type:"number",placeholder:"3500",min:0,unit:"$",defaultValue:3500},
+            {id:"months",label:"Months of Coverage",type:"select",options:[{value:"3",label:"3 months (minimum)"},{value:"6",label:"6 months (standard)"},{value:"9",label:"9 months (cautious)"},{value:"12",label:"12 months (very safe)"}],defaultValue:"6"},
+            {id:"current",label:"Current Emergency Savings",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"savingRate",label:"Monthly Savings Rate (for timeline)",type:"number",placeholder:"500",min:0,unit:"$",defaultValue:500}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% funded",
+            zones: [
+              { label: "Not Started", color: "#ef4444", from: 0, to: 10 },
+              { label: "Building", color: "#f59e0b", from: 10, to: 50 },
+              { label: "Nearly There", color: "#3b82f6", from: 50, to: 90 },
+              { label: "Fully Funded", color: "#22c55e", from: 90, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+            { name: "Net Worth Calculator", href: "/calculators/net-worth-calculator" },
+            { name: "Debt Payoff Calculator", href: "/calculators/debt-payoff-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Emergency Fund by Situation</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[["Stable job, dual income","3 months"],["Single income household","6 months"],["Self-employed / freelance","9–12 months"],["Commission-based income","9–12 months"],["Health conditions","9–12 months"],["Near retirement","12+ months"]].map(([s,m]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{s}</span><span class="font-medium">{m}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Emergency Fund Timeline</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Monthly Savings</th><th class="text-right p-2 text-xs font-semibold text-gray-700">3 mo ($10,500)</th><th class="text-right p-2 text-xs font-semibold text-gray-700">6 mo ($21,000)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["$200","4.4 yrs","8.75 yrs"],["$500","1.75 yrs","3.5 yrs"],["$1,000","10.5 mo","1.75 yrs"],["$2,000","5.25 mo","10.5 mo"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Based on $3,500/month in expenses</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Building Your Emergency Fund Faster</h2>
+        <div class="space-y-2">
+          {["Set up automatic transfer on payday — treat it like a bill","Use a separate high-yield savings account (out of sight, out of mind)","Direct any windfall (tax refund, bonus, gift) straight to the fund","Sell unused items and deposit the proceeds","Cut one recurring subscription per month and redirect the savings","Consider a temporary side gig to accelerate the timeline"].map(tip => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-green-500 mt-0.5">•</span><span>{tip}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

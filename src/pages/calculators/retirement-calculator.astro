@@ -1,0 +1,146 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const currentAge = parseInt(inputs.currentAge) || 30
+  const retireAge = parseInt(inputs.retireAge) || 65
+  const savings = parseFloat(inputs.savings) || 0
+  const monthly = parseFloat(inputs.monthly) || 0
+  const rate = parseFloat(inputs.rate) || 7
+  const withdrawalRate = parseFloat(inputs.withdrawal) || 4
+  if (retireAge <= currentAge) throw new Error('Retirement age must be greater than current age.')
+  const years = retireAge - currentAge
+  const r = rate / 100 / 12
+  const months = years * 12
+  const fv = savings * Math.pow(1 + r, months) + monthly * (Math.pow(1 + r, months) - 1) / r
+  const annualWithdrawal = fv * (withdrawalRate / 100)
+  const monthlyIncome = annualWithdrawal / 12
+  const readiness = Math.min((fv / Math.max(monthlyIncome * 12 * 25, 1)) * 100, 100)
+  return {
+    value: '$' + fv.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+    gaugeValue: Math.min(readiness, 100),
+    breakdown: [
+      'Years to retirement: ' + years,
+      'Monthly retirement income: $' + monthlyIncome.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+      'Annual withdrawal (' + withdrawalRate + '%): $' + annualWithdrawal.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+    ],
+    stats: [
+      { label: 'Nest Egg at Retirement', value: '$' + fv.toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+      { label: 'Monthly Income', value: '$' + monthlyIncome.toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+      { label: 'Years to Retire', value: String(years) },
+      { label: 'Withdrawal Rate', value: withdrawalRate + '%' },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How much do I need to retire?', answer: 'A common rule: multiply your desired annual retirement income by 25 (the "4% rule"). To spend $60,000/year in retirement, you need $1.5 million. This assumes a 4% annual withdrawal rate and a 30-year retirement.' },
+  { question: 'What is the 4% rule?', answer: 'Research (the "Trinity Study") found that withdrawing 4% of your portfolio in year one, then adjusting for inflation, has historically lasted 30+ years in almost all market conditions. It is a starting point, not a guarantee.' },
+  { question: 'How much should I contribute to my 401(k)?', answer: 'At minimum, contribute enough to get your full employer match — that is free money. Ideally, save 15% of gross income for retirement. Max 401(k) contribution in 2025 is $23,500 ($31,000 if age 50+).' },
+  { question: 'Roth vs traditional 401(k): which is better?', answer: 'Roth = pay taxes now, withdrawals tax-free. Traditional = tax deduction now, pay taxes in retirement. If you expect to be in a higher tax bracket in retirement, Roth wins. Most experts suggest using both to diversify tax risk.' },
+  { question: 'Can I retire early?', answer: 'Yes. The FIRE (Financial Independence, Retire Early) movement targets 25× annual expenses. With a 3.5% withdrawal rate for longer retirements, you may need 28–30× expenses. Retiring early means more years of withdrawals and less time to save.' },
+]
+---
+<Layout
+  title="Retirement Calculator: How Much Do You Need to Retire?"
+  description="Calculate your retirement nest egg and monthly income. Plan how much to save each month to retire comfortably with our free retirement calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Retirement Calculator', href: '/calculators/retirement-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Retirement Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Retirement Calculator"
+          description="Project your retirement savings and estimate monthly income"
+          formulaId="retirement"
+          formulaFn={formulaFn}
+          resultLabel="Retirement Nest Egg"
+          inputs={[
+            { id: 'currentAge', label: 'Current Age', type: 'number', placeholder: '30', min: 18, max: 80, unit: 'years', defaultValue: 30 },
+            { id: 'retireAge', label: 'Retirement Age', type: 'number', placeholder: '65', min: 30, max: 90, unit: 'years', defaultValue: 65 },
+            { id: 'savings', label: 'Current Savings', type: 'number', placeholder: '50000', min: 0, unit: '$', defaultValue: 50000 },
+            { id: 'monthly', label: 'Monthly Contribution', type: 'number', placeholder: '500', min: 0, unit: '$', defaultValue: 500 },
+            { id: 'rate', label: 'Annual Return Rate', type: 'number', placeholder: '7', min: 0, max: 20, step: 0.1, unit: '%', defaultValue: 7 },
+            { id: 'withdrawal', label: 'Withdrawal Rate', type: 'number', placeholder: '4', min: 1, max: 10, step: 0.1, unit: '%', defaultValue: 4 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% readiness',
+            zones: [
+              { label: 'Off Track', color: '#ef4444', from: 0, to: 40 },
+              { label: 'Behind', color: '#f59e0b', from: 40, to: 70 },
+              { label: 'On Track', color: '#3b82f6', from: 70, to: 90 },
+              { label: 'Ahead', color: '#22c55e', from: 90, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: '401(k) Calculator', href: '/calculators/401k-calculator' },
+            { name: 'Roth IRA Calculator', href: '/calculators/roth-ira-calculator' },
+            { name: 'FIRE Calculator', href: '/calculators/fire-calculator' },
+            { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Retirement Benchmarks by Age</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['Age 30', '1× annual salary'],['Age 40', '3× annual salary'],['Age 50', '6× annual salary'],['Age 60', '8× annual salary'],['Age 67', '10× annual salary']].map(([a, b]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{a}</span><span class="font-medium">{b}</span></div>
+            ))}
+          </div>
+          <p class="text-xs text-blue-700 mt-2">Source: Fidelity Investments guidelines</p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">2025 Contribution Limits</h3>
+          <ul class="text-xs text-amber-800 space-y-1">
+            <li>• 401(k): $23,500 ($31,000 if 50+)</li>
+            <li>• IRA: $7,000 ($8,000 if 50+)</li>
+            <li>• HSA (family): $8,550</li>
+            <li>• Roth IRA phases out at $150k–$165k (single)</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">The 4% Rule Explained</h2>
+        <p class="text-gray-600 text-sm mb-3">The 4% rule states you can safely withdraw 4% of your portfolio in year one, then adjust for inflation each year, for a 30-year retirement. A $1M portfolio supports $40,000/year ($3,333/month) in this model.</p>
+        <div class="grid grid-cols-2 gap-3">
+          {[['$500k','$20,000/yr'],['$1M','$40,000/yr'],['$1.5M','$60,000/yr'],['$2M','$80,000/yr']].map(([nest, income]) => (
+            <div class="bg-gray-50 rounded-lg p-3 text-center">
+              <div class="font-bold text-blue-600 text-sm">{nest}</div>
+              <div class="text-xs text-gray-500">nest egg</div>
+              <div class="font-semibold text-gray-800 text-xs mt-1">{income}/yr income</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Account Types Comparison</h2>
+        <table class="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr>
+            <th class="text-left p-2 font-semibold text-gray-700">Account</th>
+            <th class="text-left p-2 font-semibold text-gray-700">Tax Now</th>
+            <th class="text-left p-2 font-semibold text-gray-700">Tax Later</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[['Traditional 401k','No deduction','Yes, on withdrawal'],['Roth 401k','Yes (after-tax)','No (tax-free)'],['Traditional IRA','Deductible','Yes, on withdrawal'],['Roth IRA','Yes (after-tax)','No (tax-free)']].map(r => (
+              <tr><td class="p-2">{r[0]}</td><td class="p-2">{r[1]}</td><td class="p-2">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

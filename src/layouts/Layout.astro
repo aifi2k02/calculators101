@@ -1,0 +1,172 @@
+---
+import '../styles/global.css'
+import siteConfig from '../lib/siteConfig'
+
+interface BreadcrumbItem {
+  name: string
+  href: string
+}
+
+interface Props {
+  title: string
+  description: string
+  canonical?: string
+  ogType?: 'website' | 'article'
+  breadcrumbs?: BreadcrumbItem[]
+  noSchema?: boolean
+}
+
+const { title, description, canonical, ogType = 'website', breadcrumbs, noSchema } = Astro.props
+
+const { siteUrl, siteName, allowIndexing, twitterHandle, locale } = siteConfig
+
+const pageUrl = canonical ?? (siteUrl + Astro.url.pathname.replace(/\/$/, '') || siteUrl)
+const fullTitle = `${title} | ${siteName}`
+const robotsContent = allowIndexing ? 'index, follow' : 'noindex, nofollow'
+
+// BreadcrumbList JSON-LD
+const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbs.map((crumb, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: crumb.name,
+        item: siteUrl + crumb.href,
+      })),
+    }
+  : null
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary SEO -->
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robotsContent} />
+    <link rel="canonical" href={pageUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:locale" content={locale} />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content={twitterHandle} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#2563eb" />
+
+    <!-- BreadcrumbList structured data -->
+    {breadcrumbSchema && !noSchema && (
+      <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+    )}
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">C</span>
+          </div>
+          <span class="font-bold text-gray-900 text-lg">{siteName}</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600" aria-label="Main navigation">
+          <a href="/calculators/financial" class="hover:text-blue-600 transition-colors">Financial</a>
+          <a href="/calculators/fitness" class="hover:text-blue-600 transition-colors">Fitness</a>
+          <a href="/calculators/math" class="hover:text-blue-600 transition-colors">Math</a>
+          <a href="/calculators/other" class="hover:text-blue-600 transition-colors">Other</a>
+        </nav>
+        <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+      <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white px-4 py-3 flex flex-col gap-3 text-sm font-medium text-gray-700" role="navigation" aria-label="Mobile navigation">
+        <a href="/calculators/financial" class="hover:text-blue-600">Financial</a>
+        <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a>
+        <a href="/calculators/math" class="hover:text-blue-600">Math</a>
+        <a href="/calculators/other" class="hover:text-blue-600">Other</a>
+      </div>
+    </header>
+
+    <main class="flex-1" id="main-content">
+      <slot />
+    </main>
+
+    <footer class="bg-gray-900 text-gray-400 mt-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span class="text-white font-bold text-xs">C</span>
+              </div>
+              <span class="text-white font-bold">{siteName}</span>
+            </div>
+            <p class="text-xs leading-relaxed">Free online calculators for finance, health, math, and everyday life.</p>
+          </div>
+          <div>
+            <h3 class="text-white font-semibold text-sm mb-3">Financial</h3>
+            <ul class="space-y-2 text-xs">
+              <li><a href="/calculators/mortgage-calculator" class="hover:text-white transition-colors">Mortgage</a></li>
+              <li><a href="/calculators/loan-calculator" class="hover:text-white transition-colors">Loan</a></li>
+              <li><a href="/calculators/compound-interest-calculator" class="hover:text-white transition-colors">Compound Interest</a></li>
+              <li><a href="/calculators/retirement-calculator" class="hover:text-white transition-colors">Retirement</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-white font-semibold text-sm mb-3">Fitness</h3>
+            <ul class="space-y-2 text-xs">
+              <li><a href="/calculators/bmi-calculator" class="hover:text-white transition-colors">BMI</a></li>
+              <li><a href="/calculators/calorie-calculator" class="hover:text-white transition-colors">Calorie</a></li>
+              <li><a href="/calculators/tdee-calculator" class="hover:text-white transition-colors">TDEE</a></li>
+              <li><a href="/calculators/body-fat-calculator" class="hover:text-white transition-colors">Body Fat</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-white font-semibold text-sm mb-3">Math</h3>
+            <ul class="space-y-2 text-xs">
+              <li><a href="/calculators/percentage-calculator" class="hover:text-white transition-colors">Percentage</a></li>
+              <li><a href="/calculators/scientific" class="hover:text-white transition-colors">Scientific</a></li>
+              <li><a href="/calculators/fraction-calculator" class="hover:text-white transition-colors">Fraction</a></li>
+              <li><a href="/calculators/average-calculator" class="hover:text-white transition-colors">Average</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+          <p>© {new Date().getFullYear()} {siteName}. All rights reserved.</p>
+          <div class="flex gap-4">
+            <a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="/terms" class="hover:text-white transition-colors">Terms of Use</a>
+            <a href="/contact" class="hover:text-white transition-colors">Contact</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const btn = document.getElementById('mobile-menu-btn')
+      const menu = document.getElementById('mobile-menu')
+      btn?.addEventListener('click', () => {
+        const isHidden = menu?.classList.toggle('hidden')
+        btn.setAttribute('aria-expanded', String(!isHidden))
+      })
+    </script>
+  </body>
+</html>

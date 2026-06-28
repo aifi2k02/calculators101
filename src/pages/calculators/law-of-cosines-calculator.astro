@@ -1,0 +1,148 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const a = parseFloat(inputs.a)||0
+  const b = parseFloat(inputs.b)||0
+  const c = parseFloat(inputs.c)||0
+  const angleC = parseFloat(inputs.angleC)||0
+  if(a>0&&b>0&&angleC>0){
+    const C=angleC*Math.PI/180
+    const cSide=Math.sqrt(a*a+b*b-2*a*b*Math.cos(C))
+    const cosA=(b*b+cSide*cSide-a*a)/(2*b*cSide)
+    const A=Math.acos(cosA)*180/Math.PI
+    const B=180-angleC-A
+    const area=0.5*a*b*Math.sin(C)
+    return {
+      value:"c = "+cSide.toFixed(4),
+      gaugeValue:Math.min(cSide/100*100,100),
+      breakdown:["Given: a="+a+", b="+b+", C="+angleC+"deg","c = sqrt(a^2+b^2-2ab*cos(C)) = "+cSide.toFixed(4),"Angle A = "+A.toFixed(4)+"deg","Angle B = "+B.toFixed(4)+"deg","Area = "+area.toFixed(4)],
+      stats:[
+        {label:"Side c",value:cSide.toFixed(4)},
+        {label:"Angle A",value:A.toFixed(4)+"°"},
+        {label:"Angle B",value:B.toFixed(4)+"°"},
+        {label:"Area",value:area.toFixed(4)},
+      ]
+    }
+  } else if(a>0&&b>0&&c>0){
+    const cosC=(a*a+b*b-c*c)/(2*a*b)
+    if(Math.abs(cosC)>1) throw new Error("Invalid triangle: these sides do not form a triangle.")
+    const C=Math.acos(cosC)*180/Math.PI
+    const cosA=(b*b+c*c-a*a)/(2*b*c)
+    const A=Math.acos(cosA)*180/Math.PI
+    const B=180-C-A
+    const s=(a+b+c)/2
+    const area=Math.sqrt(s*(s-a)*(s-b)*(s-c))
+    return {
+      value:"C = "+C.toFixed(4)+"deg",
+      gaugeValue:Math.min(C,100),
+      breakdown:["Given: a="+a+", b="+b+", c="+c,"cos(C) = (a^2+b^2-c^2)/(2ab) = "+cosC.toFixed(4),"Angle C = "+C.toFixed(4)+"deg","Angle A = "+A.toFixed(4)+"deg","Angle B = "+B.toFixed(4)+"deg","Area (Heron) = "+area.toFixed(4)],
+      stats:[
+        {label:"Angle C",value:C.toFixed(4)+"°"},
+        {label:"Angle A",value:A.toFixed(4)+"°"},
+        {label:"Angle B",value:B.toFixed(4)+"°"},
+        {label:"Area",value:area.toFixed(4)},
+      ]
+    }
+  }
+  throw new Error("Enter all 3 sides (SSS), or sides a, b and angle C (SAS).")
+
+`
+
+const faqs = [
+  { question: "What is the law of cosines?", answer: "For a triangle with sides a, b, c and angle C opposite side c: c^2 = a^2 + b^2 - 2ab*cos(C). This generalizes the Pythagorean theorem: when C = 90deg, cos(90) = 0 and c^2 = a^2 + b^2. Use it when you know SSS (three sides) or SAS (two sides + included angle)." },
+  { question: "When should I use the law of cosines vs law of sines?", answer: "Law of cosines: use for SSS (three sides) or SAS (two sides + included angle). Law of sines: use for AAS (two angles + one side) or ASA (two angles + included side). For SSA (two sides + non-included angle), law of sines has the ambiguous case — law of cosines may be clearer." },
+  { question: "How does the law of cosines reduce to Pythagoras?", answer: "In a right triangle, the angle C at the right angle is 90 degrees. cos(90) = 0, so 2ab*cos(C) = 0. The law of cosines becomes: c^2 = a^2 + b^2 + 0 = a^2 + b^2. This is exactly the Pythagorean theorem! The law of cosines is the general case." },
+  { question: "How do I find all angles of a triangle from three sides (SSS)?", answer: "Use the law of cosines to find each angle: cos(A) = (b^2+c^2-a^2)/(2bc), cos(B) = (a^2+c^2-b^2)/(2ac), cos(C) = (a^2+b^2-c^2)/(2ab). Take arccos() to get the angles in degrees. Verify: A + B + C = 180 degrees." },
+  { question: "What is the triangle inequality?", answer: "For sides a, b, c to form a valid triangle: a + b > c, a + c > b, and b + c > a. All three conditions must hold. The law of cosines will give cos(C) outside [-1, 1] for invalid triangles, which this calculator detects. Examples: sides 3,4,5 valid; sides 1,2,10 invalid (1+2 < 10)." }
+]
+---
+<Layout
+  title="Law of Cosines Calculator: Solve Any Triangle"
+  description="Use the law of cosines to solve any triangle. Find side lengths and angles from SSS or SAS configurations. Free law of cosines calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Law of Cosines Calculator", href: "/calculators/law-of-cosines-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Law of Cosines Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Law of Cosines Calculator"
+          description="Solve triangles using the law of cosines (SSS or SAS)"
+          formulaId="law-of-cosines"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            {id:"a",label:"Side a",type:"number",placeholder:"5",min:0,step:0.001,defaultValue:5},
+            {id:"b",label:"Side b",type:"number",placeholder:"7",min:0,step:0.001,defaultValue:7},
+            {id:"c",label:"Side c (for SSS — leave 0 for SAS)",type:"number",placeholder:"0",min:0,step:0.001,defaultValue:0},
+            {id:"angleC",label:"Angle C in degrees (for SAS — leave 0 for SSS)",type:"number",placeholder:"60",min:0,max:180,step:0.001,defaultValue:60}
+          ]}
+          gauge={{
+            min: 0, max: 180, unit: "degrees",
+            zones: [
+              { label: "Acute angle", color: "#22c55e", from: 0, to: 90 },
+              { label: "Right angle", color: "#3b82f6", from: 85, to: 95 },
+              { label: "Obtuse angle", color: "#f59e0b", from: 90, to: 180 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Distance Calculator", href: "/calculators/distance-calculator" },
+            { name: "Angle Converter", href: "/calculators/angle-converter-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Law of Cosines</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-2 mb-2">
+            <div>c² = a² + b² − 2ab·cos(C)</div>
+            <div>cos(C) = (a²+b²−c²) / 2ab</div>
+          </div>
+          <div class="text-xs text-blue-700">Use for SSS or SAS triangles.<br/>When C=90°, reduces to Pythagoras.</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Triangle-Solving Decision Guide</h2>
+        <div class="space-y-2">
+          {[
+            {case:"SSS (3 sides known)",law:"Law of Cosines → find all angles"},
+            {case:"SAS (2 sides + included angle)",law:"Law of Cosines → find missing side"},
+            {case:"ASA (2 angles + included side)",law:"Law of Sines → find missing sides"},
+            {case:"AAS (2 angles + non-included side)",law:"Law of Sines → find missing sides"},
+            {case:"SSA (2 sides + non-included angle)",law:"Law of Sines (ambiguous case) or Law of Cosines"},
+            {case:"AAA (3 angles only)",law:"Cannot determine side lengths — infinitely many triangles"},
+          ].map(c => (
+            <div class="bg-gray-50 rounded-lg p-2"><div class="font-semibold text-xs text-blue-700">{c.case}</div><div class="text-xs text-gray-600">{c.law}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Cosine Values to Remember</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Angle</th><th class="p-2 text-xs font-semibold text-right">cos(θ)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["0°","1"],["30°","√3/2 ≈ 0.866"],["45°","√2/2 ≈ 0.707"],["60°","1/2 = 0.5"],["90°","0"],["120°","−0.5"],["180°","−1"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-mono">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

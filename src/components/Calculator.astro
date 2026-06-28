@@ -1,0 +1,473 @@
+---
+export interface CalcInput {
+  id: string
+  label: string
+  type: 'number' | 'select' | 'date' | 'text'
+  placeholder?: string
+  min?: number
+  max?: number
+  step?: number | string
+  unit?: string
+  options?: { value: string; label: string }[]
+  defaultValue?: string | number
+}
+
+export interface GaugeZone {
+  label: string
+  /** hex color e.g. '#22c55e' */
+  color: string
+  from: number
+  to: number
+}
+
+export interface Props {
+  title: string
+  description: string
+  inputs: CalcInput[]
+  resultLabel: string
+  resultUnit?: string
+  formulaId: string
+  /** Serialized formula function body: receives `inputs` object, returns
+   *  { value: string, breakdown?: string[], gaugeValue?: number, stats?: {label:string,value:string}[] }
+   *  or throws an Error */
+  formulaFn: string
+  relatedCalcs?: { name: string; href: string }[]
+  faqs?: { question: string; answer: string }[]
+  /** Optional gauge configuration — if provided, formulaFn should return gaugeValue */
+  gauge?: {
+    min: number
+    max: number
+    /** Visual cap for the right edge (can differ from max if last zone is open-ended) */
+    clampMax?: number
+    unit?: string
+    zones: GaugeZone[]
+  }
+}
+
+const { title, description, inputs, resultLabel, resultUnit, formulaId, formulaFn, relatedCalcs = [], faqs = [], gauge } = Astro.props
+
+// Pre-serialize gauge for client script
+const gaugeJson = gauge ? JSON.stringify(gauge) : 'null'
+
+// WebApplication structured data for every calculator
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: title,
+  description,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  browserRequirements: 'Requires JavaScript',
+}
+
+// FAQPage schema
+const faqSchema = faqs.length > 0 ? {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question',
+    name: f.question,
+    acceptedAnswer: { '@type': 'Answer', text: f.answer },
+  })),
+} : null
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
+{faqSchema && <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />}
+
+<div class="max-w-2xl mx-auto">
+  <!-- Calculator card -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden" id={`calc-card-${formulaId}`}>
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+      <h1 class="text-xl font-bold text-white">{title}</h1>
+      <p class="text-blue-100 text-sm mt-1">{description}</p>
+    </div>
+
+    <div class="p-6">
+      <!-- Inputs -->
+      <div class="space-y-4" id={`calc-inputs-${formulaId}`}>
+        {inputs.map((input) => (
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for={`${formulaId}-${input.id}`}>
+              {input.label}{input.unit && <span class="text-gray-400 font-normal ml-1">({input.unit})</span>}
+            </label>
+            {input.type === 'select' ? (
+              <select
+                id={`${formulaId}-${input.id}`}
+                data-input-id={input.id}
+                class="calc-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                {input.options?.map(opt => (
+                  <option value={opt.value} selected={opt.value === String(input.defaultValue)}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={input.type === 'date' ? 'date' : input.type === 'text' ? 'text' : 'number'}
+                id={`${formulaId}-${input.id}`}
+                data-input-id={input.id}
+                class="calc-input w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={input.placeholder ?? ''}
+                min={input.type === 'number' ? input.min : undefined}
+                max={input.type === 'number' ? input.max : undefined}
+                step={input.type === 'number' ? (input.step ?? 'any') : undefined}
+                value={input.defaultValue ?? ''}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <!-- Calculate button -->
+      <button
+        id={`calc-btn-${formulaId}`}
+        class="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-sm"
+      >
+        Calculate
+      </button>
+
+      <!-- Result -->
+      <div id={`calc-result-${formulaId}`} class="hidden mt-5">
+
+        <!-- Main result card (color changes dynamically via JS) -->
+        <div id={`result-card-${formulaId}`} class="rounded-xl p-5 border transition-colors duration-300 bg-blue-50 border-blue-200">
+          <p id={`result-label-display-${formulaId}`} class="text-sm font-medium mb-1 text-blue-700">{resultLabel}</p>
+          <p class="text-3xl font-bold text-gray-900">
+            <span id={`result-value-${formulaId}`}>—</span>
+            {resultUnit && <span class="text-lg font-normal text-gray-500 ml-1">{resultUnit}</span>}
+          </p>
+          <!-- Zone badge (shown when gauge is active) -->
+          <div id={`zone-badge-${formulaId}`} class="hidden mt-2">
+            <span id={`zone-label-${formulaId}`} class="inline-block text-xs font-semibold px-2.5 py-1 rounded-full"></span>
+          </div>
+        </div>
+
+        <!-- Stats grid (optional secondary metrics) -->
+        <div id={`result-stats-${formulaId}`} class="hidden mt-3 grid grid-cols-2 gap-2"></div>
+
+        <!-- Gauge -->
+        {gauge && (
+          <div class="mt-4" id={`gauge-container-${formulaId}`}>
+            <div class="relative h-8 rounded-full overflow-hidden flex" id={`gauge-bar-${formulaId}`}>
+              {gauge.zones.map((zone, i) => {
+                const visMax = gauge.clampMax ?? gauge.max
+                const total = visMax - gauge.min
+                const start = Math.max(zone.from, gauge.min)
+                const end = Math.min(zone.to, visMax)
+                const width = ((end - start) / total * 100).toFixed(2)
+                return (
+                  <div
+                    class="h-full flex items-center justify-center"
+                    style={`width:${width}%;background:${zone.color};`}
+                    title={zone.label}
+                  >
+                    <span class="text-white text-xs font-semibold drop-shadow px-1 truncate hidden sm:block">{zone.label}</span>
+                  </div>
+                )
+              })}
+            </div>
+            <!-- Pointer arrow + value label -->
+            <div class="relative mt-1 h-10 overflow-visible" id={`gauge-pointer-wrap-${formulaId}`}>
+              <div
+                id={`gauge-pointer-${formulaId}`}
+                class="absolute top-0 transition-all duration-500 ease-out flex flex-col items-center gap-0"
+                style="left:0%;opacity:0;transform:translateX(-50%)"
+              >
+                <svg width="12" height="8" viewBox="0 0 12 8" class="block shrink-0">
+                  <polygon points="6,0 0,8 12,8" fill="#1e40af"/>
+                </svg>
+                <span id={`gauge-val-label-${formulaId}`} class="text-xs font-bold text-blue-900 whitespace-nowrap leading-tight mt-0.5"></span>
+              </div>
+            </div>
+            <!-- Min / Max scale labels -->
+            <div class="flex justify-between mt-1" id={`gauge-scale-${formulaId}`}>
+              <span class="text-xs text-gray-400">{gauge.min}{gauge.unit ? ' '+gauge.unit : ''}</span>
+              <span class="text-xs text-gray-400">{gauge.clampMax ?? gauge.max}{gauge.unit ? ' '+gauge.unit : ''}</span>
+            </div>
+          </div>
+        )}
+
+        <!-- Breakdown -->
+        <div id={`result-breakdown-${formulaId}`} class="mt-4 text-sm text-gray-600 space-y-0.5 bg-gray-50 rounded-xl p-4 border border-gray-100"></div>
+
+        <!-- Copy / Share row -->
+        <div class="mt-3 flex gap-2">
+          <button
+            id={`copy-btn-${formulaId}`}
+            class="flex-1 text-xs border border-gray-200 hover:border-gray-300 bg-white py-2 px-3 rounded-lg text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Copy result
+          </button>
+          <button
+            id={`share-btn-${formulaId}`}
+            class="flex-1 text-xs border border-gray-200 hover:border-gray-300 bg-white py-2 px-3 rounded-lg text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+            Share
+          </button>
+        </div>
+
+        <!-- AI Explain -->
+        <button
+          id={`ai-btn-${formulaId}`}
+          class="mt-3 w-full border border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-600 hover:text-blue-700 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm flex items-center justify-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.346.346a.5.5 0 01-.36.154H9.06a.5.5 0 01-.354-.854l.003-.003z"/>
+          </svg>
+          Explain this result with AI
+        </button>
+        <div id={`ai-result-${formulaId}`} class="hidden mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900 leading-relaxed"></div>
+      </div>
+
+      <!-- Error -->
+      <div id={`calc-error-${formulaId}`} class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-start gap-2">
+        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id={`calc-error-text-${formulaId}`}></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Related calculators -->
+{relatedCalcs.length > 0 && (
+  <div class="mt-8 max-w-2xl mx-auto">
+    <h2 class="text-base font-semibold text-gray-800 mb-3">Related Calculators</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {relatedCalcs.map(rc => (
+        <a href={rc.href} class="bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:text-blue-700 transition-colors font-medium">
+          {rc.name}
+        </a>
+      ))}
+    </div>
+  </div>
+)}
+
+<!-- FAQs -->
+{faqs.length > 0 && (
+  <div class="mt-8 max-w-2xl mx-auto">
+    <h2 class="text-base font-semibold text-gray-800 mb-3">Frequently Asked Questions</h2>
+    <div class="space-y-3">
+      {faqs.map(faq => (
+        <details class="bg-white border border-gray-200 rounded-lg px-4 py-3 group">
+          <summary class="text-sm font-medium text-gray-800 cursor-pointer list-none flex justify-between items-center gap-3">
+            {faq.question}
+            <svg class="w-4 h-4 text-gray-400 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <p class="mt-2 text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+)}
+
+<script define:vars={{ formulaId, formulaFn, gaugeJson }}>
+  const gauge = gaugeJson ? JSON.parse(gaugeJson) : null
+
+  // Elements
+  const btn         = document.getElementById(`calc-btn-${formulaId}`)
+  const resultBox   = document.getElementById(`calc-result-${formulaId}`)
+  const resultCard  = document.getElementById(`result-card-${formulaId}`)
+  const resultLabel = document.getElementById(`result-label-display-${formulaId}`)
+  const resultValue = document.getElementById(`result-value-${formulaId}`)
+  const resultStats = document.getElementById(`result-stats-${formulaId}`)
+  const resultBreak = document.getElementById(`result-breakdown-${formulaId}`)
+  const errorBox    = document.getElementById(`calc-error-${formulaId}`)
+  const errorText   = document.getElementById(`calc-error-text-${formulaId}`)
+  const zoneBadge   = document.getElementById(`zone-badge-${formulaId}`)
+  const zoneLabel   = document.getElementById(`zone-label-${formulaId}`)
+  const pointer     = document.getElementById(`gauge-pointer-${formulaId}`)
+  const aiBtn       = document.getElementById(`ai-btn-${formulaId}`)
+  const aiResult    = document.getElementById(`ai-result-${formulaId}`)
+  const copyBtn     = document.getElementById(`copy-btn-${formulaId}`)
+  const shareBtn    = document.getElementById(`share-btn-${formulaId}`)
+
+  const calculate = new Function('inputs', formulaFn)
+
+  // Zone theme: colors for the result card tint
+  const zoneThemes = {
+    '#22c55e': { bg: '#f0fdf4', border: '#86efac', text: '#15803d', badge: '#dcfce7', badgeText: '#166534' },
+    '#4ade80': { bg: '#f0fdf4', border: '#86efac', text: '#15803d', badge: '#dcfce7', badgeText: '#166534' },
+    '#3b82f6': { bg: '#eff6ff', border: '#93c5fd', text: '#1d4ed8', badge: '#dbeafe', badgeText: '#1e40af' },
+    '#60a5fa': { bg: '#eff6ff', border: '#93c5fd', text: '#1d4ed8', badge: '#dbeafe', badgeText: '#1e40af' },
+    '#facc15': { bg: '#fefce8', border: '#fde047', text: '#854d0e', badge: '#fef9c3', badgeText: '#713f12' },
+    '#f97316': { bg: '#fff7ed', border: '#fdba74', text: '#9a3412', badge: '#ffedd5', badgeText: '#7c2d12' },
+    '#ef4444': { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b', badge: '#fee2e2', badgeText: '#7f1d1d' },
+    '#dc2626': { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b', badge: '#fee2e2', badgeText: '#7f1d1d' },
+    '#7c3aed': { bg: '#f5f3ff', border: '#c4b5fd', text: '#5b21b6', badge: '#ede9fe', badgeText: '#4c1d95' },
+  }
+
+  function getTheme(color) {
+    const key = color?.toLowerCase()
+    return zoneThemes[key] || { bg: '#eff6ff', border: '#93c5fd', text: '#1d4ed8', badge: '#dbeafe', badgeText: '#1e40af' }
+  }
+
+  function getInputs() {
+    const vals = {}
+    document.querySelectorAll(`[data-input-id]`).forEach(el => { vals[el.dataset.inputId] = el.value })
+    return vals
+  }
+
+  const pointerValLabel = document.getElementById(`gauge-val-label-${formulaId}`)
+
+  function updateGauge(gaugeValue) {
+    if (!gauge || !pointer || gaugeValue == null) return
+    const visMax = gauge.clampMax ?? gauge.max
+    const clamped = Math.min(Math.max(gaugeValue, gauge.min), visMax)
+    const pct = ((clamped - gauge.min) / (visMax - gauge.min) * 100)
+    pointer.style.left = pct.toFixed(2) + '%'
+    pointer.style.opacity = '1'
+    if (pointerValLabel) {
+      pointerValLabel.textContent = gaugeValue.toFixed(1) + (gauge.unit ?? '')
+    }
+    // Shift label so it never clips the left or right edge
+    // Near left edge: slide right; near right edge: slide left; middle: center
+    const shift = pct < 15 ? -(pct / 15) * 50 : pct > 85 ? -(50 + ((pct - 85) / 15) * 50) : -50
+    pointer.style.transform = `translateX(${shift.toFixed(1)}%)`
+  }
+
+  function findZone(gaugeValue) {
+    if (!gauge || gaugeValue == null) return null
+    return gauge.zones.find(z => gaugeValue >= z.from && gaugeValue < z.to)
+      ?? gauge.zones[gauge.zones.length - 1]
+  }
+
+  function renderBreakdown(breakdown) {
+    if (!resultBreak || !breakdown?.length) return
+    resultBreak.innerHTML = breakdown.map(line => {
+      if (line === '—' || line === '') return '<hr class="border-gray-200 my-1">'
+      return `<div class="flex gap-2 leading-relaxed"><span class="text-gray-400 shrink-0">›</span><span>${line}</span></div>`
+    }).join('')
+  }
+
+  function renderStats(stats) {
+    if (!resultStats || !stats?.length) { resultStats?.classList.add('hidden'); return }
+    resultStats.innerHTML = stats.map(s =>
+      `<div class="bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-center">
+        <div class="text-xs text-gray-500 mb-0.5">${s.label}</div>
+        <div class="text-sm font-semibold text-gray-900">${s.value}</div>
+      </div>`
+    ).join('')
+    resultStats.classList.remove('hidden')
+    resultStats.style.gridTemplateColumns = `repeat(${Math.min(stats.length, 3)}, minmax(0, 1fr))`
+  }
+
+  function run() {
+    if (errorBox) { errorBox.classList.add('hidden') }
+    try {
+      const inputs = getInputs()
+      const result = calculate(inputs)
+
+      // Main value
+      if (resultValue) resultValue.textContent = result.value
+
+      // Breakdown
+      renderBreakdown(result.breakdown)
+
+      // Stats grid
+      renderStats(result.stats)
+
+      // Gauge + zone coloring
+      const zone = findZone(result.gaugeValue)
+      if (zone && resultCard) {
+        const theme = getTheme(zone.color)
+        resultCard.style.backgroundColor = theme.bg
+        resultCard.style.borderColor = theme.border
+        if (resultLabel) resultLabel.style.color = theme.text
+        if (zoneBadge && zoneLabel) {
+          zoneLabel.textContent = zone.label
+          zoneLabel.style.backgroundColor = theme.badge
+          zoneLabel.style.color = theme.badgeText
+          zoneBadge.classList.remove('hidden')
+        }
+        updateGauge(result.gaugeValue)
+      } else {
+        // reset to default blue
+        if (resultCard) {
+          resultCard.style.backgroundColor = '#eff6ff'
+          resultCard.style.borderColor = '#93c5fd'
+        }
+        if (resultLabel) resultLabel.style.color = '#1d4ed8'
+        if (zoneBadge) zoneBadge.classList.add('hidden')
+      }
+
+      resultBox?.classList.remove('hidden')
+    } catch (err) {
+      if (errorText) errorText.textContent = err.message ?? 'Please check your inputs and try again.'
+      errorBox?.classList.remove('hidden')
+      resultBox?.classList.add('hidden')
+    }
+  }
+
+  // Button click
+  btn?.addEventListener('click', run)
+
+  // Live calculation — debounced
+  let debounceTimer
+  document.querySelectorAll(`[data-input-id]`).forEach(el => {
+    el.addEventListener('input', () => {
+      clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(run, 350)
+    })
+    el.addEventListener('change', () => {
+      clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(run, 100)
+    })
+  })
+
+  // Auto-calculate on load if defaults are set
+  const hasDefaults = Array.from(document.querySelectorAll('[data-input-id]')).some(el => el.value !== '')
+  if (hasDefaults) setTimeout(run, 50)
+
+  // AI explain
+  aiBtn?.addEventListener('click', async () => {
+    aiResult?.classList.remove('hidden')
+    if (aiResult) aiResult.textContent = '✨ Generating explanation...'
+    const inputs = getInputs()
+    const value = resultValue?.textContent
+    try {
+      const res = await fetch('/api/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ calculatorId: formulaId, inputs, result: value })
+      })
+      const data = await res.json()
+      if (aiResult) aiResult.textContent = data.explanation ?? 'Could not generate explanation.'
+    } catch {
+      if (aiResult) aiResult.textContent = 'AI explanation unavailable. Please try again later.'
+    }
+  })
+
+  // Copy
+  copyBtn?.addEventListener('click', () => {
+    navigator.clipboard.writeText(resultValue?.textContent ?? '').then(() => {
+      if (copyBtn) copyBtn.textContent = '✓ Copied!'
+      setTimeout(() => {
+        if (copyBtn) copyBtn.innerHTML = '<svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>Copy result'
+      }, 2000)
+    })
+  })
+
+  // Share
+  shareBtn?.addEventListener('click', () => {
+    if (navigator.share) {
+      navigator.share({ title: document.title, url: window.location.href })
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+      if (shareBtn) shareBtn.textContent = '✓ Link copied!'
+      setTimeout(() => {
+        if (shareBtn) shareBtn.innerHTML = '<svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>Share'
+      }, 2000)
+    }
+  })
+</script>

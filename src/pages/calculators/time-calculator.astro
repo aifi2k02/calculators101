@@ -1,0 +1,138 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const h1 = parseFloat(inputs.h1)||0
+  const m1 = parseFloat(inputs.m1)||0
+  const s1 = parseFloat(inputs.s1)||0
+  const h2 = parseFloat(inputs.h2)||0
+  const m2 = parseFloat(inputs.m2)||0
+  const s2 = parseFloat(inputs.s2)||0
+  const operation = inputs.operation||"add"
+  const toSec = (h,m,s) => h*3600+m*60+s
+  const sec1 = toSec(h1,m1,s1)
+  const sec2 = toSec(h2,m2,s2)
+  let total = operation==="add"?sec1+sec2:sec1-sec2
+  const isNeg = total<0
+  total = Math.abs(total)
+  const rH = Math.floor(total/3600)
+  const rM = Math.floor((total%3600)/60)
+  const rS = Math.round(total%60)
+  const result = (isNeg?"-":"")+(rH>0?rH+"h ":"")+rM+"m "+rS+"s"
+  return {
+    value:result,
+    gaugeValue:Math.min(total/86400*100,100),
+    breakdown:["Time 1: "+h1+"h "+m1+"m "+s1+"s = "+sec1+" seconds","Time 2: "+h2+"h "+m2+"m "+s2+"s = "+sec2+" seconds","Operation: "+operation,"Result: "+(isNeg?"-":"")+rH+"h "+rM+"m "+rS+"s","Total seconds: "+total,"Total minutes: "+(total/60).toFixed(2),"Total hours: "+(total/3600).toFixed(4)],
+    stats:[
+      {label:"Result",value:result},
+      {label:"Total Hours",value:(total/3600).toFixed(3)},
+      {label:"Total Minutes",value:(total/60).toFixed(2)},
+      {label:"Total Seconds",value:String(total)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I add hours and minutes?", answer: "Add hours together, then minutes. If minutes exceed 60, carry over to hours. Example: 2h 45m + 1h 30m = 3h 75m = 4h 15m (carry 60 minutes = 1 hour). For larger durations, convert to total seconds first, then convert back to hours/minutes/seconds." },
+  { question: "How do I calculate elapsed time?", answer: "Subtract start time from end time. If end < start, add 24 hours (for same-day crossing midnight). Example: 9:45 AM to 2:30 PM = 4 hours 45 minutes. In seconds: end - start = 14h30m - 9h45m = 4h45m = 17,100 seconds. Convert between units freely." },
+  { question: "How many seconds are in a day, week, year?", answer: "60 seconds = 1 minute. 3,600 seconds = 1 hour. 86,400 seconds = 1 day. 604,800 seconds = 1 week. 31,536,000 seconds = 1 year (365 days). 31,557,600 seconds = 1 Julian year (365.25 days). Programmers often remember 86400 s/day and 3.15 × 10^7 s/year." },
+  { question: "How do I convert decimal hours to hours and minutes?", answer: "0.5 hours = 30 minutes. 0.75 hours = 45 minutes. 2.25 hours = 2 hours 15 minutes. Formula: hours = floor(decimal). minutes = round((decimal - floor(decimal)) × 60). Example: 3.833 hours = 3 hours + (0.833 × 60) = 3 hours 50 minutes." },
+  { question: "How do time zones work?", answer: "The Earth is divided into 24 standard time zones, each generally 15 degrees of longitude wide. UTC (Coordinated Universal Time) is the reference. US time zones: Eastern = UTC-5 (winter), UTC-4 (summer); Central = UTC-6/-5; Mountain = UTC-7/-6; Pacific = UTC-8/-7. Daylight Saving Time (DST) shifts clocks forward 1 hour in spring and back in fall (not all regions observe DST)." }
+]
+---
+<Layout
+  title="Time Calculator: Add, Subtract & Convert Hours Minutes Seconds"
+  description="Add or subtract time durations. Convert between hours, minutes, seconds, and days. Calculate elapsed time. Free time calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Time Calculator", href: "/calculators/time-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Time Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Time Calculator"
+          description="Add, subtract, and convert time durations"
+          formulaId="time"
+          formulaFn={formulaFn}
+          resultLabel="Duration"
+          inputs={[
+            {id:"h1",label:"Hours (time 1)",type:"number",placeholder:"2",min:0,step:1,defaultValue:2},
+            {id:"m1",label:"Minutes (time 1)",type:"number",placeholder:"30",min:0,max:59,step:1,defaultValue:30},
+            {id:"s1",label:"Seconds (time 1)",type:"number",placeholder:"0",min:0,max:59,step:1,defaultValue:0},
+            {id:"operation",label:"Operation",type:"select",options:[
+              {value:"add",label:"Add (+)"},
+              {value:"subtract",label:"Subtract (−)"},
+            ],defaultValue:"add"},
+            {id:"h2",label:"Hours (time 2)",type:"number",placeholder:"1",min:0,step:1,defaultValue:1},
+            {id:"m2",label:"Minutes (time 2)",type:"number",placeholder:"45",min:0,max:59,step:1,defaultValue:45},
+            {id:"s2",label:"Seconds (time 2)",type:"number",placeholder:"30",min:0,max:59,step:1,defaultValue:30}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "< 1 hour", color: "#22c55e", from: 0, to: 4 },
+              { label: "1-8 hours", color: "#3b82f6", from: 4, to: 33 },
+              { label: "8-24 hours", color: "#f59e0b", from: 33, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Military Time Calculator", href: "/calculators/military-time-calculator" },
+            { name: "Days Until Calculator", href: "/calculators/days-until-calculator" },
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+            { name: "Date Calculator", href: "/calculators/date-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Time Conversions</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-1">
+            <div>1 min = 60 sec</div>
+            <div>1 hour = 60 min = 3,600 sec</div>
+            <div>1 day = 24h = 86,400 sec</div>
+            <div>1 week = 7 days = 604,800 sec</div>
+            <div>1 year = 365 days = 8,760 hours</div>
+            <div>1 year ≈ 31,536,000 seconds</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Time Addition Example</h2>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <div class="text-xs text-gray-600 space-y-2 font-mono">
+            <div>Add 2h 45m + 1h 30m:</div>
+            <div>Hours: 2 + 1 = 3h</div>
+            <div>Minutes: 45 + 30 = 75m</div>
+            <div>75m ÷ 60 = 1h 15m</div>
+            <div class="font-semibold text-blue-700">= 4h 15m</div>
+            <div class="mt-2">Or in seconds:</div>
+            <div>9,900 + 5,400 = 15,300 sec</div>
+            <div class="font-semibold text-blue-700">= 4h 15m 0s</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Time Calculations</h2>
+        <div class="space-y-2">
+          {["Workout tracking — total exercise time per week","Work hours — total billable hours in a day or project","Travel — flight duration across time zones","Recipe timing — total preparation + cooking time","Project management — task duration estimation","Payroll — overtime hours above 8h/day or 40h/week"].map(u => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{u}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

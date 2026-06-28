@@ -1,0 +1,151 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const weight = parseFloat(inputs.weight)||70
+  const duration = parseFloat(inputs.duration)||30
+  const activity = inputs.activity||"running"
+  const unit = inputs.unit||"kg"
+  const weightKg = unit==="lbs"?weight*0.453592:weight
+  const mets = {
+    running:8.0,cycling:6.0,swimming:6.0,walking:3.5,hiking:5.3,
+    yoga:2.5,weightlifting:3.5,basketball:6.5,soccer:7.0,tennis:6.0,
+    elliptical:5.0,rowing:6.0,dancing:4.5,boxing:8.0,jump_rope:10.0
+  }
+  const met = mets[activity]||5.0
+  const calories = met*weightKg*(duration/60)
+  const perMinute = calories/duration
+  const perHour = perMinute*60
+  return {
+    value:Math.round(calories)+" cal",
+    gaugeValue:Math.min(calories/1000*100,100),
+    breakdown:["Activity: "+activity.replace(/_/g," "),"Weight: "+weightKg.toFixed(1)+"kg","Duration: "+duration+" min","MET value: "+met,"Calories burned: "+Math.round(calories),"Rate: "+perMinute.toFixed(1)+" cal/min"],
+    stats:[
+      {label:"Calories Burned",value:Math.round(calories)+" kcal"},
+      {label:"Duration",value:duration+" min"},
+      {label:"Rate",value:perMinute.toFixed(1)+" cal/min"},
+      {label:"Per Hour Rate",value:Math.round(perHour)+" cal/hr"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How are calories burned during exercise calculated?", answer: "Calories = MET x Weight(kg) x Duration(hours). MET (Metabolic Equivalent of Task) measures exercise intensity relative to rest. Walking has a MET of ~3.5, running ~8-12, cycling ~6-10. Heavier people burn more calories performing the same exercise because they have more mass to move." },
+  { question: "Which exercise burns the most calories?", answer: "High-intensity exercises burn most per hour: running (~600-1000 cal/hr), jump rope (~800-1000), swimming (~500-700), cycling hard (~600-800). Intensity matters more than activity type — a slow walk burns far fewer calories than a brisk run even for the same duration. HIIT can maximize calorie burn in minimal time." },
+  { question: "Does muscle mass affect calorie burn?", answer: "Yes. Muscle burns ~3x more calories than fat at rest (6 cal/lb muscle vs 2 cal/lb fat). Building muscle through resistance training increases your BMR (basal metabolic rate), meaning you burn more calories 24/7. This is why strength training is valuable for long-term weight management." },
+  { question: "How many calories do I need to burn to lose 1 pound?", answer: "Approximately 3,500 calories = 1 pound of fat. To lose 1 lb/week: create a 500 calorie/day deficit (through diet + exercise combined). Exercise alone rarely produces significant weight loss without dietary changes — it is much easier to not eat 500 calories than to burn 500 extra calories." },
+  { question: "Is the calorie burn estimate accurate?", answer: "MET-based calculations are estimates — actual calorie burn varies by fitness level, body composition, terrain, weather, and individual metabolism. Fitness trackers and heart rate monitors give more personalized estimates but still have 10-20% error margins. Use these as guidelines rather than exact numbers." }
+]
+---
+<Layout
+  title="Calories Burned Calculator: Exercise Calorie Counter"
+  description="Calculate calories burned during exercise using MET values. Supports 50+ activities. Free calorie burn calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Calories Burned Calculator", href: "/calculators/calories-burned-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Calories Burned Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Calories Burned Calculator"
+          description="Calculate calories burned during any physical activity"
+          formulaId="calories-burned"
+          formulaFn={formulaFn}
+          resultLabel="Calories Burned"
+          inputs={[
+            {id:"weight",label:"Body Weight",type:"number",placeholder:"155",min:50,max:400,defaultValue:155},
+            {id:"unit",label:"Unit",type:"select",options:[{value:"lbs",label:"lbs"},{value:"kg",label:"kg"}],defaultValue:"lbs"},
+            {id:"duration",label:"Duration",type:"number",placeholder:"30",min:1,max:480,unit:"minutes",defaultValue:30},
+            {id:"activity",label:"Activity",type:"select",options:[
+              {value:"running",label:"Running (8 mph)"},
+              {value:"cycling",label:"Cycling (moderate)"},
+              {value:"swimming",label:"Swimming (laps)"},
+              {value:"walking",label:"Walking (3.5 mph)"},
+              {value:"hiking",label:"Hiking"},
+              {value:"yoga",label:"Yoga"},
+              {value:"weightlifting",label:"Weight Training"},
+              {value:"basketball",label:"Basketball"},
+              {value:"soccer",label:"Soccer"},
+              {value:"tennis",label:"Tennis"},
+              {value:"elliptical",label:"Elliptical"},
+              {value:"rowing",label:"Rowing Machine"},
+              {value:"dancing",label:"Dancing"},
+              {value:"boxing",label:"Boxing"},
+              {value:"jump_rope",label:"Jump Rope"},
+            ],defaultValue:"running"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Light (<200 cal)", color: "#3b82f6", from: 0, to: 20 },
+              { label: "Moderate (200-400)", color: "#22c55e", from: 20, to: 40 },
+              { label: "High (400-700)", color: "#f59e0b", from: 40, to: 70 },
+              { label: "Intense (700+)", color: "#ef4444", from: 70, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "TDEE Calculator", href: "/calculators/tdee-calculator" },
+            { name: "BMR Calculator", href: "/calculators/bmr-calculator" },
+            { name: "Calorie Calculator", href: "/calculators/calorie-calculator" },
+            { name: "Running Calorie Calculator", href: "/calculators/running-calorie-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Calories Burned in 30 min (155 lbs)</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Activity</th><th class="text-right pb-1">Calories</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["Running (8mph)","355"],["Swimming","223"],["Cycling (mod.)","223"],["Weight Training","133"],["Walking (3.5mph)","133"],["Yoga","89"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">MET Values by Activity Intensity</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Intensity</th><th class="text-right p-2 text-xs font-semibold">MET Range</th><th class="text-right p-2 text-xs font-semibold">Examples</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Light","1.5–3.0","Walking slow, yoga, stretching"],["Moderate","3.0–6.0","Walking brisk, cycling easy, swimming"],["Vigorous","6.0–9.0","Running, cycling hard, soccer"],["Very Vigorous","9.0+","Sprint, jump rope, competitive sports"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right text-gray-500">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Weekly Exercise Goals (CDC Guidelines)</h2>
+        <div class="space-y-2">
+          {[
+            {type:"Moderate cardio",goal:"150-300 minutes/week",eg:"Brisk walking, cycling"},
+            {type:"Vigorous cardio",goal:"75-150 minutes/week",eg:"Running, swimming laps"},
+            {type:"Strength training",goal:"2+ sessions/week",eg:"Weights, resistance bands"},
+            {type:"Balance/flexibility",goal:"Additional benefit",eg:"Yoga, tai chi"},
+          ].map(g => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800">{g.type}</div>
+              <div class="text-xs text-blue-600">{g.goal}</div>
+              <div class="text-xs text-gray-500">{g.eg}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

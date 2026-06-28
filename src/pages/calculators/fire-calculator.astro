@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const annualExpenses = parseFloat(inputs.annualExpenses)||0
+  const currentSavings = parseFloat(inputs.currentSavings)||0
+  const annualSavings = parseFloat(inputs.annualSavings)||0
+  const returnRate = parseFloat(inputs.returnRate)||7
+  const withdrawalRate = parseFloat(inputs.withdrawalRate)||4
+  if(annualExpenses<=0) throw new Error("Enter annual expenses.")
+  const fireNumber = annualExpenses/(withdrawalRate/100)
+  const r = returnRate/100
+  let years=0, balance=currentSavings
+  while(balance<fireNumber&&years<100){
+    balance=balance*(1+r)+annualSavings; years++
+  }
+  const progress = Math.min((currentSavings/fireNumber)*100,100)
+  const lean = annualExpenses*0.75/(withdrawalRate/100)
+  const fat = annualExpenses*1.5/(withdrawalRate/100)
+  return {
+    value:"$"+fireNumber.toLocaleString("en-US",{maximumFractionDigits:0})+" FIRE number",
+    gaugeValue:progress,
+    breakdown:["Annual expenses: $"+annualExpenses,"FIRE number ("+withdrawalRate+"% rule): $"+fireNumber.toLocaleString("en-US",{maximumFractionDigits:0}),"Current savings: $"+currentSavings.toLocaleString("en-US",{maximumFractionDigits:0}),"Years to FIRE: "+years,"Progress: "+progress.toFixed(1)+"%"],
+    stats:[
+      {label:"FIRE Number",value:"$"+fireNumber.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Years to FIRE",value:years+" years"},
+      {label:"Progress",value:progress.toFixed(1)+"%"},
+      {label:"Lean FIRE Number",value:"$"+lean.toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is FIRE?", answer: "FIRE = Financial Independence, Retire Early. The goal: accumulate enough invested assets so that investment returns cover living expenses indefinitely. The most common approach: save 25x your annual expenses (the 4% rule), then withdraw 4% per year — historically sufficient to last 30+ years without depleting the portfolio." },
+  { question: "What is the 4% rule?", answer: "Based on the Trinity Study (1998), withdrawing 4% of a balanced stock/bond portfolio annually has historically sustained portfolios for 30+ years in most historical market scenarios. This gives a FIRE number of 25x annual expenses. Some use 3.5% (28.5x expenses) for more conservative early retirement." },
+  { question: "What is lean FIRE vs fat FIRE?", answer: "Lean FIRE: retiring with a minimalist budget (typically $25-40k/year, ~$625k-$1M FIRE number). Regular FIRE: middle-ground lifestyle. Fat FIRE: retiring with a generous budget ($100k+/year, $2.5M+ FIRE number). Coast FIRE: having enough that compound growth alone will reach your number. Barista FIRE: partially FI, working part-time." },
+  { question: "How do I increase my savings rate for FIRE?", answer: "Savings rate is the #1 driver of time to FIRE. Going from 10% to 50% savings rate cuts time to FIRE from ~40 years to ~17 years. Focus on the big three: housing (rent/buy cheaper), transportation (drive older car), food (cook at home). Reduce these and you can save 50%+ of income." },
+  { question: "Is the 4% rule still valid?", answer: "It remains widely used, but some researchers suggest 3.5% may be safer for very long retirements (40-50 years) given current market valuations. Flexibility helps — if portfolio drops 30%, cut spending 10-20%. Many early retirees also have some part-time income in early retirement years, making the rule more sustainable." }
+]
+---
+<Layout
+  title="FIRE Calculator: Financial Independence Retire Early Number"
+  description="Calculate your FIRE number and how long until financial independence. Supports lean FIRE, regular FIRE, and fat FIRE. Free FIRE calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "FIRE Calculator", href: "/calculators/fire-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">FIRE Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="FIRE Calculator"
+          description="Calculate your financial independence number and years to FIRE"
+          formulaId="fire"
+          formulaFn={formulaFn}
+          resultLabel="FIRE Number"
+          inputs={[
+            {id:"annualExpenses",label:"Annual Living Expenses",type:"number",placeholder:"60000",min:0,unit:"$",defaultValue:60000},
+            {id:"currentSavings",label:"Current Invested Savings",type:"number",placeholder:"100000",min:0,unit:"$",defaultValue:100000},
+            {id:"annualSavings",label:"Annual Savings (net, after expenses)",type:"number",placeholder:"30000",min:0,unit:"$",defaultValue:30000},
+            {id:"returnRate",label:"Expected Annual Return",type:"number",placeholder:"7",min:0,max:20,step:0.5,unit:"%",defaultValue:7},
+            {id:"withdrawalRate",label:"Safe Withdrawal Rate",type:"number",placeholder:"4",min:2,max:6,step:0.25,unit:"%",defaultValue:4}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% to FIRE",
+            zones: [
+              { label: "Just Starting", color: "#ef4444", from: 0, to: 10 },
+              { label: "Building", color: "#f59e0b", from: 10, to: 40 },
+              { label: "Halfway There", color: "#3b82f6", from: 40, to: 75 },
+              { label: "FIRE Ready", color: "#22c55e", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Retirement Calculator", href: "/calculators/retirement-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">FIRE Numbers by Spending</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["$30k/yr (lean)","$750,000"],["$50k/yr","$1,250,000"],["$75k/yr","$1,875,000"],["$100k/yr","$2,500,000"],["$150k/yr (fat)","$3,750,000"]].map(([e,n]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{e}</span><span class="font-medium">{n}</span></div>
+            ))}
+          </div>
+          <p class="text-xs text-blue-600 mt-1">Based on 4% safe withdrawal rate (25x rule)</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Years to FIRE by Savings Rate</h2>
+        <p class="text-xs text-gray-600 mb-3">Assumes 7% return, 4% withdrawal rate, starting from $0:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Savings Rate</th><th class="text-right p-2 text-xs font-semibold">Years to FIRE</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["10%","43 years"],["20%","37 years"],["30%","28 years"],["50%","17 years"],["70%","8.5 years"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium text-blue-700">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">FIRE Variants</h2>
+        <div class="space-y-3">
+          {[
+            {t:"Lean FIRE",d:"Minimalist lifestyle. Very low spending. Often requires flexibility or geographic arbitrage (relocating to lower cost areas)."},
+            {t:"Regular FIRE",d:"Middle-class lifestyle maintained. Average spending. Most common FIRE goal in the community."},
+            {t:"Fat FIRE",d:"Luxury retirement. High spending budget. Requires significantly larger portfolio but offers maximum lifestyle freedom."},
+            {t:"Coast FIRE",d:"Invested enough that compound growth alone reaches target by traditional retirement age. Can relax savings and coast."},
+            {t:"Barista FIRE",d:"Portfolio covers most expenses. Part-time work covers remainder and benefits. Less accumulation needed."},
+          ].map(f => (
+            <div class="bg-gray-50 rounded-lg p-2.5">
+              <div class="font-semibold text-xs text-blue-700 mb-0.5">{f.t}</div>
+              <div class="text-xs text-gray-600">{f.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = inputs.value||""
+  const roundTo = parseInt(inputs.roundTo)||3
+  const numStr = value.toString().trim()
+  const num = parseFloat(numStr)
+  if(isNaN(num)) throw new Error("Enter a valid number.")
+  // Count sig figs
+  const countSigFigs = s => {
+    s=s.replace(/^-/,"").replace(/^0+(?=[1-9])/,"")
+    if(s.includes(".")){
+      s=s.replace(/^0+/,"")
+      if(s.startsWith(".")) s=s.replace(/^\.0*/,"").replace(/^$/,"0")
+      return s.replace(".","").replace(/^0+/,"").length||1
+    } else {
+      return s.replace(/0+$/,"").length
+    }
+  }
+  const sigFigCount=countSigFigs(numStr)
+  const roundedToN = parseFloat(num.toPrecision(roundTo))
+  return {
+    value:sigFigCount+" significant figures",
+    gaugeValue:Math.min(sigFigCount/10*100,100),
+    breakdown:["Number: "+numStr,"Significant figures: "+sigFigCount,"Rounded to "+roundTo+" sig figs: "+roundedToN,"Scientific notation: "+num.toExponential(roundTo-1)],
+    stats:[
+      {label:"Sig Figs Count",value:String(sigFigCount)},
+      {label:"Rounded ("+roundTo+" SF)",value:String(roundedToN)},
+      {label:"In Sci Notation",value:num.toExponential(roundTo-1)},
+      {label:"Original",value:numStr},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What are significant figures?", answer: "Significant figures (sig figs) are the meaningful digits in a number that reflect measurement precision. Non-zero digits are always significant. Zeros between non-zero digits are significant. Trailing zeros after a decimal point are significant. Leading zeros are never significant." },
+  { question: "How many sig figs does 0.00470 have?", answer: "0.00470 has 3 significant figures: 4, 7, and the trailing 0 after the 7. The leading zeros (0.00) are not significant — they are just placeholders showing the decimal place. The trailing zero IS significant because it shows precision to the ten-thousandths place." },
+  { question: "What are the rules for significant figures in calculations?", answer: "Multiplication/Division: round to the fewest sig figs in the inputs. 2.5 × 3.42 = 8.6 (2 sig figs). Addition/Subtraction: round to the fewest decimal places in the inputs. 12.52 + 1.1 = 13.6 (1 decimal place). Scientific notation makes sig figs unambiguous: 3.50 × 10^4 has exactly 3 sig figs." },
+  { question: "How do I round to 3 significant figures?", answer: "Find the 3rd significant digit, then look at the next digit. If it is 5 or more, round up; if less than 5, round down. Examples: 0.004726 → 0.00473. 12,456 → 12,500. 1.2349 → 1.23. Zeros used as placeholders do not count, only measurement-meaningful digits do." },
+  { question: "Why are significant figures important?", answer: "They communicate the precision of a measurement. Writing 12.5 g implies precision to ±0.05 g; writing 12.500 g implies ±0.0005 g. In engineering and science, false precision can lead to errors. A calculated result cannot be more precise than the least precise measurement it came from." }
+]
+---
+<Layout
+  title="Significant Figures Calculator: Count & Round Sig Figs"
+  description="Count significant figures in a number and round to any number of sig figs. Learn the rules for significant figures. Free sig figs calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Significant Figures Calculator", href: "/calculators/sig-figs-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Significant Figures Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Significant Figures Calculator"
+          description="Count significant figures and round to a target number of sig figs"
+          formulaId="sig-figs"
+          formulaFn={formulaFn}
+          resultLabel="Sig Figs"
+          inputs={[
+            {id:"value",label:"Number",type:"text",placeholder:"0.00470",defaultValue:"0.00470"},
+            {id:"roundTo",label:"Round to (significant figures)",type:"number",placeholder:"3",min:1,max:10,defaultValue:3}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "1-2 sig figs", color: "#ef4444", from: 0, to: 20 },
+              { label: "3-4 sig figs", color: "#f59e0b", from: 20, to: 40 },
+              { label: "5-7 sig figs", color: "#22c55e", from: 40, to: 70 },
+              { label: "8+ sig figs", color: "#3b82f6", from: 70, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Scientific Notation", href: "/calculators/scientific-notation-calculator" },
+            { name: "Percentage Error Calculator", href: "/calculators/percentage-error-calculator" },
+            { name: "Rounding Calculator", href: "/calculators/rounding-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Sig Fig Rules</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            <div>✓ Non-zero digits: always significant</div>
+            <div>✓ Zeros between non-zero: significant</div>
+            <div>✓ Trailing zeros after decimal: significant</div>
+            <div>✗ Leading zeros: NOT significant</div>
+            <div>✗ Trailing zeros without decimal: ambiguous</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Examples</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Number</th><th class="p-2 text-xs font-semibold text-right">Sig Figs</th><th class="p-2 text-xs font-semibold text-right">Reason</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["7230","3","trailing zero ambiguous"],["7230.","4","decimal point makes trailing 0 sig"],["0.00830","3","4 and 7 and trailing 0"],["3.00 × 10^4","3","coefficient determines sig figs"],["100.0","4","trailing zeros after decimal sig"]].map(r => (
+              <tr><td class="p-2 text-xs font-mono">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td><td class="p-2 text-xs text-right text-gray-500">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Calculation Rules</h2>
+        <div class="space-y-2">
+          {[
+            {op:"Multiply / Divide",r:"Round to the fewest sig figs among all inputs"},
+            {op:"Add / Subtract",r:"Round to the fewest decimal places among inputs"},
+            {op:"Exact numbers",r:"Counting numbers (3 apples) and defined constants have infinite sig figs"},
+          ].map(o => (
+            <div class="bg-gray-50 rounded-lg p-3"><div class="font-semibold text-xs text-blue-700">{o.op}</div><div class="text-xs text-gray-600">{o.r}</div></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const inputType = inputs.inputType||"radius"
+  const value = parseFloat(inputs.value)||0
+  if(value<=0) throw new Error("Enter a positive measurement.")
+  let r
+  if(inputType==="radius") r=value
+  else if(inputType==="diameter") r=value/2
+  else if(inputType==="circumference") r=value/(2*Math.PI)
+  else if(inputType==="area") r=Math.sqrt(value/Math.PI)
+  else throw new Error("Unknown input type.")
+  const diameter=2*r
+  const circumference=2*Math.PI*r
+  const area=Math.PI*r*r
+  return {
+    value:"Area: "+area.toFixed(4)+" | Circumference: "+circumference.toFixed(4),
+    gaugeValue:Math.min(r/100*100,100),
+    breakdown:["Radius: "+r.toFixed(6),"Diameter: "+diameter.toFixed(6),"Circumference: "+circumference.toFixed(6),"Area: "+area.toFixed(6),"Sector: 360 deg total"],
+    stats:[
+      {label:"Radius",value:r.toFixed(4)},
+      {label:"Diameter",value:diameter.toFixed(4)},
+      {label:"Circumference",value:circumference.toFixed(4)},
+      {label:"Area",value:area.toFixed(4)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What are the circle formulas?", answer: "For a circle with radius r: Area = pi x r^2. Circumference = 2 x pi x r = pi x d. Diameter = 2r. If you know any one measurement, you can find all others. Pi (pi) ≈ 3.14159265358979." },
+  { question: "How do I find the area of a circle from the circumference?", answer: "First find radius: r = C / (2 x pi). Then area = pi x r^2. Shortcut: Area = C^2 / (4 x pi). Example: circumference = 31.416, area = (31.416)^2 / (4 x pi) ≈ 78.54 square units." },
+  { question: "What is the difference between circumference and perimeter?", answer: "Circumference is specifically the perimeter (boundary length) of a circle. Perimeter is the general term for the boundary length of any 2D shape. All circles have circumference; other shapes have perimeter. C = 2 x pi x r = pi x d." },
+  { question: "What is pi (pi) and why is it important?", answer: "Pi (pi) ≈ 3.14159265... is the ratio of any circle circumference to its diameter: C/d = pi. It is irrational (never ending decimal) and transcendental (cannot be expressed as a root of a polynomial). Pi appears in countless formulas beyond circles: sphere volumes, wave equations, Fourier transforms, and probability." },
+  { question: "What is the area of a semicircle?", answer: "Area of semicircle = (pi x r^2) / 2. The straight edge has length 2r. Perimeter = pi x r + 2r = r(pi + 2). For a quarter circle: Area = (pi x r^2) / 4. For a sector with angle theta (degrees): Area = (theta/360) x pi x r^2." }
+]
+---
+<Layout
+  title="Circle Calculator: Area, Circumference, Diameter, Radius"
+  description="Calculate circle area, circumference, diameter, and radius from any single measurement. Free circle calculator with formulas."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Circle Calculator", href: "/calculators/circle-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Circle Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Circle Calculator"
+          description="Calculate all circle measurements from any single input"
+          formulaId="circle"
+          formulaFn={formulaFn}
+          resultLabel="Area"
+          inputs={[
+            {id:"inputType",label:"Known measurement",type:"select",options:[
+              {value:"radius",label:"Radius (r)"},
+              {value:"diameter",label:"Diameter (d)"},
+              {value:"circumference",label:"Circumference (C)"},
+              {value:"area",label:"Area (A)"},
+            ],defaultValue:"radius"},
+            {id:"value",label:"Value",type:"number",placeholder:"5",min:0,step:0.0001,defaultValue:5}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "radius",
+            zones: [
+              { label: "Small (r<10)", color: "#22c55e", from: 0, to: 10 },
+              { label: "Medium (r 10-50)", color: "#3b82f6", from: 10, to: 50 },
+              { label: "Large (r 50+)", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+            { name: "Volume Calculator", href: "/calculators/volume-calculator" },
+            { name: "Distance Calculator", href: "/calculators/distance-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Circle Formulas</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-1">
+            <div>Area = π × r²</div>
+            <div>Circumference = 2πr = πd</div>
+            <div>Diameter = 2r</div>
+            <div>r = C / (2π)</div>
+            <div>r = √(A / π)</div>
+            <div>π ≈ 3.14159265...</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Circle Parts</h2>
+        <div class="space-y-2">
+          {[
+            {t:"Radius",d:"Distance from center to edge (r). Half the diameter."},
+            {t:"Diameter",d:"Longest chord through center (d = 2r). Width of the circle."},
+            {t:"Circumference",d:"Perimeter of the circle (C = 2πr). Distance around the edge."},
+            {t:"Area",d:"Space inside the circle (A = πr²). Measured in square units."},
+            {t:"Chord",d:"Any line segment connecting two points on the circle. Diameter is the longest chord."},
+            {t:"Sector",d:"Pie-slice shaped region. Area = (θ/360) × πr²."},
+          ].map(p => (
+            <div class="bg-gray-50 rounded-lg p-2"><div class="font-semibold text-xs text-blue-700">{p.t}</div><div class="text-xs text-gray-600">{p.d}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Circles</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Radius</th><th class="p-2 text-xs font-semibold text-right">Area</th><th class="p-2 text-xs font-semibold text-right">Circumference</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[1,"3.14","6.28"],[5,"78.54","31.42"],[10,"314.16","62.83"],[12,"452.39","75.40"],[100,"31,415.93","628.32"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

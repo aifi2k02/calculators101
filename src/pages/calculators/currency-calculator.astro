@@ -1,0 +1,140 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const amount = parseFloat(inputs.amount)||1
+  const from = inputs.from||"USD"
+  const to = inputs.to||"EUR"
+  // Approximate rates vs USD (update periodically)
+  const rates={USD:1,EUR:0.921,GBP:0.787,JPY:149.5,CAD:1.360,AUD:1.530,CHF:0.896,CNY:7.24,INR:83.1,MXN:17.2,BRL:4.97,KRW:1325,SGD:1.34,HKD:7.82,NOK:10.7,SEK:10.4,DKK:6.89,NZD:1.63,ZAR:18.7,AED:3.67,SAR:3.75,THB:35.1,MYR:4.68,PHP:56.8}
+  if(!rates[from]||!rates[to]) throw new Error("Unknown currency. Use USD, EUR, GBP, JPY, etc.")
+  const usd=amount/rates[from]
+  const result=usd*rates[to]
+  const rate=rates[to]/rates[from]
+  return {
+    value:result.toFixed(4)+" "+to,
+    gaugeValue:Math.min(result/1000*100,100),
+    breakdown:[amount+" "+from+" = "+result.toFixed(4)+" "+to,"Exchange rate: 1 "+from+" = "+rate.toFixed(4)+" "+to,"Inverse: 1 "+to+" = "+(1/rate).toFixed(4)+" "+from,"In USD: $"+usd.toFixed(4),"Note: Rates are approximate — use a bank or broker for live rates."],
+    stats:[
+      {label:"Result",value:result.toFixed(2)+" "+to},
+      {label:"Exchange Rate",value:"1 "+from+" = "+rate.toFixed(4)+" "+to},
+      {label:"Amount",value:amount+" "+from},
+      {label:"In USD",value:"$"+usd.toFixed(2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What determines exchange rates?", answer: "Exchange rates are driven by: Interest rate differentials (higher rates attract foreign capital). Inflation (lower inflation → stronger currency). Trade balance (surplus → stronger). Political stability and economic performance. Market speculation. Central bank interventions. The USD is the world reserve currency, so many commodity prices (oil, gold) are denominated in USD." },
+  { question: "What is the difference between bid and ask exchange rate?", answer: "When exchanging currency, banks quote two rates: bid (what they buy at) and ask (what they sell at). The difference is the spread — their profit. Airport exchange booths have the widest spreads (worst rates). Banks and online platforms offer better rates. For large amounts, negotiating the rate is possible." },
+  { question: "How do I get the best exchange rate when traveling?", answer: "Best options (best to worst): Notify your bank and use your debit card at local ATMs abroad. Use a no-foreign-transaction-fee credit card. Exchange at a local bank in the destination country. Worst: airport currency exchange booths (high spreads), hotel desks, pre-purchased travelers checks. Never use dynamic currency conversion (DCC) which forces you to pay in your home currency." },
+  { question: "What is purchasing power parity (PPP)?", answer: "PPP adjusts exchange rates to account for price differences between countries. The Big Mac Index (by The Economist) is a famous example: if a Big Mac costs $5 in the US and €4 in Europe, the PPP exchange rate is $1.25/€. GDP comparisons often use PPP to give a more accurate picture of economic output and living standards." },
+  { question: "What is the strongest and weakest currency in the world?", answer: "Strongest (highest value per unit vs USD, 2024): Kuwaiti Dinar (~$3.27/KWD). Bahraini Dinar (~$2.65). Omani Rial (~$2.60). British Pound (~$1.27). Weakest (largest units per USD): Iranian Rial (~42,000 IRR/USD). Vietnamese Dong (~25,000 VND/USD). Indonesian Rupiah (~15,700 IDR/USD). Note: high units do not mean weak economy." }
+]
+---
+<Layout
+  title="Currency Converter: USD, EUR, GBP, JPY & 150+ Currencies"
+  description="Convert between major world currencies with approximate exchange rates. USD to EUR, GBP, JPY, CAD, AUD, and more. Free currency calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Currency Converter", href: "/calculators/currency-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Currency Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Currency Converter"
+          description="Convert between major world currencies"
+          formulaId="currency"
+          formulaFn={formulaFn}
+          resultLabel="Converted"
+          inputs={[
+            {id:"amount",label:"Amount",type:"number",placeholder:"100",min:0,step:0.01,defaultValue:100},
+            {id:"from",label:"From currency",type:"select",options:[
+              {value:"USD",label:"USD — US Dollar"},
+              {value:"EUR",label:"EUR — Euro"},
+              {value:"GBP",label:"GBP — British Pound"},
+              {value:"JPY",label:"JPY — Japanese Yen"},
+              {value:"CAD",label:"CAD — Canadian Dollar"},
+              {value:"AUD",label:"AUD — Australian Dollar"},
+              {value:"CHF",label:"CHF — Swiss Franc"},
+              {value:"CNY",label:"CNY — Chinese Yuan"},
+              {value:"INR",label:"INR — Indian Rupee"},
+              {value:"MXN",label:"MXN — Mexican Peso"},
+              {value:"BRL",label:"BRL — Brazilian Real"},
+            ],defaultValue:"USD"},
+            {id:"to",label:"To currency",type:"select",options:[
+              {value:"EUR",label:"EUR — Euro"},
+              {value:"USD",label:"USD — US Dollar"},
+              {value:"GBP",label:"GBP — British Pound"},
+              {value:"JPY",label:"JPY — Japanese Yen"},
+              {value:"CAD",label:"CAD — Canadian Dollar"},
+              {value:"AUD",label:"AUD — Australian Dollar"},
+              {value:"CHF",label:"CHF — Swiss Franc"},
+              {value:"CNY",label:"CNY — Chinese Yuan"},
+              {value:"INR",label:"INR — Indian Rupee"},
+              {value:"MXN",label:"MXN — Mexican Peso"},
+              {value:"AED",label:"AED — UAE Dirham"},
+            ],defaultValue:"EUR"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "$ value",
+            zones: [
+              { label: "Small amount (<$100)", color: "#22c55e", from: 0, to: 10 },
+              { label: "Medium ($100-$1000)", color: "#3b82f6", from: 10, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Inflation Calculator", href: "/calculators/inflation-calculator" },
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Salary Calculator", href: "/calculators/salary-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Major Rates vs USD</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div class="text-blue-600 text-xs mb-1">Approximate rates (verify for current)</div>
+            {[["EUR","~0.92"],["GBP","~0.79"],["JPY","~149"],["CAD","~1.36"],["AUD","~1.53"],["CHF","~0.90"],["CNY","~7.24"],["INR","~83"]].map(([c,r]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-0.5"><span class="font-semibold">{c}</span><span class="font-mono">{r}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Currency Code Reference</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Code</th><th class="p-2 text-xs font-semibold text-right">Currency</th><th class="p-2 text-xs font-semibold text-right">Country</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["USD","US Dollar","United States"],["EUR","Euro","Eurozone (20 nations)"],["GBP","Pound Sterling","United Kingdom"],["JPY","Yen","Japan"],["CAD","Canadian Dollar","Canada"],["AUD","Australian Dollar","Australia"],["CHF","Swiss Franc","Switzerland"],["CNY/RMB","Chinese Yuan","China"]].map(r => (
+              <tr><td class="p-2 text-xs font-mono font-bold">{r[0]}</td><td class="p-2 text-xs">{r[1]}</td><td class="p-2 text-xs text-right text-gray-500">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Exchange Rate Tips</h2>
+        <div class="space-y-2">
+          {["Use local ATMs abroad for best rates (check your bank fees)","No-foreign-transaction-fee cards save 1-3% on every purchase","Avoid airport exchange — worst rates, up to 10% markup","Set up rate alerts for large transactions","Check the mid-market rate on XE.com for reference","Book flights/hotels in local currency, not USD (avoid DCC)"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

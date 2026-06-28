@@ -1,0 +1,158 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const calories = parseFloat(inputs.calories) || 0
+  const goal = inputs.goal || 'maintain'
+  const style = inputs.style || 'balanced'
+  if (calories < 800) throw new Error('Enter daily calories (minimum 800).')
+  let proteinPct, carbPct, fatPct
+  if (style === 'keto') { proteinPct = 25; carbPct = 5; fatPct = 70 }
+  else if (style === 'low-carb') { proteinPct = 35; carbPct = 20; fatPct = 45 }
+  else if (style === 'high-protein') { proteinPct = 40; carbPct = 35; fatPct = 25 }
+  else { proteinPct = 30; carbPct = 40; fatPct = 30 }
+  const protein = Math.round(calories * proteinPct / 100 / 4)
+  const carbs = Math.round(calories * carbPct / 100 / 4)
+  const fat = Math.round(calories * fatPct / 100 / 9)
+  return {
+    value: protein + 'g protein / ' + carbs + 'g carbs / ' + fat + 'g fat',
+    gaugeValue: proteinPct,
+    breakdown: [
+      'Protein: ' + protein + 'g (' + proteinPct + '% = ' + Math.round(calories*proteinPct/100) + ' cal)',
+      'Carbs: ' + carbs + 'g (' + carbPct + '% = ' + Math.round(calories*carbPct/100) + ' cal)',
+      'Fat: ' + fat + 'g (' + fatPct + '% = ' + Math.round(calories*fatPct/100) + ' cal)',
+    ],
+    stats: [
+      { label: 'Protein', value: protein + 'g/day' },
+      { label: 'Carbohydrates', value: carbs + 'g/day' },
+      { label: 'Fat', value: fat + 'g/day' },
+      { label: 'Calorie Target', value: calories + ' kcal' },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What are macros and why do they matter?', answer: 'Macros (macronutrients) are protein, carbohydrates, and fat — the three nutrients that provide calories. Protein and carbs have 4 calories/gram; fat has 9 calories/gram. Tracking macros ensures you hit calorie goals while meeting nutritional needs for your specific goal (muscle gain, fat loss, performance).' },
+  { question: 'How much protein do I need per day?', answer: 'For general health: 0.8g per kg body weight. For muscle building: 1.6–2.2g per kg. For fat loss while preserving muscle: 1.8–2.5g per kg. Higher protein keeps you full and preserves muscle during a calorie deficit.' },
+  { question: 'What macro ratio is best for weight loss?', answer: 'Research shows any macro split can produce weight loss if calories are controlled. High protein helps preserve muscle (30–40%). Many find reducing carbs helps with satiety. A typical starting point: 30% protein, 35% carbs, 35% fat. Adjust based on preferences and results.' },
+  { question: 'What is the difference between keto and low-carb macros?', answer: 'Keto is very low carb (under 5% or ~20–50g/day) to induce ketosis. Low-carb typically allows 20–30% carbs (~100–150g/day). Keto is more restrictive but some people find it helps control hunger. Both can be effective for weight loss.' },
+  { question: 'Do I need to track macros, or just calories?', answer: 'Calories are the primary driver of weight change. Macros matter more for body composition (muscle vs. fat), athletic performance, and satiety. If you\'re new to tracking, start with just calories. Add macro tracking once you\'ve established the calorie habit.' },
+]
+---
+<Layout
+  title="Macro Calculator: Daily Protein, Carbs & Fat Targets"
+  description="Calculate your daily macronutrient targets for any diet style — balanced, high-protein, low-carb, or keto. Free macro calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Fitness & Health', href: '/calculators/fitness' },
+    { name: 'Macro Calculator', href: '/calculators/macro-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Macro Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Macro Calculator"
+          description="Calculate daily protein, carbs, and fat targets for your diet style"
+          formulaId="macro"
+          formulaFn={formulaFn}
+          resultLabel="Daily Macros"
+          inputs={[
+            { id: 'calories', label: 'Daily Calorie Target', type: 'number', placeholder: '2000', min: 800, max: 5000, unit: 'kcal', defaultValue: 2000 },
+            { id: 'goal', label: 'Goal', type: 'select', options: [
+              { value: 'maintain', label: 'Maintain weight' },
+              { value: 'lose', label: 'Lose fat' },
+              { value: 'gain', label: 'Build muscle' },
+            ], defaultValue: 'maintain' },
+            { id: 'style', label: 'Diet Style', type: 'select', options: [
+              { value: 'balanced', label: 'Balanced (30/40/30)' },
+              { value: 'high-protein', label: 'High Protein (40/35/25)' },
+              { value: 'low-carb', label: 'Low Carb (35/20/45)' },
+              { value: 'keto', label: 'Keto (25/5/70)' },
+            ], defaultValue: 'balanced' },
+          ]}
+          gauge={{
+            min: 0, max: 50, unit: '% protein',
+            zones: [
+              { label: 'Low Protein', color: '#94a3b8', from: 0, to: 20 },
+              { label: 'Moderate', color: '#3b82f6', from: 20, to: 30 },
+              { label: 'High Protein', color: '#22c55e', from: 30, to: 40 },
+              { label: 'Very High', color: '#f59e0b', from: 40, to: 50 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
+            { name: 'Protein Calculator', href: '/calculators/protein-calculator' },
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'Keto Calculator', href: '/calculators/keto-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Diet Style Comparison (2000 cal)</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left pb-1">Style</th><th class="text-right pb-1">Protein</th><th class="text-right pb-1">Carbs</th><th class="text-right pb-1">Fat</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[['Balanced','150g','200g','67g'],['High Protein','200g','175g','56g'],['Low Carb','175g','100g','100g'],['Keto','125g','25g','156g']].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td><td class="text-right">{r[3]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-2">Calories per Gram</h3>
+          <ul class="text-xs text-green-800 space-y-1">
+            <li>• Protein: <strong>4 cal/g</strong></li>
+            <li>• Carbohydrates: <strong>4 cal/g</strong></li>
+            <li>• Fat: <strong>9 cal/g</strong></li>
+            <li>• Alcohol: <strong>7 cal/g</strong></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Protein Recommendations by Goal</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr>
+            <th class="text-left p-2 text-xs font-semibold text-gray-700">Goal</th>
+            <th class="text-right p-2 text-xs font-semibold text-gray-700">Protein Target</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[['Sedentary adult','0.8g/kg body weight'],['Active adult','1.0–1.3g/kg'],['Fat loss (muscle preservation)','1.8–2.5g/kg'],['Muscle building','1.6–2.2g/kg'],['Endurance athlete','1.2–1.6g/kg'],['Strength athlete','1.7–2.2g/kg']].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">High-Protein Food Sources</h2>
+        <div class="grid grid-cols-2 gap-2">
+          {[
+            { food: 'Chicken breast (100g)', protein: '31g' },
+            { food: 'Greek yogurt (170g)', protein: '17g' },
+            { food: 'Eggs (1 large)', protein: '6g' },
+            { food: 'Tuna (85g)', protein: '25g' },
+            { food: 'Whey protein (1 scoop)', protein: '25g' },
+            { food: 'Cottage cheese (100g)', protein: '11g' },
+            { food: 'Lentils (100g cooked)', protein: '9g' },
+            { food: 'Salmon (100g)', protein: '25g' },
+          ].map(f => (
+            <div class="bg-gray-50 rounded-lg p-2 flex justify-between items-center">
+              <span class="text-xs text-gray-600">{f.food}</span>
+              <span class="text-xs font-bold text-blue-600">{f.protein}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

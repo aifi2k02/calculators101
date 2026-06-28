@@ -1,0 +1,158 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const weight = parseFloat(inputs.weight) || 0
+  const reps = parseInt(inputs.reps) || 1
+  const unit = inputs.unit || 'lbs'
+  if (weight <= 0) throw new Error('Enter weight lifted.')
+  if (reps < 1 || reps > 30) throw new Error('Reps must be between 1 and 30.')
+  if (reps === 1) {
+    return {
+      value: weight + ' ' + unit + ' (that IS your 1RM)',
+      gaugeValue: 100,
+      breakdown: ['Your 1 rep IS your 1RM: ' + weight + ' ' + unit],
+      stats: [
+        { label: '1RM', value: weight + ' ' + unit },
+        { label: '90%', value: Math.round(weight * 0.9) + ' ' + unit },
+        { label: '80%', value: Math.round(weight * 0.8) + ' ' + unit },
+        { label: '70%', value: Math.round(weight * 0.7) + ' ' + unit },
+      ]
+    }
+  }
+  const brzycki = weight * (36 / (37 - reps))
+  const epley = weight * (1 + reps / 30)
+  const avg = (brzycki + epley) / 2
+  const pct = reps >= 10 ? 65 : reps >= 6 ? 80 : 90
+  return {
+    value: Math.round(avg) + ' ' + unit + ' estimated 1RM',
+    gaugeValue: pct,
+    breakdown: [
+      'Brzycki formula: ' + Math.round(brzycki) + ' ' + unit,
+      'Epley formula: ' + Math.round(epley) + ' ' + unit,
+      'Average estimate: ' + Math.round(avg) + ' ' + unit,
+    ],
+    stats: [
+      { label: '1RM Estimate', value: Math.round(avg) + ' ' + unit },
+      { label: '85% (5-rep zone)', value: Math.round(avg * 0.85) + ' ' + unit },
+      { label: '75% (10-rep zone)', value: Math.round(avg * 0.75) + ' ' + unit },
+      { label: '65% (15-rep zone)', value: Math.round(avg * 0.65) + ' ' + unit },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is a 1 rep max (1RM)?', answer: 'Your 1RM is the maximum weight you can lift for a single repetition with proper form. It is used to set training intensity percentages for strength programs. Testing your true 1RM carries injury risk, so estimating from submaximal lifts is safer.' },
+  { question: 'How accurate are 1RM calculators?', answer: 'Most accurate for 1–5 rep sets (within 2–5%). Accuracy decreases for higher rep sets (10+) because the relationship between reps and maximal strength varies by individual, muscle fiber type, and exercise type. Experienced lifters can often handle a higher percentage of their 1RM for multiple reps than beginners.' },
+  { question: 'What weight should I use for different rep ranges?', answer: '1RM = 100% | 3 reps ≈ 93% | 5 reps ≈ 87% | 8 reps ≈ 80% | 10 reps ≈ 75% | 12 reps ≈ 70% | 15 reps ≈ 65%. These are guidelines — individual responses vary significantly.' },
+  { question: 'Should I actually test my 1RM?', answer: 'Not regularly. True 1RM testing is taxing and carries higher injury risk. Most strength programs use percentage-based training from an estimated or tested 1RM. Test your true 1RM only at the end of training cycles or for competition, with a spotter.' },
+  { question: 'Which formula is most accurate — Epley or Brzycki?', answer: 'Neither is universally best. Both are validated formulas that perform similarly for 1–6 rep ranges. Brzycki tends to be more accurate at lower rep counts; Epley can overestimate at very high reps. Averaging both (as this calculator does) improves overall accuracy.' },
+]
+---
+<Layout
+  title="One Rep Max Calculator: Estimate Your 1RM"
+  description="Estimate your one rep max from any weight and rep count using the Brzycki and Epley formulas. Free 1RM calculator with training percentage chart."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Fitness & Health', href: '/calculators/fitness' },
+    { name: 'One Rep Max Calculator', href: '/calculators/one-rep-max-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">One Rep Max Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="One Rep Max Calculator"
+          description="Estimate your maximum strength from submaximal lifts using validated formulas"
+          formulaId="one-rep-max"
+          formulaFn={formulaFn}
+          resultLabel="Estimated 1RM"
+          inputs={[
+            { id: 'weight', label: 'Weight Lifted', type: 'number', placeholder: '225', min: 1, unit: 'lbs', defaultValue: 225 },
+            { id: 'reps', label: 'Reps Performed', type: 'number', placeholder: '5', min: 1, max: 30, defaultValue: 5 },
+            { id: 'unit', label: 'Weight Unit', type: 'select', options: [{ value: 'lbs', label: 'Pounds (lbs)' }, { value: 'kg', label: 'Kilograms (kg)' }], defaultValue: 'lbs' },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% accuracy',
+            zones: [
+              { label: '1–3 reps (very accurate)', color: '#22c55e', from: 80, to: 100 },
+              { label: '4–6 reps (accurate)', color: '#3b82f6', from: 60, to: 80 },
+              { label: '7–10 reps (decent)', color: '#f59e0b', from: 40, to: 60 },
+              { label: '10+ reps (rough estimate)', color: '#ef4444', from: 0, to: 40 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
+            { name: 'Body Fat Calculator', href: '/calculators/body-fat-calculator' },
+            { name: 'Protein Calculator', href: '/calculators/protein-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">1RM Percentage Chart</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left pb-1">% of 1RM</th><th class="text-right pb-1">Approx. Reps</th><th class="text-right pb-1">Training Goal</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[['95–100%','1–2','Max strength'],['85–92%','3–5','Strength'],['75–85%','6–8','Strength/size'],['65–75%','8–12','Hypertrophy'],['55–65%','12–15','Endurance'],['<55%','15+','Muscular endurance']].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">Strength Standards (Bench Press)</h3>
+          <div class="space-y-1 text-xs text-amber-800">
+            {[['Beginner','<0.5× bodyweight'],['Novice','0.75× bodyweight'],['Intermediate','1× bodyweight'],['Advanced','1.5× bodyweight'],['Elite','2× bodyweight']].map(([l,s]) => (
+              <div class="flex justify-between border-b border-amber-100 pb-1"><span>{l}</span><span class="font-medium">{s}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Strength Standards by Lift</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr>
+            <th class="text-left p-2 text-xs font-semibold text-gray-700">Lift</th>
+            <th class="text-right p-2 text-xs font-semibold text-gray-700">Intermediate (male)</th>
+            <th class="text-right p-2 text-xs font-semibold text-gray-700">Intermediate (female)</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[['Squat','1.5× BW','1.0× BW'],['Bench Press','1.0× BW','0.65× BW'],['Deadlift','1.75× BW','1.25× BW'],['Overhead Press','0.75× BW','0.5× BW']].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How to Safely Test Your 1RM</h2>
+        <div class="space-y-2">
+          {[
+            'Warm up thoroughly — 5–10 min cardio + dynamic stretching',
+            'Do progressively heavier warm-up sets (50%, 70%, 80%, 90%)',
+            'Rest 3–5 minutes between near-max attempts',
+            'Make small jumps (2.5–5%) for each attempt',
+            'Use a spotter for barbell lifts; have safety bars set',
+            'Stop if form breaks down — technique before weight',
+            'Limit true 1RM testing to 2–4 times per year',
+          ].map(tip => (
+            <div class="flex gap-2 text-xs text-gray-600">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>{tip}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

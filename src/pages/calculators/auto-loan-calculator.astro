@@ -1,0 +1,157 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const price = parseFloat(inputs.price) || 0
+  const down = parseFloat(inputs.down) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  const term = parseInt(inputs.term) || 60
+  const tradeIn = parseFloat(inputs.tradeIn) || 0
+  const principal = price - down - tradeIn
+  if (principal <= 0) throw new Error('Down payment exceeds vehicle price.')
+  if (rate < 0) throw new Error('Interest rate must be positive.')
+  const r = rate / 100 / 12
+  const payment = r === 0 ? principal / term : principal * r * Math.pow(1 + r, term) / (Math.pow(1 + r, term) - 1)
+  const totalCost = payment * term + down + tradeIn * 0
+  const totalInterest = payment * term - principal
+  const affordabilityScore = Math.max(0, Math.min(100, 100 - (payment / Math.max(price * 0.02, 1)) * 10))
+  return {
+    value: '$' + payment.toFixed(2) + '/mo',
+    gaugeValue: affordabilityScore,
+    breakdown: [
+      'Loan amount: $' + principal.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+      'Total interest: $' + totalInterest.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+      'Total cost: $' + (payment * term + down).toLocaleString('en-US', { maximumFractionDigits: 0 }),
+    ],
+    stats: [
+      { label: 'Monthly Payment', value: '$' + payment.toFixed(2) },
+      { label: 'Total Interest', value: '$' + totalInterest.toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+      { label: 'Loan Amount', value: '$' + principal.toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+      { label: 'Total Cost', value: '$' + (payment * term + down).toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is a good car loan interest rate?', answer: 'As of 2025, excellent credit (720+) typically qualifies for 5–7% APR on new cars. Average credit (660–720) sees 7–10%. Below 660 may face 10–20%+. Credit unions often offer lower rates than dealerships.' },
+  { question: 'How much car can I afford?', answer: "The 20/4/10 rule: put 20% down, finance for no more than 4 years, and keep total vehicle costs (payment + insurance) under 10% of monthly gross income. For a $5,000/mo income, total auto costs should be under $500/mo." },
+  { question: 'Should I choose a shorter or longer loan term?', answer: 'Shorter terms (36–48 months) save significant interest but have higher payments. Longer terms (72–84 months) lower payments but cost more overall and risk being underwater (owing more than the car is worth).' },
+  { question: 'What is a trade-in and how does it help?', answer: "A trade-in is your old vehicle\'s value applied to the new purchase. It reduces the loan amount needed and can save on sales tax in many states (you pay tax only on the price difference, not the full price)." },
+  { question: 'Is 0% financing really free?', answer: '0% APR promotions from dealers often come with a catch: you may give up a cash rebate worth more than the interest saved, or need excellent credit (750+) to qualify. Always compare 0% financing vs. taking a rebate and getting a low-rate loan.' },
+]
+---
+<Layout
+  title="Auto Loan Calculator: Monthly Car Payment Estimator"
+  description="Calculate your monthly car payment, total interest, and total cost. Supports down payment and trade-in. Free auto loan calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Auto Loan Calculator', href: '/calculators/auto-loan-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Auto Loan Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Auto Loan Calculator"
+          description="Calculate your monthly car payment and total cost of financing"
+          formulaId="auto-loan"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Payment"
+          inputs={[
+            { id: 'price', label: 'Vehicle Price', type: 'number', placeholder: '30000', min: 0, unit: '$', defaultValue: 30000 },
+            { id: 'down', label: 'Down Payment', type: 'number', placeholder: '6000', min: 0, unit: '$', defaultValue: 6000 },
+            { id: 'tradeIn', label: 'Trade-In Value', type: 'number', placeholder: '0', min: 0, unit: '$', defaultValue: 0 },
+            { id: 'rate', label: 'Interest Rate (APR)', type: 'number', placeholder: '6.5', min: 0, max: 30, step: 0.1, unit: '%', defaultValue: 6.5 },
+            { id: 'term', label: 'Loan Term', type: 'select', options: [
+              { value: '24', label: '24 months (2 yr)' },
+              { value: '36', label: '36 months (3 yr)' },
+              { value: '48', label: '48 months (4 yr)' },
+              { value: '60', label: '60 months (5 yr)' },
+              { value: '72', label: '72 months (6 yr)' },
+              { value: '84', label: '84 months (7 yr)' },
+            ], defaultValue: '60' },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% affordability',
+            zones: [
+              { label: 'Stretch', color: '#ef4444', from: 0, to: 30 },
+              { label: 'Manageable', color: '#f59e0b', from: 30, to: 60 },
+              { label: 'Comfortable', color: '#22c55e', from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Loan Calculator', href: '/calculators/loan-calculator' },
+            { name: 'Car Lease Calculator', href: '/calculators/car-lease-calculator' },
+            { name: 'APR Calculator', href: '/calculators/apr-calculator' },
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">$25,000 Loan Payment by Term</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left pb-1">Term</th><th class="text-right pb-1">Payment</th><th class="text-right pb-1">Total Interest</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[['36 mo','$760/mo','$1,376'],['48 mo','$583/mo','$1,985'],['60 mo','$475/mo','$2,509'],['72 mo','$402/mo','$3,087']].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-1">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="text-xs text-blue-600 mt-1">At 6.5% APR</p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">20/4/10 Rule</h3>
+          <ul class="text-xs text-amber-800 space-y-1">
+            <li>• <strong>20%</strong> down payment minimum</li>
+            <li>• <strong>4 years</strong> max loan term</li>
+            <li>• <strong>10%</strong> of income max for auto costs</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Loan vs Lease: Which Is Better?</h2>
+        <div class="space-y-3">
+          {[
+            { opt: 'Buy (Loan)', pros: 'Build equity, no mileage limits, eventually payment-free', cons: 'Higher monthly payment, responsible for all repairs' },
+            { opt: 'Lease', pros: 'Lower monthly payment, always drive a new car, covered by warranty', cons: 'No equity, mileage limits (~12k/yr), fees for wear and tear' },
+          ].map(o => (
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div class="font-semibold text-gray-800 text-sm mb-2">{o.opt}</div>
+              <div class="text-xs text-green-700 mb-1">✓ {o.pros}</div>
+              <div class="text-xs text-red-600">✗ {o.cons}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Tips to Get a Lower Rate</h2>
+        <div class="space-y-2">
+          {[
+            'Check your credit score before shopping — above 720 gets the best rates',
+            'Get pre-approved by your bank or credit union first',
+            'Negotiate the car price separately from financing',
+            'Avoid dealer add-ons (GAP insurance, extended warranties) rolled into the loan',
+            'Make a larger down payment to reduce principal and improve loan-to-value ratio',
+            'Consider a shorter term — lenders offer lower rates for 36 vs. 72-month loans',
+          ].map(tip => (
+            <div class="flex gap-2 text-xs text-gray-600">
+              <span class="text-blue-500 mt-0.5 flex-shrink-0">•</span>
+              <span>{tip}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

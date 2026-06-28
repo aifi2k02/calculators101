@@ -1,0 +1,139 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const shares = parseFloat(inputs.shares)||0
+  const pricePerShare = parseFloat(inputs.pricePerShare)||0
+  const annualDividend = parseFloat(inputs.annualDividend)||0
+  const growthRate = parseFloat(inputs.growthRate)||5
+  const years = parseInt(inputs.years)||10
+  const drip = inputs.drip!=="false"
+  if(shares<=0||pricePerShare<=0) throw new Error("Enter shares and price.")
+  const investment = shares*pricePerShare
+  const yield_ = (annualDividend/pricePerShare)*100
+  let currentShares=shares, totalDiv=0, currentDiv=annualDividend
+  for(let y=0;y<years;y++){
+    const annualTotal=currentShares*currentDiv
+    totalDiv+=annualTotal
+    if(drip){ currentShares+=annualTotal/pricePerShare }
+    currentDiv*=(1+growthRate/100)
+  }
+  const finalIncome = currentShares*currentDiv
+  return {
+    value:"$"+totalDiv.toLocaleString("en-US",{maximumFractionDigits:0})+" total",
+    gaugeValue:Math.min(yield_*5,100),
+    breakdown:["Initial investment: $"+investment.toLocaleString("en-US",{maximumFractionDigits:0}),"Dividend yield: "+yield_.toFixed(2)+"%","Annual income (yr 1): $"+(shares*annualDividend).toFixed(2),"Total dividends over "+years+"yr: $"+totalDiv.toLocaleString("en-US",{maximumFractionDigits:0}),"Annual income at end: $"+finalIncome.toLocaleString("en-US",{maximumFractionDigits:0})],
+    stats:[
+      {label:"Dividend Yield",value:yield_.toFixed(2)+"%"},
+      {label:"Year 1 Income",value:"$"+(shares*annualDividend).toFixed(0)},
+      {label:years+"yr Total Dividends",value:"$"+totalDiv.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Annual Income at End",value:"$"+finalIncome.toFixed(0)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a good dividend yield?", answer: "2-4% is typical for quality dividend stocks. Over 5% may indicate risk (the price dropped, inflating the yield — investigate why). Under 2% but growing fast can be better than 5% with no growth. Focus on dividend growth rate and payout ratio as much as current yield." },
+  { question: "What is DRIP and why does it matter?", answer: "DRIP = Dividend Reinvestment Plan. Instead of receiving cash, dividends automatically buy more shares. Over decades, this compounding accelerates wealth dramatically. A $10,000 investment with 3% yield, 5% dividend growth, and DRIP over 30 years generates far more than taking dividends as cash." },
+  { question: "What is payout ratio and why does it matter?", answer: "Payout ratio = Dividends paid / Net income. Under 50%: sustainable, room to grow. 50-75%: moderate, still usually safe. Over 75-80%: may be unsustainable. Over 100%: the company is paying more than it earns — dividend cut likely. Always check payout ratio before buying dividend stocks." },
+  { question: "What is yield on cost?", answer: "Yield on cost (YOC) = Current annual dividend / Original purchase price. If you bought a stock at $20/share and it now pays $2/year, your YOC is 10% even if current yield is only 3%. Long-term dividend growth investing is powerful because YOC compounds over time." },
+  { question: "What are the best dividend-paying investments?", answer: "Individual dividend stocks: reits, utilities, consumer staples, financials with long dividend history. Dividend ETFs: VYM (Vanguard High Dividend), SCHD (Schwab Dividend), NOBL (Dividend Aristocrats). REITs offer high yields but pay as ordinary income. Dividend growth > high current yield for long-term investors." }
+]
+---
+<Layout
+  title="Dividend Calculator: Dividend Income & DRIP Growth"
+  description="Calculate dividend income, DRIP (dividend reinvestment) growth, and yield on cost over time. Free dividend calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Dividend Calculator", href: "/calculators/dividend-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Dividend Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Dividend Calculator"
+          description="Calculate dividend income and DRIP growth over time"
+          formulaId="dividend"
+          formulaFn={formulaFn}
+          resultLabel="Total Dividend Income"
+          inputs={[
+            {id:"shares",label:"Number of Shares",type:"number",placeholder:"100",min:0,defaultValue:100},
+            {id:"pricePerShare",label:"Price Per Share",type:"number",placeholder:"50",min:0,unit:"$",defaultValue:50},
+            {id:"annualDividend",label:"Annual Dividend Per Share",type:"number",placeholder:"2",min:0,unit:"$",step:0.01,defaultValue:2},
+            {id:"growthRate",label:"Dividend Growth Rate",type:"number",placeholder:"5",min:0,max:30,step:0.5,unit:"%",defaultValue:5},
+            {id:"years",label:"Investment Horizon",type:"number",placeholder:"10",min:1,max:50,unit:"years",defaultValue:10},
+            {id:"drip",label:"DRIP (Reinvest Dividends)?",type:"select",options:[{value:"true",label:"Yes — reinvest dividends"},{value:"false",label:"No — take as cash"}],defaultValue:"true"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% yield (×5)",
+            zones: [
+              { label: "Low yield <2%", color: "#ef4444", from: 0, to: 10 },
+              { label: "Moderate 2-3%", color: "#f59e0b", from: 10, to: 15 },
+              { label: "Good 3-5%", color: "#3b82f6", from: 15, to: 25 },
+              { label: "High yield 5%+", color: "#22c55e", from: 25, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Stock Profit Calculator", href: "/calculators/stock-profit-calculator" },
+            { name: "DCA Calculator", href: "/calculators/dca-calculator" },
+            { name: "Compound Interest Calculator", href: "/calculators/compound-interest-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-3">DRIP Power: 30-Year Example</h3>
+          <p class="text-xs text-green-800 mb-2">$10,000 invested, 3% yield, 5% dividend growth:</p>
+          <div class="space-y-1 text-xs text-green-800">
+            {[["Without DRIP","~$17,000 total dividends"],["With DRIP","~$29,000 total dividends"],["Difference","+$12,000 (70% more)"]].map(([k,v]) => (
+              <div class="flex justify-between border-b border-green-100 pb-0.5"><span>{k}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Dividend Safety Checklist</h2>
+        <div class="space-y-2">
+          {[
+            {factor:"Payout Ratio",safe:"Under 60%",risky:"Over 80%"},
+            {factor:"Dividend Growth",safe:"5+ consecutive years",risky:"Flat or cut history"},
+            {factor:"Free Cash Flow",safe:"Covers dividend 1.5x+",risky:"Barely covers payout"},
+            {factor:"Debt Level",safe:"Manageable debt/EBITDA",risky:"High leverage"},
+            {factor:"Business Model",safe:"Recurring revenue",risky:"Cyclical or declining"},
+          ].map(f => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800 mb-1">{f.factor}</div>
+              <div class="flex gap-4 text-xs">
+                <span class="text-green-700">✓ {f.safe}</span>
+                <span class="text-red-600">✗ {f.risky}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Dividend Aristocrats — 25+ Year Growers</h2>
+        <p class="text-xs text-gray-600 mb-2">Companies that have increased dividends for 25+ consecutive years (S&P 500 Dividend Aristocrats index):</p>
+        <div class="bg-blue-50 rounded-xl p-4 text-xs text-blue-800 space-y-1">
+          <div>Examples: Coca-Cola, Johnson & Johnson, Procter & Gamble, 3M, Colgate-Palmolive, McDonald&apos;s, Walmart</div>
+          <div class="mt-2">Track via ETF: <strong>NOBL</strong> (ProShares S&P 500 Dividend Aristocrats)</div>
+          <div class="mt-1">65 qualifying companies as of 2025</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

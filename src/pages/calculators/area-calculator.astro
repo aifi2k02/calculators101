@@ -1,0 +1,146 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const shape = inputs.shape||"rectangle"
+  const a = parseFloat(inputs.a)||0
+  const b = parseFloat(inputs.b)||0
+  const c = parseFloat(inputs.c)||0
+  let area, perimeter, formula
+  if(shape==="rectangle"){
+    if(a<=0||b<=0) throw new Error("Enter length and width.")
+    area=a*b; perimeter=2*(a+b); formula="A = l x w"
+  } else if(shape==="circle"){
+    if(a<=0) throw new Error("Enter radius.")
+    area=Math.PI*a*a; perimeter=2*Math.PI*a; formula="A = pi r^2"
+  } else if(shape==="triangle"){
+    if(a<=0||b<=0) throw new Error("Enter base and height.")
+    area=0.5*a*b; perimeter=a+b+(c||Math.sqrt(a*a+b*b)); formula="A = 1/2 x b x h"
+  } else if(shape==="square"){
+    if(a<=0) throw new Error("Enter side length.")
+    area=a*a; perimeter=4*a; formula="A = s^2"
+  } else if(shape==="trapezoid"){
+    if(a<=0||b<=0||c<=0) throw new Error("Enter both bases and height.")
+    area=0.5*(a+b)*c; perimeter=0; formula="A = 1/2 x (a+b) x h"
+  } else if(shape==="ellipse"){
+    area=Math.PI*a*b; perimeter=Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b))); formula="A = pi a b"
+  } else {
+    throw new Error("Unknown shape")
+  }
+  return {
+    value:area.toFixed(4)+" sq units",
+    gaugeValue:Math.min(area/1000*100,100),
+    breakdown:["Shape: "+shape,"Formula: "+formula,"Area: "+area.toFixed(4)+" sq units","Perimeter: "+perimeter.toFixed(4)+" units"],
+    stats:[
+      {label:"Area",value:area.toFixed(4)},
+      {label:"Shape",value:shape.charAt(0).toUpperCase()+shape.slice(1)},
+      {label:"Perimeter",value:perimeter.toFixed(4)},
+      {label:"Formula",value:formula},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I calculate the area of a rectangle?", answer: "Area = Length x Width. A room that is 12 feet by 15 feet has an area of 180 square feet. For square units, make sure both measurements use the same unit before multiplying." },
+  { question: "How do I calculate the area of a circle?", answer: "Area = pi x r2, where r is the radius. Circumference = 2 x pi x r. A circle with radius 5 has area = pi x 25 = 78.54 sq units. If you know the diameter, radius = diameter / 2." },
+  { question: "How do I calculate triangle area without height?", answer: "If you know all three sides (a, b, c), use Heron formula: s = (a+b+c)/2, Area = sqrt(s(s-a)(s-b)(s-c)). If you know two sides and the included angle: Area = 0.5 x a x b x sin(C)." },
+  { question: "How do I convert square feet to square meters?", answer: "1 square foot = 0.0929 square meters. 1 square meter = 10.764 square feet. To convert: sq ft x 0.0929 = sq meters. A 2,000 sq ft house = 185.8 sq meters." },
+  { question: "What is the area of a regular hexagon?", answer: "Regular hexagon area = (3 x sqrt(3) / 2) x s2, where s is the side length. A hexagon with side length 5 has area = (3 x 1.732 / 2) x 25 = 64.95 sq units." }
+]
+---
+<Layout
+  title="Area Calculator: Rectangle, Circle, Triangle & More"
+  description="Calculate area of any shape: rectangle, circle, triangle, square, trapezoid, and more. Free area calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Area Calculator", href: "/calculators/area-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Area Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Area Calculator"
+          description="Calculate area of any geometric shape"
+          formulaId="area"
+          formulaFn={formulaFn}
+          resultLabel="Area"
+          inputs={[
+            {id:"shape",label:"Shape",type:"select",options:[
+              {value:"rectangle",label:"Rectangle"},
+              {value:"square",label:"Square"},
+              {value:"circle",label:"Circle"},
+              {value:"triangle",label:"Triangle (base & height)"},
+              {value:"trapezoid",label:"Trapezoid"},
+              {value:"ellipse",label:"Ellipse"},
+            ],defaultValue:"rectangle"},
+            {id:"a",label:"Side A / Length / Radius / Base 1",type:"number",placeholder:"10",min:0,step:0.01,defaultValue:10},
+            {id:"b",label:"Side B / Width / Height / Base 2",type:"number",placeholder:"5",min:0,step:0.01,defaultValue:5},
+            {id:"c",label:"Side C / Height (trapezoid/triangle 3rd side)",type:"number",placeholder:"0",min:0,step:0.01,defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small (<50)", color: "#3b82f6", from: 0, to: 5 },
+              { label: "Medium (50-500)", color: "#22c55e", from: 5, to: 50 },
+              { label: "Large (500+)", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Volume Calculator", href: "/calculators/volume-calculator" },
+            { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+            { name: "Circle Calculator", href: "/calculators/circle-calculator" },
+            { name: "Pythagorean Theorem Calculator", href: "/calculators/triangle-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Area Formulas</h3>
+          <div class="space-y-1 text-xs text-blue-800 font-mono">
+            <div>Rectangle: A = l x w</div>
+            <div>Square: A = s^2</div>
+            <div>Circle: A = pi x r^2</div>
+            <div>Triangle: A = 1/2 x b x h</div>
+            <div>Trapezoid: A = 1/2 x (a+b) x h</div>
+            <div>Ellipse: A = pi x a x b</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Real-World Area Examples</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Space</th><th class="text-right p-2 text-xs font-semibold">Typical Area</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Bedroom","120–200 sq ft"],["Living room","250–400 sq ft"],["House (US avg)","2,300 sq ft"],["Tennis court","2,808 sq ft"],["Football field","57,600 sq ft"],["Acre","43,560 sq ft"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Unit Conversions</h2>
+        <div class="space-y-1 text-xs text-gray-600 bg-gray-50 rounded-xl p-4 font-mono">
+          <div>1 sq ft = 144 sq inches</div>
+          <div>1 sq yard = 9 sq ft</div>
+          <div>1 sq meter = 10.764 sq ft</div>
+          <div>1 acre = 43,560 sq ft</div>
+          <div>1 hectare = 2.471 acres</div>
+          <div>1 sq mile = 640 acres</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

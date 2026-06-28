@@ -1,0 +1,132 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const principal = parseFloat(inputs.principal)||0
+  const rate = parseFloat(inputs.rate)||0
+  const term = parseInt(inputs.term)||12
+  const fees = parseFloat(inputs.fees)||0
+  if(principal<=0) throw new Error("Enter loan amount.")
+  const r = rate/100/12
+  const payment = r===0?(principal/term):principal*r*Math.pow(1+r,term)/(Math.pow(1+r,term)-1)
+  const totalPaid = payment*term
+  const totalInterest = totalPaid-principal
+  const effectivePrincipal = principal-fees
+  let aprGuess=rate/100, step=0.001
+  for(let i=0;i<1000;i++){
+    const rm=aprGuess/12
+    const pv=rm===0?effectivePrincipal/term:payment*(1-Math.pow(1+rm,-term))/rm
+    if(Math.abs(pv-effectivePrincipal)<0.01) break
+    if(pv>effectivePrincipal) aprGuess+=step; else aprGuess-=step; step*=0.99
+  }
+  const apr = aprGuess*100
+  const diff = apr-rate
+  return {
+    value:apr.toFixed(3)+"%",
+    gaugeValue:Math.min(apr,30)/30*100,
+    breakdown:["Stated rate: "+rate+"%","APR (with fees): "+apr.toFixed(3)+"%","Monthly payment: $"+payment.toFixed(2),"Total interest: $"+totalInterest.toFixed(2),"Fees added: $"+fees],
+    stats:[
+      {label:"APR",value:apr.toFixed(3)+"%"},
+      {label:"Stated Rate",value:rate+"%"},
+      {label:"Rate Difference",value:"+"+diff.toFixed(3)+"%"},
+      {label:"Monthly Payment",value:"$"+payment.toFixed(2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is APR and how is it different from interest rate?", answer: "The interest rate is the base cost of borrowing. APR (Annual Percentage Rate) includes the interest rate PLUS fees and other costs, expressed as a yearly rate. APR is always equal to or higher than the stated rate. It is the true cost of the loan." },
+  { question: "Why is APR important when comparing loans?", answer: "Two loans with the same interest rate can have very different APRs if one has high origination fees. Always compare APR, not just interest rate. A 6% loan with $2,000 in fees may cost more than a 6.5% loan with no fees on a short-term loan." },
+  { question: "What fees are typically included in APR?", answer: "Origination fees, underwriting fees, broker fees, mortgage points (for home loans), and other mandatory closing costs. NOT included: appraisal, title insurance, escrow, and other third-party fees that vary by provider." },
+  { question: "What is a good APR for a personal loan?", answer: "Under 10% is excellent. 10-15% is good. 15-20% is fair. Above 20% is high. Credit cards average 21-24% APR. Payday loans can exceed 400% APR. Your rate depends heavily on credit score, income, and loan term." },
+  { question: "Does APR account for compounding?", answer: "Standard APR does not account for compounding. APY (Annual Percentage Yield) does. When comparing savings accounts, use APY. When comparing loans, APR is the standard. For credit cards, APR divided by 365 gives daily periodic rate, which compounds monthly." }
+]
+---
+<Layout
+  title="APR Calculator: Annual Percentage Rate Calculator"
+  description="Calculate the true annual percentage rate (APR) of a loan including fees. Compare loan costs accurately with our free APR calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "APR Calculator", href: "/calculators/apr-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">APR Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="APR Calculator"
+          description="Calculate the true annual percentage rate including fees"
+          formulaId="apr"
+          formulaFn={formulaFn}
+          resultLabel="APR"
+          inputs={[
+            {id:"principal",label:"Loan Amount",type:"number",placeholder:"20000",min:0,unit:"$",defaultValue:20000},
+            {id:"rate",label:"Stated Interest Rate",type:"number",placeholder:"6.5",min:0,max:50,step:0.1,unit:"%",defaultValue:6.5},
+            {id:"term",label:"Loan Term",type:"number",placeholder:"60",min:1,unit:"months",defaultValue:60},
+            {id:"fees",label:"Total Upfront Fees",type:"number",placeholder:"500",min:0,unit:"$",defaultValue:500}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Excellent <7%", color: "#22c55e", from: 0, to: 23 },
+              { label: "Good 7-12%", color: "#3b82f6", from: 23, to: 40 },
+              { label: "Fair 12-20%", color: "#f59e0b", from: 40, to: 67 },
+              { label: "High 20%+", color: "#ef4444", from: 67, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "Loan Calculator", href: "/calculators/loan-calculator" },
+            { name: "Auto Loan Calculator", href: "/calculators/auto-loan-calculator" },
+            { name: "Interest Calculator", href: "/calculators/interest-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">APR vs Interest Rate</h3>
+          <div class="text-xs text-blue-800 space-y-2">
+            <div><strong>Interest Rate:</strong> Base cost of borrowing money, expressed as annual %</div>
+            <div><strong>APR:</strong> Total cost including fees. Always &ge; interest rate.</div>
+            <div class="bg-blue-100 rounded p-2 mt-2">Example: 6% rate + $1,000 fee on $20k/5yr loan = <strong>6.8% APR</strong></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Typical APR Ranges by Loan Type</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Loan Type</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Good Credit APR</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["30-yr Mortgage","6-8%"],["15-yr Mortgage","5.5-7%"],["Auto Loan","5-9%"],["Personal Loan","8-15%"],["Student Loan","5-8%"],["Credit Card","18-25%"],["Payday Loan","300-400%+"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How Fees Impact APR</h2>
+        <p class="text-xs text-gray-600 mb-3">$20,000 loan at 6%, 60 months. Fee impact:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Fees</th><th class="text-right p-2 text-xs font-semibold">APR</th><th class="text-right p-2 text-xs font-semibold">Extra Cost</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["$0","6.00%","$0"],["$250","6.26%","$250"],["$500","6.52%","$500"],["$1,000","7.04%","$1,000"],["$2,000","8.07%","$2,000"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right text-red-600">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

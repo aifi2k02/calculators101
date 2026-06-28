@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const a = parseFloat(inputs.a)||0
+  const b = parseFloat(inputs.b)||0
+  const c = parseFloat(inputs.c)||0
+  if(a===0) throw new Error("a cannot be 0 (would not be quadratic).")
+  const discriminant = b*b-4*a*c
+  if(discriminant>0){
+    const x1=(-b+Math.sqrt(discriminant))/(2*a)
+    const x2=(-b-Math.sqrt(discriminant))/(2*a)
+    return {
+      value:"x = "+x1.toFixed(4)+" or "+x2.toFixed(4),
+      gaugeValue:50,
+      breakdown:["Equation: "+a+"x^2 + "+b+"x + "+c+" = 0","Discriminant: "+discriminant+" > 0 (2 real roots)","x1 = "+x1.toFixed(6),"x2 = "+x2.toFixed(6),"Vertex: ("+(-b/(2*a)).toFixed(4)+", "+(c-b*b/(4*a)).toFixed(4)+")"],
+      stats:[
+        {label:"Root x1",value:x1.toFixed(4)},
+        {label:"Root x2",value:x2.toFixed(4)},
+        {label:"Discriminant",value:discriminant.toFixed(4)},
+        {label:"Vertex x",value:(-b/(2*a)).toFixed(4)},
+      ]
+    }
+  } else if(discriminant===0){
+    const x=-b/(2*a)
+    return {
+      value:"x = "+x.toFixed(4)+" (double root)",
+      gaugeValue:50,
+      breakdown:["Discriminant: 0 (one repeated root)","x = "+x.toFixed(6),"Vertex: ("+x.toFixed(4)+", 0)"],
+      stats:[{label:"Root",value:x.toFixed(4)},{label:"Root type",value:"Double (repeated)"},{label:"Discriminant",value:"0"},{label:"Vertex x",value:x.toFixed(4)}]
+    }
+  } else {
+    const realPart=-b/(2*a)
+    const imagPart=Math.sqrt(-discriminant)/(2*a)
+    return {
+      value:"Complex roots: "+realPart.toFixed(3)+" ± "+imagPart.toFixed(3)+"i",
+      gaugeValue:50,
+      breakdown:["Discriminant: "+discriminant+" < 0 (complex roots)","x1 = "+realPart.toFixed(4)+" + "+imagPart.toFixed(4)+"i","x2 = "+realPart.toFixed(4)+" - "+imagPart.toFixed(4)+"i","No real solutions"],
+      stats:[{label:"Real Part",value:realPart.toFixed(4)},{label:"Imaginary Part",value:"±"+imagPart.toFixed(4)+"i"},{label:"Discriminant",value:discriminant.toFixed(0)},{label:"Root Type",value:"Complex"}]
+    }
+  }
+
+`
+
+const faqs = [
+  { question: "What is the quadratic formula?", answer: "For ax^2 + bx + c = 0: x = (-b ± sqrt(b^2 - 4ac)) / (2a). The discriminant b^2 - 4ac determines the type of roots: positive = two distinct real roots; zero = one repeated real root; negative = two complex conjugate roots." },
+  { question: "What is the discriminant?", answer: "The discriminant is b^2 - 4ac. If > 0: two distinct real roots (parabola crosses x-axis twice). If = 0: one repeated real root (parabola is tangent to x-axis). If < 0: no real roots, two complex conjugate roots (parabola does not cross x-axis)." },
+  { question: "How do I factor a quadratic equation?", answer: "To factor x^2 - 5x + 6 = 0: find two numbers that multiply to c (6) and add to b (-5). Those are -2 and -3: (x-2)(x-3) = 0, so x = 2 or x = 3. When factoring is difficult, use the quadratic formula — it always works." },
+  { question: "What is the vertex of a parabola?", answer: "The vertex is the minimum or maximum point of the parabola y = ax^2 + bx + c. Vertex x = -b/(2a). Vertex y = c - b^2/(4a). If a > 0, it is a minimum (parabola opens up). If a < 0, it is a maximum (parabola opens down)." },
+  { question: "Can I solve a quadratic by completing the square?", answer: "Yes. For x^2 + bx + c = 0: (1) Move c: x^2 + bx = -c. (2) Add (b/2)^2 to both sides: x^2 + bx + (b/2)^2 = -c + (b/2)^2. (3) Factor left side: (x + b/2)^2 = discriminant/4. (4) Solve: x = -b/2 ± sqrt(discriminant/2). This is essentially how the quadratic formula is derived." }
+]
+---
+<Layout
+  title="Quadratic Formula Calculator: Solve ax^2 + bx + c = 0"
+  description="Solve any quadratic equation using the quadratic formula. Find real and complex roots with full step-by-step solution. Free quadratic calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Quadratic Formula Calculator", href: "/calculators/quadratic-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Quadratic Formula Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Quadratic Formula Calculator"
+          description="Solve quadratic equations with the quadratic formula"
+          formulaId="quadratic"
+          formulaFn={formulaFn}
+          resultLabel="Roots"
+          inputs={[
+            {id:"a",label:"Coefficient a (ax²)",type:"number",placeholder:"1",step:0.001,defaultValue:1},
+            {id:"b",label:"Coefficient b (bx)",type:"number",placeholder:"-5",step:0.001,defaultValue:-5},
+            {id:"c",label:"Coefficient c (constant)",type:"number",placeholder:"6",step:0.001,defaultValue:6}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "root type",
+            zones: [
+              { label: "Real roots", color: "#22c55e", from: 40, to: 60 },
+              { label: "Complex roots", color: "#ef4444", from: 0, to: 40 },
+              { label: "Complex roots", color: "#ef4444", from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Fraction Calculator", href: "/calculators/fraction-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+            { name: "Z-Score Calculator", href: "/calculators/z-score-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Quadratic Formula</h3>
+          <div class="text-center text-blue-800 font-mono text-sm bg-blue-100 rounded p-3 mb-2">x = (-b ± sqrt(b²-4ac)) / 2a</div>
+          <div class="text-xs text-blue-700 space-y-1">
+            <div>D &gt; 0: Two real roots</div>
+            <div>D = 0: One repeated root</div>
+            <div>D &lt; 0: Complex roots (no real solution)</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Solution Methods</h2>
+        <div class="space-y-3">
+          {[
+            {m:"Factoring",w:"When?",d:"When you can find two integers that multiply to c and add to b. Fastest when it works."},
+            {m:"Quadratic Formula",w:"Always works",d:"x = (-b ± sqrt(b^2-4ac)) / 2a. Use when factoring is difficult or discriminant is negative."},
+            {m:"Completing the Square",w:"For understanding",d:"Algebraic technique that derives the quadratic formula. Useful for conic sections."},
+            {m:"Graphing",w:"Approximate",d:"Find where parabola crosses x-axis. Accurate if using a graphing calculator."},
+          ].map(s => (
+            <div class="bg-gray-50 rounded-lg p-3"><div class="font-semibold text-xs text-blue-700">{s.m} <span class="text-gray-500">({s.w})</span></div><div class="text-xs text-gray-600">{s.d}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Real-World Applications</h2>
+        <div class="space-y-2">
+          {["Projectile motion: h = -16t^2 + v0t + h0 (find when ball hits ground)","Profit optimization: P = -x^2 + 50x - 200 (find max profit)","Area problems: find dimensions from area constraints","Physics: kinematics equations with constant acceleration","Engineering: beam deflection, stress calculations","Finance: break-even analysis with quadratic cost curves"].map(a => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{a}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

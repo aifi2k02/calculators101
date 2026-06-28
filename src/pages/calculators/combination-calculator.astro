@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const n = parseInt(inputs.n)||0
+  const r = parseInt(inputs.r)||0
+  if(n<0||r<0) throw new Error("n and r must be non-negative.")
+  if(r>n) throw new Error("r cannot be greater than n.")
+  if(n>20) throw new Error("n must be 20 or less to prevent overflow.")
+  const factorial = x => {
+    if(x<=1) return 1
+    let result=1
+    for(let i=2;i<=x;i++) result*=i
+    return result
+  }
+  const nCr = factorial(n)/(factorial(r)*factorial(n-r))
+  const nPr = factorial(n)/factorial(n-r)
+  return {
+    value:"C("+n+","+r+") = "+nCr.toLocaleString(),
+    gaugeValue:Math.min(nCr/1000*100,100),
+    breakdown:["n = "+n+" items","r = "+r+" chosen","Combinations C("+n+","+r+") = "+nCr.toLocaleString(),"Permutations P("+n+","+r+") = "+nPr.toLocaleString(),"Ratio nPr/nCr = r! = "+factorial(r)],
+    stats:[
+      {label:"Combinations (nCr)",value:nCr.toLocaleString()},
+      {label:"Permutations (nPr)",value:nPr.toLocaleString()},
+      {label:"n",value:String(n)},
+      {label:"r",value:String(r)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a combination?", answer: "A combination C(n,r) counts ways to choose r items from n items where ORDER DOES NOT MATTER. Choosing 3 people from 10 for a committee: C(10,3) = 10!/(3! x 7!) = 120 ways. If you chose Alice, Bob, Carol — that is the same as Carol, Bob, Alice in combinations." },
+  { question: "What is a permutation?", answer: "A permutation P(n,r) counts ways to arrange r items from n where ORDER MATTERS. Choosing a president, VP, and treasurer from 10 people: P(10,3) = 720. Here, Alice-Bob-Carol and Carol-Bob-Alice are DIFFERENT arrangements. Permutations = Combinations x r!" },
+  { question: "What is the difference between combinations and permutations?", answer: "Combinations: order does not matter (choosing committee members, lottery numbers). Permutations: order matters (ranking, passwords, assigned roles). P(n,r) = n!/(n-r)!. C(n,r) = n!/(r! x (n-r)!). Permutations are always >= combinations (for same n and r)." },
+  { question: "How do I calculate combinations on a calculator?", answer: "On a scientific calculator: enter n, press nCr button, enter r, press =. On iPhone calculator (landscape): look for Cr. Most graphing calculators have MATH > PRB menu. In Excel: COMBIN(n,r). In Python: math.comb(n,r) or scipy.special.comb(n,r)." },
+  { question: "What is the probability of winning a lottery?", answer: "Lottery (pick 6 from 49): C(49,6) = 13,983,816. Probability of winning = 1 in 13,983,816 (about 0.0000071%). Powerball (pick 5 from 69 + 1 from 26): C(69,5) x 26 = 292,201,338. Probability = 1 in 292 million. Combinations make these astronomical numbers precise." }
+]
+---
+<Layout
+  title="Combination Calculator: nCr Combinations & Permutations"
+  description="Calculate combinations nCr and permutations nPr. Find all possible selections from a set. Free combination calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Combination Calculator", href: "/calculators/combination-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Combination Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Combination Calculator"
+          description="Calculate combinations nCr and permutations nPr"
+          formulaId="combination"
+          formulaFn={formulaFn}
+          resultLabel="Combinations"
+          inputs={[
+            {id:"n",label:"Total items (n)",type:"number",placeholder:"10",min:0,max:20,defaultValue:10},
+            {id:"r",label:"Items chosen (r)",type:"number",placeholder:"3",min:0,max:20,defaultValue:3}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "combinations",
+            zones: [
+              { label: "Small (<100)", color: "#22c55e", from: 0, to: 10 },
+              { label: "Medium (100-1000)", color: "#3b82f6", from: 10, to: 100 },
+              { label: "Large (1000+)", color: "#f59e0b", from: 100, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Factorial Calculator", href: "/calculators/factorial-calculator" },
+            { name: "Probability Calculator", href: "/calculators/percentage-calculator" },
+            { name: "Z-Score Calculator", href: "/calculators/z-score-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Formulas</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-2">
+            <div>C(n,r) = n! / (r! x (n-r)!)</div>
+            <div>P(n,r) = n! / (n-r)!</div>
+            <div class="mt-2 font-sans">nCr = nPr / r!</div>
+          </div>
+          <div class="text-xs text-blue-700 mt-3">C = Combinations (order does NOT matter)<br/>P = Permutations (order MATTERS)</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Combination Values</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">C(n,r)</th><th class="p-2 text-xs font-semibold text-right">Result</th><th class="p-2 text-xs font-semibold text-right">Example</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["C(4,2)","6","Choose 2 from 4"],["C(6,2)","15","Pairs from 6"],["C(10,3)","120","3 from 10"],["C(13,5)","1,287","Poker hand"],["C(49,6)","13,983,816","Lottery 6/49"]].map(r => (
+              <tr><td class="p-2 text-xs font-mono">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td><td class="p-2 text-xs text-right text-gray-500">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Real-World Applications</h2>
+        <div class="space-y-2">
+          {["Lottery — how many combinations of numbers exist","Poker — how many possible 5-card hands from 52 cards = C(52,5) = 2,598,960","Committee selection — pick 5 members from 20 candidates","Drug trials — choose which patients receive treatment","Sports brackets — matchup possibilities","Password security — combinations of characters in a password"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

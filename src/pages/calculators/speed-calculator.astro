@@ -1,0 +1,130 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = parseFloat(inputs.value)||0
+  const from = inputs.from||"mph"
+  if(value<0) throw new Error("Enter a non-negative speed.")
+  const toMs = {
+    mph:0.44704, kmh:1/3.6, ms:1, knots:0.514444, mach:340.29,
+    fps:0.3048, light:299792458
+  }
+  const ms = value*(toMs[from]||1)
+  const mph = ms/toMs.mph
+  const kmh = ms*3.6
+  const knots = ms/toMs.knots
+  const mach = ms/toMs.mach
+  const fps = ms/toMs.fps
+  const kph = kmh
+  return {
+    value:mph.toFixed(4)+" mph | "+kmh.toFixed(4)+" km/h",
+    gaugeValue:Math.min(mph/200*100,100),
+    breakdown:["Input: "+value+" "+from,"mph: "+mph.toFixed(4),"km/h: "+kmh.toFixed(4),"m/s: "+ms.toFixed(4),"knots: "+knots.toFixed(4),"Mach: "+mach.toFixed(6),"ft/s: "+fps.toFixed(4)],
+    stats:[
+      {label:"mph",value:mph.toFixed(3)},
+      {label:"km/h",value:kmh.toFixed(3)},
+      {label:"m/s",value:ms.toFixed(3)},
+      {label:"Knots",value:knots.toFixed(3)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I convert mph to km/h?", answer: "Multiply mph by 1.60934. Example: 60 mph = 60 × 1.60934 = 96.56 km/h. To convert km/h to mph: divide by 1.60934 (or multiply by 0.6214). Quick mental estimate: km/h ≈ mph × 1.6 (or mph × 8/5)." },
+  { question: "What is a knot in speed?", answer: "1 knot = 1 nautical mile per hour = 1.852 km/h = 1.151 mph. Knots are used in aviation and maritime navigation because nautical miles correspond to degrees of latitude (1 nautical mile = 1 arcminute of latitude), making navigation easier. A hurricane is Category 1 at 64-82 knots (74-95 mph)." },
+  { question: "What is Mach 1?", answer: "Mach 1 = the speed of sound in air, approximately 343 m/s = 1,235 km/h = 767 mph at sea level (15 degrees C). Mach number = object speed / speed of sound. Subsonic: Mach < 1. Transonic: Mach 0.8-1.2. Supersonic: Mach 1-5. Hypersonic: Mach 5+. The exact value varies with temperature and altitude." },
+  { question: "How fast is the fastest car, plane, and runner?", answer: "Fastest production car (2024): Bugatti Bolide ~500 km/h (311 mph). Fastest jet aircraft: SR-71 Blackbird at Mach 3.3 (3,540 km/h, 2,200 mph). Fastest human runner: Usain Bolt at 44.72 km/h (27.79 mph) in 2009. International Space Station: 28,000 km/h (17,500 mph)." },
+  { question: "What is escape velocity?", answer: "Escape velocity is the speed needed to break free from a celestial body gravity without further propulsion. Earth: 11.2 km/s = 40,320 km/h = 25,054 mph. Moon: 2.38 km/s. Mars: 5.03 km/s. Jupiter: 59.5 km/s. The Sun: 617.5 km/s. Rockets do not need to reach this instantly — they can use thrust continuously." }
+]
+---
+<Layout
+  title="Speed Converter: mph, km/h, m/s, knots, Mach"
+  description="Convert speed between mph, km/h, m/s, knots, and Mach number. Free speed converter with distance and time calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Speed Converter", href: "/calculators/speed-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Speed Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Speed Converter"
+          description="Convert speeds between mph, km/h, m/s, knots, and Mach"
+          formulaId="speed"
+          formulaFn={formulaFn}
+          resultLabel="Speed"
+          inputs={[
+            {id:"value",label:"Speed value",type:"number",placeholder:"60",min:0,step:0.001,defaultValue:60},
+            {id:"from",label:"Convert from",type:"select",options:[
+              {value:"mph",label:"Miles per hour (mph)"},
+              {value:"kmh",label:"Kilometers per hour (km/h)"},
+              {value:"ms",label:"Meters per second (m/s)"},
+              {value:"knots",label:"Knots (nautical mph)"},
+              {value:"mach",label:"Mach number"},
+              {value:"fps",label:"Feet per second (fps)"},
+            ],defaultValue:"mph"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "mph",
+            zones: [
+              { label: "Slow (<30mph)", color: "#22c55e", from: 0, to: 15 },
+              { label: "Highway (30-80mph)", color: "#3b82f6", from: 15, to: 40 },
+              { label: "Fast (80-200mph)", color: "#f59e0b", from: 40, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Distance Calculator", href: "/calculators/distance-calculator" },
+            { name: "Fuel Cost Calculator", href: "/calculators/fuel-cost-calculator" },
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+            { name: "Pace Calculator", href: "/calculators/pace-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Speed Reference Points</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            {[["Walking","3-4 mph / 5-6 km/h"],["Cycling","12-15 mph / 20-24 km/h"],["Car (highway)","65-75 mph / 105-120 km/h"],["Commercial jet","550-600 mph / 885-965 km/h"],["Sound (Mach 1)","767 mph / 1,235 km/h"],["ISS orbit","17,500 mph / 28,000 km/h"]].map(([t,s]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-0.5"><span>{t}</span><span class="font-mono">{s}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Speed Conversion Table</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">mph</th><th class="p-2 text-xs text-right">km/h</th><th class="p-2 text-xs text-right">m/s</th><th class="p-2 text-xs text-right">knots</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[10,16.1,4.5,8.7],[30,48.3,13.4,26.1],[55,88.5,24.6,47.8],[65,104.6,29.1,56.5],[75,120.7,33.5,65.2],[100,160.9,44.7,86.9],[200,321.9,89.4,173.8]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right">{r[3]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Time / Distance / Speed</h2>
+        <div class="bg-gray-50 rounded-xl p-4 text-xs text-gray-600 space-y-2">
+          <div class="font-mono text-blue-700">Speed = Distance / Time</div>
+          <div class="font-mono text-blue-700">Distance = Speed × Time</div>
+          <div class="font-mono text-blue-700">Time = Distance / Speed</div>
+          <div class="mt-2">At 60 mph: 1 mile per minute</div>
+          <div>At 100 km/h: 1 km per 36 seconds</div>
+          <div>Light travels 300,000 km in 1 second</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

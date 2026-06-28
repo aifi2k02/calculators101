@@ -1,0 +1,115 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const height = parseFloat(inputs.height)||0
+  const weight = parseFloat(inputs.weight)||0
+  const heightUnit = inputs.heightUnit||"cm"
+  const weightUnit = inputs.weightUnit||"kg"
+  if(height<=0||weight<=0) throw new Error("Enter height and weight.")
+  const hcm = heightUnit==="in"?height*2.54:height
+  const wkg = weightUnit==="lbs"?weight*0.453592:weight
+  const mosteller = Math.sqrt((hcm*wkg)/3600)
+  const dubois = 0.007184*Math.pow(hcm,0.725)*Math.pow(wkg,0.425)
+  const haycock = 0.024265*Math.pow(hcm,0.3964)*Math.pow(wkg,0.5378)
+  const average = (mosteller+dubois+haycock)/3
+  return {
+    value:average.toFixed(3)+" m²",
+    gaugeValue:Math.min((average/2.5)*100,100),
+    breakdown:["Height: "+hcm.toFixed(1)+"cm | Weight: "+wkg.toFixed(1)+"kg","Mosteller: "+mosteller.toFixed(3)+" m²","Du Bois: "+dubois.toFixed(3)+" m²","Haycock: "+haycock.toFixed(3)+" m²","Average: "+average.toFixed(3)+" m²"],
+    stats:[
+      {label:"Average BSA",value:average.toFixed(3)+" m²"},
+      {label:"Mosteller",value:mosteller.toFixed(3)+" m²"},
+      {label:"Du Bois",value:dubois.toFixed(3)+" m²"},
+      {label:"Haycock",value:haycock.toFixed(3)+" m²"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is body surface area used for?", answer: "BSA is used in medicine to calculate drug doses, especially for chemotherapy, where dosing by weight alone is less accurate. It is also used to calculate cardiac index, fluid replacement in burns, and other clinical parameters. Most chemotherapy drugs are dosed in mg/m2." },
+  { question: "Which BSA formula is most accurate?", answer: "The Mosteller formula is most commonly used due to its simplicity (BSA = sqrt(Height x Weight / 3600)). Du Bois (1916) was the first widely used formula but is less accurate at extremes. Haycock is preferred in pediatrics. No single formula is perfect for all body types." },
+  { question: "What is average adult BSA?", answer: "Average adult male BSA: ~1.9 m2. Average adult female: ~1.6 m2. These are the reference values used in clinical studies and standard drug dosing charts. Values range from ~0.25 m2 (newborn) to 2.5+ m2 for very large adults." },
+  { question: "How does BSA differ from BMI?", answer: "BMI (Body Mass Index) = weight/height2 — measures weight relative to height, used for general health screening. BSA (Body Surface Area) = estimate of skin area — used for clinical drug dosing. BSA is not affected by adiposity in the same way BMI is and is more relevant for drug metabolism." },
+  { question: "Why is BSA important for chemotherapy dosing?", answer: "Chemotherapy drugs are often highly toxic at wrong doses. Dosing by body surface area (mg/m2) rather than just weight provides a better approximation of drug distribution volume, metabolic rate, and toxicity threshold. However, actual dosing decisions are complex and made by oncologists based on many factors." }
+]
+---
+<Layout
+  title="Body Surface Area Calculator: BSA for Drug Dosing"
+  description="Calculate body surface area (BSA) using the Mosteller, Du Bois, and Haycock formulas. Used for chemotherapy and drug dosing. Free BSA calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Body Surface Area Calculator", href: "/calculators/body-surface-area-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Body Surface Area Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Body Surface Area Calculator"
+          description="Calculate body surface area using multiple medical formulas"
+          formulaId="body-surface-area"
+          formulaFn={formulaFn}
+          resultLabel="Body Surface Area"
+          inputs={[
+            {id:"height",label:"Height",type:"number",placeholder:"175",min:50,max:300,defaultValue:175},
+            {id:"heightUnit",label:"Height Unit",type:"select",options:[{value:"cm",label:"cm"},{value:"in",label:"inches"}],defaultValue:"cm"},
+            {id:"weight",label:"Weight",type:"number",placeholder:"70",min:1,max:500,defaultValue:70},
+            {id:"weightUnit",label:"Weight Unit",type:"select",options:[{value:"kg",label:"kg"},{value:"lbs",label:"lbs"}],defaultValue:"kg"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small (<1.6 m2)", color: "#3b82f6", from: 0, to: 64 },
+              { label: "Average (1.6-2.0)", color: "#22c55e", from: 64, to: 80 },
+              { label: "Large (2.0-2.4)", color: "#f59e0b", from: 80, to: 96 },
+              { label: "Very Large (2.4+)", color: "#ef4444", from: 96, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "BMI Calculator", href: "/calculators/bmi-calculator" },
+            { name: "Lean Body Mass Calculator", href: "/calculators/lean-body-mass-calculator" },
+            { name: "BMR Calculator", href: "/calculators/bmr-calculator" },
+            { name: "Ideal Weight Calculator", href: "/calculators/ideal-weight-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Average BSA by Population</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Newborn","0.25 m²"],["1-year-old","0.44 m²"],["Child (10 yrs)","1.14 m²"],["Adult female avg","1.6 m²"],["Adult male avg","1.9 m²"]].map(([g,b]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{g}</span><span class="font-medium">{b}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">BSA Formula Comparison</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        {[
+          {name:"Mosteller (1987)",formula:"BSA = sqrt(H × W / 3600)",notes:"Most widely used. Simple and accurate for most adults."},
+          {name:"Du Bois (1916)",formula:"BSA = 0.007184 × H^0.725 × W^0.425",notes:"Historical standard. Less accurate at body size extremes."},
+          {name:"Haycock (1978)",formula:"BSA = 0.024265 × H^0.3964 × W^0.5378",notes:"Preferred for children and pediatric drug dosing."},
+        ].map(f => (
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="font-bold text-sm text-gray-800 mb-2">{f.name}</div>
+            <div class="font-mono text-xs text-blue-700 mb-2">{f.formula}</div>
+            <div class="text-xs text-gray-600">{f.notes}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

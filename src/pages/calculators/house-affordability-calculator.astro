@@ -1,0 +1,146 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const grossIncome = parseFloat(inputs.grossIncome)||0
+  const monthlyDebt = parseFloat(inputs.monthlyDebt)||0
+  const downPayment = parseFloat(inputs.downPayment)||40000
+  const rate = parseFloat(inputs.rate)||7
+  const term = parseInt(inputs.term)||30
+  const propertyTax = parseFloat(inputs.propertyTax)||1.2
+  const insurance = parseFloat(inputs.insurance)||1200
+  if(grossIncome<=0) throw new Error("Enter annual income.")
+  const monthlyIncome = grossIncome/12
+  const maxDti = 0.43
+  const maxHousingDti = 0.28
+  const maxTotalPayment = monthlyIncome*maxDti-monthlyDebt
+  const maxHousingPayment = Math.min(maxTotalPayment,monthlyIncome*maxHousingDti)
+  const r=rate/100/12, n=term*12
+  const monthlyInsurance=insurance/12
+  const pAndI = maxHousingPayment-monthlyInsurance
+  const loanAmount = pAndI*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n))
+  const maxHomePrice = loanAmount+downPayment
+  const taxMonthly = maxHomePrice*(propertyTax/100)/12
+  const adjustedPandI = maxHousingPayment-monthlyInsurance-taxMonthly
+  const adjustedLoan = adjustedPandI*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n))
+  const finalPrice = Math.max(0,adjustedLoan+downPayment)
+  return {
+    value:"$"+finalPrice.toLocaleString("en-US",{maximumFractionDigits:0}),
+    gaugeValue:Math.min(finalPrice/1000000*100,100),
+    breakdown:["Annual income: $"+grossIncome,"Monthly income: $"+monthlyIncome.toFixed(0),"Max DTI payment: $"+maxHousingPayment.toFixed(0),"Down payment: $"+downPayment,"Estimated home price: $"+finalPrice.toLocaleString("en-US",{maximumFractionDigits:0})],
+    stats:[
+      {label:"Affordable Home Price",value:"$"+finalPrice.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Down Payment",value:"$"+downPayment.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Max Housing Payment",value:"$"+maxHousingPayment.toFixed(0)+"/mo"},
+      {label:"Loan Amount",value:"$"+adjustedLoan.toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How much house can I afford on my income?", answer: "The standard guideline: your total housing payment (PITI) should not exceed 28% of gross monthly income (front-end DTI). All debt payments combined should not exceed 36-43% (back-end DTI). On $100k salary: max housing payment ~$2,333/month, which supports roughly a $350-400k home with 10% down at 7%." },
+  { question: "What is the 28/36 rule for home buying?", answer: "The 28/36 rule: spend no more than 28% of gross monthly income on housing (principal, interest, taxes, insurance), and no more than 36% on all debt combined. More generous modern guidelines use 28/43 or 36/50 for well-qualified buyers. The rule is a starting point — actual affordability depends on your full financial picture." },
+  { question: "What income do I need for a $400,000 house?", answer: "At 7% rate, 30-year loan, 20% down on a $400k home: monthly PITI ~$2,500-2,700. Using 28% rule: need ~$9,300/month ($112k/year) gross income. Using the 43% back-end with no other debt: could qualify on ~$6,300/month ($75k/year), but it would be tight. Higher down payment reduces income needed." },
+  { question: "How does debt affect home buying power?", answer: "Existing debt directly reduces how much house you can afford. $500/month in car and student loan payments removes roughly $60-80k from your affordable home price. Paying off debt before buying can dramatically increase your budget. This is why mortgage lenders look at back-end DTI carefully." },
+  { question: "Should I stretch my budget to buy more house?", answer: "Generally no. Being house-poor — spending 40%+ of income on housing — creates financial stress and prevents savings and investing. A smaller home you can comfortably afford is better than a larger one that keeps you from building wealth. Leave room for emergency savings, retirement contributions, and life expenses." }
+]
+---
+<Layout
+  title="House Affordability Calculator: How Much Home Can I Afford?"
+  description="Calculate how much house you can afford based on income, debt, and down payment. Uses DTI guidelines. Free home affordability calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "House Affordability Calculator", href: "/calculators/house-affordability-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">House Affordability Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="House Affordability Calculator"
+          description="Calculate how much house you can afford based on income and DTI"
+          formulaId="house-affordability"
+          formulaFn={formulaFn}
+          resultLabel="Affordable Home Price"
+          inputs={[
+            {id:"grossIncome",label:"Annual Gross Income",type:"number",placeholder:"100000",min:0,unit:"$",defaultValue:100000},
+            {id:"monthlyDebt",label:"Existing Monthly Debt Payments",type:"number",placeholder:"500",min:0,unit:"$",defaultValue:500},
+            {id:"downPayment",label:"Down Payment Available",type:"number",placeholder:"40000",min:0,unit:"$",defaultValue:40000},
+            {id:"rate",label:"Mortgage Rate",type:"number",placeholder:"7",min:0,max:15,step:0.1,unit:"%",defaultValue:7},
+            {id:"term",label:"Loan Term",type:"select",options:[{value:"15",label:"15 years"},{value:"20",label:"20 years"},{value:"30",label:"30 years"}],defaultValue:"30"},
+            {id:"propertyTax",label:"Property Tax Rate",type:"number",placeholder:"1.2",min:0,max:3,step:0.1,unit:"%",defaultValue:1.2},
+            {id:"insurance",label:"Annual Homeowners Insurance",type:"number",placeholder:"1200",min:0,unit:"$",defaultValue:1200}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Starter (<$250k)", color: "#3b82f6", from: 0, to: 25 },
+              { label: "Mid-range ($250-600k)", color: "#22c55e", from: 25, to: 60 },
+              { label: "Luxury ($600k-$1M)", color: "#f59e0b", from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "Debt-to-Income Calculator", href: "/calculators/debt-to-income-calculator" },
+            { name: "Down Payment Calculator", href: "/calculators/down-payment-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Affordability by Income (7% rate, 30yr, 20% down)</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Annual Income</th><th class="text-right pb-1">Affordable Home</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["$60,000","~$200,000"],["$80,000","~$275,000"],["$100,000","~$340,000"],["$150,000","~$510,000"],["$200,000","~$680,000"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="text-xs text-blue-600 mt-1">Assumes no other debt, 28% front-end DTI</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">What Impacts Your Buying Power?</h2>
+        <div class="space-y-3">
+          {[
+            {factor:"Income",impact:"Every $10k more income adds ~$35-50k buying power"},
+            {factor:"Down Payment",impact:"$10k more down = ~$10k more home (less = more loan)"},
+            {factor:"Interest Rate",impact:"1% higher rate cuts buying power by ~10%"},
+            {factor:"Existing Debt",impact:"$500/mo more debt = ~$60k less home"},
+            {factor:"Loan Term",impact:"15yr vs 30yr: higher payment, 20% more buying power vs same payment"},
+          ].map(f => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-blue-700">{f.factor}</div>
+              <div class="text-xs text-gray-600 mt-0.5">{f.impact}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Hidden Costs of Homeownership</h2>
+        <div class="space-y-2">
+          {[["Property taxes","1-2% of home value/year"],["Homeowners insurance","$1,500-3,000/year"],["HOA fees","$0-500+/month"],["Maintenance","1% of home value/year"],["Utilities","$200-400+/month more than renting"],["PMI (< 20% down)","$100-400/month"]].map(([cost,amount]) => (
+            <div class="flex justify-between bg-gray-50 rounded px-3 py-1.5 text-xs">
+              <span class="text-gray-700">{cost}</span>
+              <span class="font-medium text-gray-800">{amount}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

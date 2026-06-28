@@ -1,0 +1,213 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const homePrice = parseFloat(inputs.principal) || 0
+  const downPayment = parseFloat(inputs.downpayment) || 0
+  const principal = homePrice - downPayment
+  const rate = parseFloat(inputs.rate) || 0
+  const years = parseInt(inputs.years) || 30
+  const tax = parseFloat(inputs.tax) || 0
+  const insurance = parseFloat(inputs.insurance) || 0
+  const pmi = downPayment / homePrice < 0.20 ? homePrice * 0.008 / 12 : 0
+  if (principal <= 0) throw new Error('Loan amount must be greater than 0.')
+  if (rate < 0) throw new Error('Interest rate cannot be negative.')
+  const r = rate / 100 / 12
+  const n = years * 12
+  const monthly = r === 0 ? principal / n : (principal * r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1)
+  const total = monthly * n
+  const interest = total - principal
+  const totalMonthly = monthly + tax/12 + insurance/12 + pmi
+  const downPct = (downPayment / homePrice * 100).toFixed(1)
+  return {
+    value: '$' + monthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + '/mo',
+    stats: [
+      { label: 'Principal & Interest', value: '$' + monthly.toFixed(2) },
+      { label: 'Total Payment (PITI)', value: '$' + totalMonthly.toFixed(0) + '/mo' },
+      { label: 'Total Repayment', value: '$' + Math.round(total).toLocaleString() },
+      { label: 'Total Interest', value: '$' + Math.round(interest).toLocaleString() },
+      { label: 'Down Payment', value: downPct + '%' },
+    ],
+    breakdown: [
+      'Home price: $' + homePrice.toLocaleString(),
+      'Down payment: $' + downPayment.toLocaleString() + ' (' + downPct + '%)',
+      'Loan amount: $' + principal.toLocaleString(),
+      'Rate: ' + rate + '% per year → ' + (rate/12).toFixed(4) + '%/month',
+      'Term: ' + years + ' years (' + n + ' payments)',
+      '—',
+      'Principal & interest: $' + monthly.toFixed(2) + '/month',
+      tax > 0 ? 'Property tax: $' + (tax/12).toFixed(2) + '/month' : '',
+      insurance > 0 ? 'Insurance: $' + (insurance/12).toFixed(2) + '/month' : '',
+      pmi > 0 ? 'PMI (est.): $' + pmi.toFixed(2) + '/month (until 20% equity)' : '',
+      'Total monthly payment: $' + totalMonthly.toFixed(2),
+      '—',
+      'Total of ' + n + ' payments: $' + total.toFixed(2),
+      'Total interest paid: $' + interest.toFixed(2),
+      'Interest as % of loan: ' + (interest/principal*100).toFixed(1) + '%',
+    ].filter(Boolean)
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '%',
+  zones: [
+    { label: 'Low LTV <60%', color: '#22c55e', from: 0, to: 60 },
+    { label: 'Moderate 60-80%', color: '#3b82f6', from: 60, to: 80 },
+    { label: 'High 80-90%', color: '#f59e0b', from: 80, to: 90 },
+    { label: 'Very High 90%+', color: '#ef4444', from: 90, to: 100 },
+  ]
+}
+---
+<Layout
+  title="Mortgage Calculator: Monthly Payment, Interest & PITI"
+  description="Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI. Supports 10, 15, 20, and 30-year fixed-rate loans."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Financial",href:"/calculators/financial"},{name:"Mortgage Calculator",href:"/calculators/mortgage-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Mortgage Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Mortgage Calculator"
+          description="Monthly payment with full cost breakdown including PITI"
+          formulaId="mortgage"
+          formulaFn={formulaFn}
+          resultLabel="Monthly P&I Payment"
+          inputs={[
+            { id: 'principal', label: 'Home Price', type: 'number', placeholder: '400000', min: 0, unit: '$', defaultValue: 400000 },
+            { id: 'downpayment', label: 'Down Payment', type: 'number', placeholder: '80000', min: 0, unit: '$', defaultValue: 80000 },
+            { id: 'rate', label: 'Annual Interest Rate', type: 'number', placeholder: '6.75', min: 0, max: 30, step: 0.125, unit: '%', defaultValue: 6.75 },
+            { id: 'years', label: 'Loan Term', type: 'select', options: [
+              { value: '30', label: '30 years (most common)' },
+              { value: '20', label: '20 years' },
+              { value: '15', label: '15 years (lower rate, higher payment)' },
+              { value: '10', label: '10 years' },
+            ], defaultValue: '30' },
+            { id: 'tax', label: 'Annual Property Tax (optional)', type: 'number', placeholder: '5000', min: 0, unit: '$', defaultValue: 0 },
+            { id: 'insurance', label: 'Annual Home Insurance (optional)', type: 'number', placeholder: '1800', min: 0, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          relatedCalcs={[
+            { name: 'Amortization Calculator', href: '/calculators/amortization-calculator' },
+            { name: 'House Affordability', href: '/calculators/house-affordability-calculator' },
+            { name: 'Refinance Calculator', href: '/calculators/refinance-calculator' },
+            { name: 'PMI Calculator', href: '/calculators/pmi-calculator' },
+            { name: 'Escrow Calculator', href: '/calculators/escrow-calculator' },
+            { name: 'Rent vs Buy', href: '/calculators/rent-vs-buy-calculator' },
+          ]}
+          faqs={[
+            { question: 'How is a mortgage payment calculated?', answer: 'Monthly P&I = P × [r(1+r)ⁿ] / [(1+r)ⁿ−1], where P = loan principal, r = monthly rate (annual ÷ 12), n = number of payments. This formula ensures the loan is fully paid off at the end of the term.' },
+            { question: 'What is PITI?', answer: 'PITI = Principal + Interest + Taxes + Insurance. It represents your total monthly housing cost. Lenders qualify you based on PITI ÷ gross monthly income (the "front-end ratio"), which should stay under 28%.' },
+            { question: 'Should I choose a 15 or 30-year mortgage?', answer: 'A 15-year mortgage has higher monthly payments but you pay ~50–60% less interest overall and build equity faster. A 30-year gives more monthly cash flow flexibility. At current rates, many financial advisors favor 30-year and investing the difference.' },
+            { question: 'What is PMI and how do I avoid it?', answer: 'PMI (Private Mortgage Insurance) is required when your down payment is less than 20%. It typically costs 0.5–1.5% of the loan amount per year. Avoid it by putting 20% down, or getting an 80-10-10 piggyback loan.' },
+            { question: 'How much does a lower interest rate save?', answer: 'On a $400,000 loan at 7% vs 6.5% for 30 years, you save about $70/month and ~$25,000 in total interest. Every 0.25% rate reduction saves roughly $12–15/month per $100,000 borrowed.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Monthly Payment by Rate & Price</h3>
+          </div>
+          <div class="p-4">
+            <p class="text-xs text-gray-500 mb-2">30-year fixed, 20% down</p>
+            <table class="w-full text-xs">
+              <thead><tr class="text-gray-500">
+                <th class="text-left pb-1.5">Price</th>
+                <th class="text-right pb-1.5">6.5%</th>
+                <th class="text-right pb-1.5">7.0%</th>
+              </tr></thead>
+              <tbody class="text-gray-700">
+                {[
+                  ['$250k', '$1,264', '$1,330'],
+                  ['$350k', '$1,770', '$1,862'],
+                  ['$450k', '$2,276', '$2,394'],
+                  ['$550k', '$2,781', '$2,926'],
+                  ['$700k', '$3,541', '$3,726'],
+                ].map(([p, r1, r2]) => (
+                  <tr class="border-t border-gray-50">
+                    <td class="py-1.5 font-medium">{p}</td>
+                    <td class="py-1.5 text-right">{r1}</td>
+                    <td class="py-1.5 text-right">{r2}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h3 class="font-semibold text-blue-900 text-sm mb-2">Affordability Rules</h3>
+          <div class="space-y-1.5 text-xs text-blue-800">
+            <div><strong>28% rule:</strong> Housing ≤ 28% of gross income</div>
+            <div><strong>36% rule:</strong> All debt ≤ 36% of gross income</div>
+            <div><strong>20% down:</strong> Avoids PMI, lowers rate</div>
+            <div><strong>3× income:</strong> Home price ≤ 3× annual salary</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rich content -->
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How Mortgage Payments Work</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">A mortgage is an amortizing loan — each monthly payment covers both interest charged on the current balance and a portion of the principal. In the early years, most of your payment goes to interest. Over time, the balance decreases and more goes to principal.</p>
+        <p class="text-gray-600 leading-relaxed">For example, on a $400,000 loan at 7% for 30 years, your first payment of $2,661 splits as: $2,333 interest + $328 principal. By year 15, it\'s roughly $1,900 interest + $761 principal. By year 29, almost all of it is principal.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">15-Year vs 30-Year Mortgage Comparison</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
+            <thead class="bg-gray-50"><tr>
+              <th class="text-left px-4 py-3 font-semibold text-gray-700">Factor</th>
+              <th class="text-center px-4 py-3 font-semibold text-blue-700">15-Year</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-700">30-Year</th>
+            </tr></thead>
+            <tbody>
+              {[
+                ['Monthly payment', 'Higher (~40% more)', 'Lower'],
+                ['Total interest paid', '~55% less', 'Much more'],
+                ['Interest rate', 'Typically 0.5–0.75% lower', 'Standard rate'],
+                ['Equity buildup', 'Faster', 'Slower'],
+                ['Monthly cash flow', 'Tighter', 'More flexible'],
+                ['Risk if income drops', 'Higher (higher payment)', 'Lower (lower payment)'],
+                ['Best for', 'Low debt, stable income', 'Maximizing monthly cash flow'],
+              ].map(([f, y15, y30], i) => (
+                <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td class="px-4 py-2.5 font-medium text-gray-700">{f}</td>
+                  <td class="px-4 py-2.5 text-center text-blue-700">{y15}</td>
+                  <td class="px-4 py-2.5 text-center text-gray-600">{y30}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Tips to Lower Your Mortgage Payment</h2>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {[
+            ['Improve your credit score', 'A 760+ credit score gets the best rates. Each 20-point improvement can save 0.25–0.5% on your rate.'],
+            ['Shop multiple lenders', 'Getting 3–5 quotes can save an average of $1,500 in fees and a lower rate. Use the same day for accurate comparisons.'],
+            ['Make a larger down payment', 'Every additional 5% down lowers your loan balance and avoids or reduces PMI.'],
+            ['Buy down your rate with points', '1 point costs 1% of the loan and typically lowers your rate by 0.25%. Calculate break-even before buying points.'],
+            ['Choose a shorter term', '15-year mortgages have rates ~0.5–0.75% lower than 30-year, saving significantly on interest.'],
+            ['Time the market', 'Mortgage rates fluctuate daily. Lock when rates dip; a 0.5% difference on $400k saves ~$100/month.'],
+          ].map(([title, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="font-semibold text-gray-800 text-sm mb-1">{title}</p>
+              <p class="text-xs text-gray-600 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,116 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const experimental = parseFloat(inputs.experimental)
+  const actual = parseFloat(inputs.actual)
+  if(isNaN(experimental)||isNaN(actual)) throw new Error("Enter both values.")
+  if(actual===0) throw new Error("Actual value cannot be zero.")
+  const error=experimental-actual
+  const percentError=Math.abs(error)/Math.abs(actual)*100
+  const relativeError=error/actual
+  const absError=Math.abs(error)
+  return {
+    value:percentError.toFixed(4)+"%",
+    gaugeValue:Math.min(percentError,100),
+    breakdown:["Experimental: "+experimental,"Actual: "+actual,"Absolute error: "+error.toFixed(6),"Absolute error: |"+error.toFixed(4)+"|","Percent error: "+percentError.toFixed(4)+"%","Relative error: "+relativeError.toFixed(6)],
+    stats:[
+      {label:"% Error",value:percentError.toFixed(4)+"%"},
+      {label:"Absolute Error",value:absError.toFixed(4)},
+      {label:"Signed Error",value:(error>0?"+":"")+error.toFixed(4)},
+      {label:"Relative Error",value:relativeError.toFixed(6)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is percentage error?", answer: "Percentage error = |experimental - actual| / |actual| x 100%. It measures how far off a measured value is from the true value. A 2% error means your measurement was 2% away from the true value. Lower percentage error = more accurate measurement." },
+  { question: "Why use absolute value in percentage error?", answer: "The absolute value |experimental - actual| gives us the magnitude of the error regardless of direction. Without it, being 5% too high and 5% too low would cancel out. Percentage error is always reported as a positive number representing the size of the discrepancy." },
+  { question: "What percentage error is acceptable in science?", answer: "Depends on the field: Physics lab (student level): <5% is good, <10% acceptable. Analytical chemistry: <2%. Manufacturing quality control: often <1%. Medical devices: <0.5% or even less. Research science: depends on the measurement, but typically strive for <5%." },
+  { question: "What is the difference between percent error and percent difference?", answer: "Percent error compares a measurement to a known true value: |measured - true| / |true| x 100%. Percent difference compares two measurements neither of which is designated the true value: |A - B| / ((A+B)/2) x 100%. Use percent error when a true value is known; percent difference when comparing two measurements." },
+  { question: "How do I reduce experimental error?", answer: "Systematic errors (shift in one direction): calibrate equipment, use better measuring tools, control experimental conditions. Random errors (scatter in both directions): repeat measurements and average, use larger sample sizes. Human errors: double-check readings, use digital instruments, blind measurements." }
+]
+---
+<Layout
+  title="Percentage Error Calculator: Experimental vs Actual Value"
+  description="Calculate percentage error between experimental and actual values. Used in science, math, and quality control. Free percent error calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Percentage Error Calculator", href: "/calculators/percentage-error-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Percentage Error Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Percentage Error Calculator"
+          description="Calculate percentage error between measured and true values"
+          formulaId="percentage-error"
+          formulaFn={formulaFn}
+          resultLabel="% Error"
+          inputs={[
+            {id:"experimental",label:"Experimental (measured) value",type:"number",placeholder:"9.8",step:0.000001,defaultValue:9.8},
+            {id:"actual",label:"Actual (accepted/true) value",type:"number",placeholder:"9.81",step:0.000001,defaultValue:9.81}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% error",
+            zones: [
+              { label: "Excellent (<1%)", color: "#22c55e", from: 0, to: 1 },
+              { label: "Good (1-5%)", color: "#3b82f6", from: 1, to: 5 },
+              { label: "Acceptable (5-10%)", color: "#f59e0b", from: 5, to: 10 },
+              { label: "Poor (10%+)", color: "#ef4444", from: 10, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+            { name: "Z-Score Calculator", href: "/calculators/z-score-calculator" },
+            { name: "Sig Figs Calculator", href: "/calculators/sig-figs-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Percentage Error Formula</h3>
+          <div class="text-center text-blue-800 font-mono text-sm bg-blue-100 rounded p-3 mb-2">% Error = |E - A| / |A| × 100%</div>
+          <div class="text-xs text-blue-700">E = Experimental value<br/>A = Actual (accepted) value</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Acceptable Error by Field</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Field</th><th class="p-2 text-xs font-semibold text-right">Typical Acceptable Error</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Student physics lab","< 10%"],["Engineering","< 5%"],["Analytical chemistry","< 2%"],["Medical devices","< 1%"],["Precision manufacturing","< 0.5%"],["Research science","< 5% typical"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Error Types</h2>
+        <div class="space-y-3">
+          {[
+            {t:"Systematic Error",d:"Consistent bias in one direction. Caused by faulty calibration, instrument zero offset. Cannot be reduced by averaging."},
+            {t:"Random Error",d:"Unpredictable scatter in both directions. Reduced by taking more measurements and averaging results."},
+            {t:"Human Error",d:"Reading scales wrong, parallax, transcription errors. Reduced by careful technique and digital instruments."},
+          ].map(e => (
+            <div class="bg-gray-50 rounded-lg p-3"><div class="font-semibold text-xs text-blue-700">{e.t}</div><div class="text-xs text-gray-600">{e.d}</div></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

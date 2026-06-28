@@ -1,0 +1,123 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = parseFloat(inputs.value)
+  if(isNaN(value)) throw new Error("Enter a valid number.")
+  if(Math.abs(value)>999999999999) throw new Error("Number too large (max 999,999,999,999).")
+  const ones=["","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"]
+  const tens=["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"]
+  const toWords = n => {
+    if(n===0) return "zero"
+    let result=""
+    if(n>=1000000000){result+=toWords(Math.floor(n/1000000000))+" billion ";n%=1000000000}
+    if(n>=1000000){result+=toWords(Math.floor(n/1000000))+" million ";n%=1000000}
+    if(n>=1000){result+=toWords(Math.floor(n/1000))+" thousand ";n%=1000}
+    if(n>=100){result+=ones[Math.floor(n/100)]+" hundred ";n%=100}
+    if(n>=20){result+=tens[Math.floor(n/10)]+(n%10?" "+ones[n%10]:"");n=0}
+    else if(n>0){result+=ones[n];n=0}
+    return result.trim()
+  }
+  const negative = value<0
+  const absVal = Math.abs(Math.round(value))
+  let words = (negative?"negative ":"")+toWords(absVal)
+  const cents = Math.round((Math.abs(value)%1)*100)
+  const dollarWords = words + (cents>0?" and "+toWords(cents)+"/100":"")
+  return {
+    value:words,
+    gaugeValue:Math.min(absVal/1000000000*100,100),
+    breakdown:["Number: "+value,"In words: "+words,"Check format: "+dollarWords+" dollars","Digits: "+Math.abs(Math.round(value)).toString().length],
+    stats:[
+      {label:"In Words",value:words.substring(0,20)+(words.length>20?"...":"")},
+      {label:"Number",value:value.toLocaleString()},
+      {label:"Check Format",value:dollarWords.substring(0,30)+(dollarWords.length>30?"...":"")},
+      {label:"Digit Count",value:String(Math.abs(Math.round(value)).toString().length)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I write a check amount in words?", answer: "Write the dollar amount in words, then the cents as a fraction. Example: $1,234.56 = One thousand two hundred thirty-four and 56/100 dollars. Start at the far left of the line, use a capital first letter, and draw a line through any unused space to prevent fraud." },
+  { question: "How are large numbers named in English?", answer: "Thousand (10^3), million (10^6), billion (10^9), trillion (10^12), quadrillion (10^15), quintillion (10^18). In the British system, a billion used to mean 10^12 (a million millions), but the American system (10^9) is now standard globally in business and science." },
+  { question: "How do I write ordinal numbers (first, second, third)?", answer: "Ordinals: 1st (first), 2nd (second), 3rd (third), 4th-19th (fourth...nineteenth), 20th (twentieth), 21st (twenty-first), 22nd (twenty-second), 23rd (twenty-third), 24th-29th (twenty-fourth...twenty-ninth). Pattern: most end in -th, except those ending in 1 (-st), 2 (-nd), 3 (-rd)." },
+  { question: "When should numbers be spelled out in writing?", answer: "Style guides vary, but common rules: spell out numbers zero through nine, use numerals for 10 and above. Always spell out at sentence start. Use numerals for specific measurements (5 miles, 3 hours). In checks and legal documents, always spell out dollar amounts to prevent alteration." },
+  { question: "What is the difference between cardinal and ordinal numbers?", answer: "Cardinal numbers count quantity: one, two, three, four... They answer how many? Ordinal numbers indicate position: first, second, third, fourth... They answer which order? In English, most ordinals add -th to the cardinal: seven → seventh, nineteen → nineteenth." }
+]
+---
+<Layout
+  title="Number to Words Calculator: Convert Numbers to English Words"
+  description="Convert any number to English words. Spell out numbers for checks, legal documents, and writing. Free number to words converter."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Number to Words Calculator", href: "/calculators/number-to-words-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Number to Words Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Number to Words Calculator"
+          description="Convert numbers to English words for checks and documents"
+          formulaId="number-to-words"
+          formulaFn={formulaFn}
+          resultLabel="Words"
+          inputs={[
+            {id:"value",label:"Number",type:"number",placeholder:"1234567",step:1,defaultValue:1234567}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Ones/Tens", color: "#22c55e", from: 0, to: 10 },
+              { label: "Hundreds/Thousands", color: "#3b82f6", from: 10, to: 50 },
+              { label: "Millions+", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Roman Numeral Calculator", href: "/calculators/roman-numeral-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+            { name: "Currency Calculator", href: "/calculators/currency-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Number System</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div><span class="font-mono">1–19</span>: one, two... nineteen</div>
+            <div><span class="font-mono">20–99</span>: twenty-one... ninety-nine</div>
+            <div><span class="font-mono">100–999</span>: one hundred...</div>
+            <div><span class="font-mono">1,000+</span>: one thousand...</div>
+            <div><span class="font-mono">1,000,000+</span>: one million...</div>
+            <div><span class="font-mono">1,000,000,000+</span>: one billion...</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Check Writing Guide</h2>
+      <div class="bg-gray-50 rounded-xl p-5">
+        <div class="text-xs text-gray-700 space-y-2">
+          <div class="grid grid-cols-2 gap-4">
+            {[["$5.00","Five and 00/100 dollars"],["$99.99","Ninety-nine and 99/100 dollars"],["$100.00","One hundred and 00/100 dollars"],["$1,000.50","One thousand and 50/100 dollars"],["$10,000.00","Ten thousand and 00/100 dollars"],["$1,234,567.89","One million two hundred thirty-four thousand five hundred sixty-seven and 89/100 dollars"]].map(r => (
+              <div class="bg-white rounded p-2 col-span-full md:col-span-1">
+                <div class="font-semibold text-blue-700">{r[0]}</div>
+                <div class="text-gray-600">{r[1]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

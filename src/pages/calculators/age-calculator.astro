@@ -1,0 +1,187 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const birth = new Date(inputs.birthdate)
+  if (!inputs.birthdate || isNaN(birth.getTime())) throw new Error('Please enter a valid birth date.')
+  const now = new Date()
+  if (birth > now) throw new Error('Birth date cannot be in the future.')
+  let years = now.getFullYear() - birth.getFullYear()
+  let months = now.getMonth() - birth.getMonth()
+  let days = now.getDate() - birth.getDate()
+  if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate() }
+  if (months < 0) { years--; months += 12 }
+  const totalDays = Math.floor((now - birth) / 86400000)
+  const totalWeeks = Math.floor(totalDays / 7)
+  const totalMonths = years * 12 + months
+  const totalHours = totalDays * 24
+  const nextBirthday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate())
+  if (nextBirthday <= now) nextBirthday.setFullYear(now.getFullYear() + 1)
+  const daysToNext = Math.ceil((nextBirthday - now) / 86400000)
+  const birthdayMonth = ['January','February','March','April','May','June','July','August','September','October','November','December'][birth.getMonth()]
+  return {
+    value: years + ' years old',
+    stats: [
+      { label: 'Exact Age', value: years + 'y ' + months + 'm ' + days + 'd' },
+      { label: 'Total Days', value: totalDays.toLocaleString() },
+      { label: 'Total Weeks', value: totalWeeks.toLocaleString() },
+      { label: 'Total Months', value: totalMonths.toLocaleString() },
+      { label: 'Next Birthday', value: 'In ' + daysToNext + ' days' },
+    ],
+    breakdown: [
+      'Date of birth: ' + birthdayMonth + ' ' + birth.getDate() + ', ' + birth.getFullYear(),
+      'Age: ' + years + ' years, ' + months + ' months, ' + days + ' days',
+      '—',
+      'Total days lived: ' + totalDays.toLocaleString(),
+      'Total weeks lived: ' + totalWeeks.toLocaleString(),
+      'Total months lived: ' + totalMonths.toLocaleString(),
+      'Approximate hours lived: ' + totalHours.toLocaleString(),
+      '—',
+      'Next birthday in: ' + daysToNext + ' day' + (daysToNext===1?'':'s'),
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: 'years',
+  zones: [
+    { label: 'Young 0-25', color: '#22c55e', from: 0, to: 25 },
+    { label: 'Middle 25-50', color: '#3b82f6', from: 25, to: 50 },
+    { label: 'Senior 50-75', color: '#f59e0b', from: 50, to: 75 },
+    { label: 'Elder 75+', color: '#ef4444', from: 75, to: 100 },
+  ]
+}
+---
+<Layout
+  title="Age Calculator: Exact Age in Years, Months & Days"
+  description="Calculate your exact age in years, months, and days from your date of birth. See total days, weeks, months lived, and countdown to next birthday."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Age Calculator",href:"/calculators/age-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <span class="text-gray-900">Age Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Age Calculator"
+          description="Calculate your exact age from date of birth"
+          formulaId="age"
+          formulaFn={formulaFn}
+          resultLabel="Your Age"
+          inputs={[
+            { id: 'birthdate', label: 'Date of Birth', type: 'date', defaultValue: '1994-01-01' },
+          ]}
+          gauge={gauge}
+          relatedCalcs={[
+            { name: 'Date Calculator', href: '/calculators/date-calculator' },
+            { name: 'Time Calculator', href: '/calculators/time-calculator' },
+            { name: 'Birthday Calculator', href: '/calculators/birthday' },
+            { name: 'Zodiac Sign Calculator', href: '/calculators/zodiac-calculator' },
+          ]}
+          faqs={[
+            { question: 'How is exact age calculated?', answer: 'Age = current date minus birth date, computed as full years, remaining months, then remaining days. Days-in-month and leap years are handled precisely, so your age is accurate to the day.' },
+            { question: 'Why might my age differ by one day?', answer: 'Your age updates at midnight on your birthday in the local timezone. Checking around midnight or across timezone boundaries may show a difference of one day.' },
+            { question: 'How many days old am I?', answer: 'A 30-year-old has lived approximately 10,957 days (30 × 365 + 7 or 8 leap days). The calculator shows your exact total including all leap years since birth.' },
+            { question: 'What is 10,000 days old?', answer: '10,000 days equals approximately 27 years and 4.5 months. Many people celebrate this milestone as it occurs in their late 20s.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Age Milestones in Days</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['1 year', '365 days'],
+              ['5 years', '1,826 days'],
+              ['10,000 days', '~27.4 years'],
+              ['18 years', '6,570 days'],
+              ['21 years', '7,670 days'],
+              ['25 years', '9,131 days'],
+              ['30 years', '10,957 days'],
+              ['40 years', '14,610 days'],
+              ['50 years', '18,262 days'],
+              ['65 years', '23,741 days'],
+              ['100 years', '36,525 days'],
+            ].map(([age, days]) => (
+              <div class="px-4 py-2 flex justify-between text-xs">
+                <span class="text-gray-600">{age}</span>
+                <span class="font-semibold text-gray-800">{days}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h3 class="font-semibold text-blue-900 text-sm mb-2">Fun Age Facts</h3>
+          <ul class="text-xs text-blue-800 space-y-1.5">
+            <li>• Your heart beats ~100,000 times per day</li>
+            <li>• You breathe ~20,000 times per day</li>
+            <li>• You sleep ~⅓ of your life</li>
+            <li>• Every cell is replaced within ~7 years</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How Age is Calculated</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Calculating exact age sounds simple — subtract birth year from current year — but precision requires handling months, days, and leap years correctly. Most calculators show just the number of years, missing the full picture.</p>
+        <p class="text-gray-600 leading-relaxed">This calculator shows your age to the exact day: years, months, and days remaining. It also converts your age into total days, weeks, months, and hours lived — a surprisingly interesting perspective on the time you've accumulated.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Legal Ages Around the World</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
+            <thead class="bg-gray-50"><tr>
+              <th class="text-left px-4 py-3 font-semibold text-gray-700">Milestone</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-700">US</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-700">UK</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-700">Many EU</th>
+            </tr></thead>
+            <tbody>
+              {[
+                ['Drive a car', '16', '17', '18'],
+                ['Vote', '18', '18', '18'],
+                ['Drink alcohol', '21', '18', '18'],
+                ['Rent a car', '25 (no surcharge)', '21', '21'],
+                ['Retirement (state)', '62–67', '66', '60–67'],
+              ].map(([milestone, us, uk, eu], i) => (
+                <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td class="px-4 py-2.5 text-gray-700 font-medium">{milestone}</td>
+                  <td class="px-4 py-2.5 text-center text-gray-600">{us}</td>
+                  <td class="px-4 py-2.5 text-center text-gray-600">{uk}</td>
+                  <td class="px-4 py-2.5 text-center text-gray-600">{eu}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Notable Age Milestones</h2>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {[
+            ['1,000 days (2.7 years)', 'A common early childhood milestone tracking cognitive and physical development.'],
+            ['10,000 days (~27 years)', 'A rare milestone celebrated by some — roughly the age when adult life patterns solidify.'],
+            ['18 years', 'Legal adulthood in most countries — right to vote, sign contracts, and serve in the military.'],
+            ['21 years', 'Full legal adulthood in the US — legal drinking age and full contract capacity.'],
+            ['25 years', 'Brain fully developed (prefrontal cortex matures). Car rental without surcharge in most countries.'],
+            ['65–67 years', 'Traditional retirement age in most developed countries; Medicare eligibility in the US.'],
+          ].map(([milestone, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="font-semibold text-gray-800 text-sm mb-1">{milestone}</p>
+              <p class="text-xs text-gray-600 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

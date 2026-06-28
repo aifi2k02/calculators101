@@ -1,0 +1,135 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const principal = parseFloat(inputs.principal) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  const years = parseInt(inputs.years) || 0
+  if (principal <= 0) throw new Error("Enter loan amount.")
+  if (years <= 0) throw new Error("Enter loan term.")
+  const r = rate / 100 / 12
+  const n = years * 12
+  const payment = r === 0 ? principal / n : principal * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1)
+  const totalPaid = payment * n
+  const totalInterest = totalPaid - principal
+  const interestPct = (totalInterest / totalPaid) * 100
+  // Year 1 breakdown
+  let bal = principal, y1interest = 0
+  for (let i = 0; i < Math.min(12, n); i++) {
+    const int = bal * r; y1interest += int; bal = bal + int - payment
+  }
+  return {
+    value: "$" + payment.toFixed(2) + "/mo",
+    gaugeValue: Math.min(interestPct, 60) / 60 * 100,
+    breakdown: ["Monthly payment: $" + payment.toFixed(2), "Total paid: $" + totalPaid.toFixed(2), "Total interest: $" + totalInterest.toFixed(2), "Interest is " + interestPct.toFixed(1) + "% of total paid", "Year 1 interest: $" + y1interest.toFixed(2)],
+    stats: [
+      { label: "Monthly Payment", value: "$" + payment.toFixed(2) },
+      { label: "Total Interest", value: "$" + totalInterest.toFixed(0) },
+      { label: "Total Paid", value: "$" + totalPaid.toFixed(0) },
+      { label: "Interest Share", value: interestPct.toFixed(1) + "%" },
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is amortization?", answer: "Amortization is the process of paying off a loan through regular payments over time. Each payment covers interest first, with the remainder reducing principal. Early payments are mostly interest; later payments are mostly principal." },
+  { question: "Why do I pay so much interest on a 30-year mortgage?", answer: "A $300,000 mortgage at 7% for 30 years costs ~$418,000 in total interest — more than the loan itself. This is because you owe interest on the full balance for decades. Paying even $100 extra per month can save tens of thousands." },
+  { question: "What is the difference between a 15 and 30-year mortgage?", answer: "A 15-year mortgage has higher monthly payments but saves enormous interest — typically 50-60% less total interest than a 30-year. A 30-year has lower payments with more flexibility, but much higher lifetime cost." },
+  { question: "How do extra payments affect amortization?", answer: "Extra payments go entirely to principal, reducing your balance and future interest charges. On a $300k mortgage at 7%, paying $200/month extra can pay off the loan 7 years early and save $85,000+ in interest." },
+  { question: "What is a balloon payment?", answer: "A balloon mortgage has smaller monthly payments with one large final payment (the balloon). Common in commercial real estate and some auto loans. The risk: you must refinance or pay the lump sum when it comes due." }
+]
+---
+<Layout
+  title="Amortization Calculator: Loan Payment Schedule"
+  description="Calculate your loan amortization schedule. See principal vs. interest breakdown for every payment. Free amortization calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Amortization Calculator", href: "/calculators/amortization-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Amortization Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Amortization Calculator"
+          description="See your loan payment breakdown — principal vs interest for every payment"
+          formulaId="amortization"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Payment"
+          inputs={[
+            { id: "principal", label: "Loan Amount", type: "number", placeholder: "300000", min: 0, unit: "$", defaultValue: 300000 },
+            { id: "rate", label: "Annual Interest Rate", type: "number", placeholder: "7", min: 0, max: 25, step: 0.1, unit: "%", defaultValue: 7 },
+            { id: "years", label: "Loan Term", type: "select", options: [{ value: "10", label: "10 years" },{ value: "15", label: "15 years" },{ value: "20", label: "20 years" },{ value: "25", label: "25 years" },{ value: "30", label: "30 years" }], defaultValue: "30" }
+          ]}
+          gauge={{min: 0, max: 100, unit: "% interest",
+            zones: [
+              { label: "Low", color: "#22c55e", from: 0, to: 33 },
+              { label: "Moderate", color: "#f59e0b", from: 33, to: 66 },
+              { label: "High", color: "#ef4444", from: 66, to: 100 },
+            ]}}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "Loan Calculator", href: "/calculators/loan-calculator" },
+            { name: "Refinance Calculator", href: "/calculators/refinance-calculator" }
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">$300k at 7% — Term Comparison</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left pb-1">Term</th><th class="text-right pb-1">Payment</th><th class="text-right pb-1">Total Interest</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["10yr","$3,484/mo","$118,000"],["15yr","$2,696/mo","$185,000"],["20yr","$2,326/mo","$258,000"],["30yr","$1,996/mo","$419,000"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-1">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">Early vs Late Payments</h3>
+          <p class="text-xs text-amber-800">In year 1 of a 30-year $300k mortgage at 7%, about <strong>$1,742</strong> of each $1,996 payment goes to interest. By year 25, only <strong>$500</strong> goes to interest. Early payments are mostly interest!</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How Amortization Works</h2>
+        <p class="text-gray-600 text-sm mb-3">Each payment = Interest + Principal. Interest = Outstanding Balance × Monthly Rate. Principal = Payment − Interest.</p>
+        <div class="bg-gray-50 rounded-lg p-4 text-xs font-mono">
+          <div class="mb-1">Month 1: Balance $300,000</div>
+          <div class="mb-1">Interest: $300k × 7%/12 = $1,750</div>
+          <div class="mb-1">Principal: $1,996 − $1,750 = $246</div>
+          <div>New balance: $300,000 − $246 = $299,754</div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Power of Extra Payments</h2>
+        <div class="space-y-2">
+          {[
+            { extra: "+$0/mo", payoff: "30 years", saved: "$0" },
+            { extra: "+$100/mo", payoff: "~26.5 years", saved: "~$60,000" },
+            { extra: "+$200/mo", payoff: "~24 years", saved: "~$95,000" },
+            { extra: "+$500/mo", payoff: "~20 years", saved: "~$150,000" },
+          ].map(p => (
+            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
+              <div class="font-mono text-xs text-blue-600 w-20">{p.extra}</div>
+              <div class="text-xs text-gray-700">Paid off in {p.payoff}, save {p.saved}</div>
+            </div>
+          ))}
+        </div>
+        <p class="text-xs text-gray-500 mt-2">On a $300k, 7%, 30-year mortgage</p>
+      </div>
+    </div>
+  </div>
+</Layout>

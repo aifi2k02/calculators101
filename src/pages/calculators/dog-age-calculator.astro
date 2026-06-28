@@ -1,0 +1,124 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const dogYears = parseFloat(inputs.dogYears)||0
+  const size = inputs.size||"medium"
+  if(dogYears<=0||dogYears>30) throw new Error("Enter a valid dog age (1-30).")
+  const humanAgeMap = {
+    small: [15,24,28,32,36,40,44,48,52,56,60,64,68,72,76,80,84,88,92,96,100,104,108,112,116,120,124,128,132,136],
+    medium:[15,24,28,32,36,42,47,51,56,60,64,68,72,77,81,85,89,93,97,101,105,109,113,117,121,125,129,133,137,141],
+    large: [15,24,28,32,36,45,50,55,61,66,72,77,82,88,93,99,104,109,115,120,126,131,136,142,147,153,158,163,169,174]
+  }
+  const map = humanAgeMap[size]||humanAgeMap.medium
+  const idx = Math.min(Math.floor(dogYears)-1, map.length-1)
+  const humanAge = map[Math.max(0,idx)]
+  const lifeExpectancy = {small:14,medium:12,large:10}[size]||12
+  const pctLife = dogYears/lifeExpectancy*100
+  return {
+    value:humanAge+" human years",
+    gaugeValue:Math.min(pctLife,100),
+    breakdown:["Dog age: "+dogYears+" years","Size: "+size,"Human equivalent: "+humanAge+" years","Life expectancy ("+size+"): ~"+lifeExpectancy+" years","% of life lived: "+pctLife.toFixed(1)+"%"],
+    stats:[
+      {label:"Human Age Equivalent",value:humanAge+" years"},
+      {label:"Dog Age",value:dogYears+" years"},
+      {label:"Size Category",value:size.charAt(0).toUpperCase()+size.slice(1)},
+      {label:"Life Stage",value:pctLife<25?"Puppy":pctLife<50?"Young Adult":pctLife<75?"Adult":"Senior"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "Is the 7 dog years to 1 human year rule accurate?", answer: "No — the 7-to-1 rule is a myth. A 1-year-old dog is already sexually mature and roughly equivalent to a 15-year-old human. By age 2, they match ~24 human years. After that, aging slows to about 4-5 human years per dog year, depending on breed size. Larger dogs age faster than smaller ones." },
+  { question: "Why do large dogs age faster than small dogs?", answer: "Larger dogs have higher metabolic rates, grow faster, and their organs work harder. A Great Dane may only live 8-10 years, while a Chihuahua can reach 14-16 years. Scientifically, larger animals tend to have shorter lifespans in general (elephant vs mouse), though the pattern reverses between species." },
+  { question: "What are the life stages of a dog?", answer: "Puppy (0-1 year): rapid growth, socialization window 3-12 weeks. Adolescent (1-2 years): hormone surge, testing boundaries. Young adult (2-3 years): peak energy, fully trained behavior. Prime adult (3-7 years): stable, healthy years. Mature adult (7-10 years): starting to slow. Senior (10+ years): special health needs." },
+  { question: "When is a dog considered a senior?", answer: "Small dogs: 10-12 years. Medium dogs: 8-10 years. Large dogs: 7-9 years. Giant breeds: 5-7 years. At this stage, twice-yearly vet visits are recommended. Watch for arthritis, vision/hearing loss, cognitive dysfunction, and organ changes that often appear in senior dogs." },
+  { question: "How can I help my dog live longer?", answer: "Maintain healthy weight (obesity reduces lifespan by 2+ years). Regular exercise matching breed needs. Dental care (dental disease affects heart, kidneys). Yearly vet checkups (twice-yearly for seniors). Quality nutrition — avoid fillers and excess calories. Mental stimulation to maintain cognitive health. Avoid harmful substances." }
+]
+---
+<Layout
+  title="Dog Age Calculator: Dog Years to Human Years"
+  description="Convert your dog age to human years. Uses size-adjusted formula for small, medium, and large dog breeds. Free dog age calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Dog Age Calculator", href: "/calculators/dog-age-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Dog Age Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Dog Age Calculator"
+          description="Convert dog years to human years by breed size"
+          formulaId="dog-age"
+          formulaFn={formulaFn}
+          resultLabel="Human Years"
+          inputs={[
+            {id:"dogYears",label:"Dog age (years)",type:"number",placeholder:"5",min:0,max:30,step:0.5,defaultValue:5},
+            {id:"size",label:"Dog size",type:"select",options:[
+              {value:"small",label:"Small (under 20 lbs)"},
+              {value:"medium",label:"Medium (20-50 lbs)"},
+              {value:"large",label:"Large (over 50 lbs)"},
+            ],defaultValue:"medium"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Puppy", color: "#22c55e", from: 0, to: 25 },
+              { label: "Young adult", color: "#3b82f6", from: 25, to: 50 },
+              { label: "Adult", color: "#f59e0b", from: 50, to: 75 },
+              { label: "Senior", color: "#ef4444", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+            { name: "BMI Calculator", href: "/calculators/bmi-calculator" },
+            { name: "Ideal Weight Calculator", href: "/calculators/ideal-weight-calculator" },
+            { name: "Heart Rate Calculator", href: "/calculators/heart-rate-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Life Expectancy by Size</h3>
+          <div class="text-xs text-blue-800 space-y-2">
+            {[["Small breeds (<20 lbs)","12-16 years","Chihuahua, Poodle"],["Medium breeds (20-50 lbs)","10-14 years","Beagle, Border Collie"],["Large breeds (50-90 lbs)","8-12 years","Lab, Golden Retriever"],["Giant breeds (90+ lbs)","6-10 years","Great Dane, Mastiff"]].map(([s,l,e]) => (
+              <div class="border-b border-blue-100 pb-1"><div class="font-semibold">{s}</div><div>{l} — {e}</div></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Dog to Human Age Chart</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Dog Age</th><th class="p-2 text-xs text-right">Small</th><th class="p-2 text-xs text-right">Medium</th><th class="p-2 text-xs text-right">Large</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[1,15,15,15],[2,24,24,24],[5,36,36,36],[7,44,47,50],[10,56,60,66],[12,64,69,77],[15,76,83,93]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]} yrs</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right">{r[3]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Senior Dog Care Tips</h2>
+        <div class="space-y-2">
+          {["Vet visits every 6 months (not annually) after age 7","Senior dog food: lower calorie, joint support formulas","Ramps and orthopedic beds ease joint pain","Shorter but more frequent walks for arthritic dogs","Mental stimulation: puzzle feeders, nose work, training","Watch for: excessive thirst, weight changes, lethargy"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

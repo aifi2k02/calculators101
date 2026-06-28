@@ -1,0 +1,141 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const a = parseFloat(inputs.a)||0
+  const b = parseFloat(inputs.b)||0
+  const c = parseFloat(inputs.c)||0
+  const angleA = parseFloat(inputs.angleA)||0
+  if(a>0&&b>0&&c>0){
+    const s=(a+b+c)/2
+    const area=Math.sqrt(s*(s-a)*(s-b)*(s-c))
+    const cosA=(b*b+c*c-a*a)/(2*b*c)
+    const A=Math.acos(cosA)*180/Math.PI
+    const B=Math.acos((a*a+c*c-b*b)/(2*a*c))*180/Math.PI
+    const C=180-A-B
+    return {
+      value:"Area: "+area.toFixed(4),
+      gaugeValue:Math.min(area/1000*100,100),
+      breakdown:["Sides: a="+a+", b="+b+", c="+c,"Perimeter: "+(a+b+c).toFixed(4),"Area: "+area.toFixed(4),"Angle A: "+A.toFixed(2)+"deg","Angle B: "+B.toFixed(2)+"deg","Angle C: "+C.toFixed(2)+"deg"],
+      stats:[
+        {label:"Area",value:area.toFixed(4)},
+        {label:"Perimeter",value:(a+b+c).toFixed(4)},
+        {label:"Angle A",value:A.toFixed(2)+"°"},
+        {label:"Angle C",value:C.toFixed(2)+"°"},
+      ]
+    }
+  } else if(a>0&&b>0&&angleA>0){
+    const A=angleA*Math.PI/180
+    const sinB=b*Math.sin(A)/a
+    const B=Math.asin(sinB)*180/Math.PI
+    const C=180-angleA-B
+    const c=a*Math.sin(C*Math.PI/180)/Math.sin(A)
+    const area=0.5*a*b*Math.sin(C*Math.PI/180)
+    return {
+      value:"Area: "+area.toFixed(4),
+      gaugeValue:Math.min(area/1000*100,100),
+      breakdown:["Using SSA: a="+a+", b="+b+", A="+angleA+"deg","c: "+c.toFixed(4),"Angle B: "+B.toFixed(2)+"deg","Angle C: "+C.toFixed(2)+"deg","Area: "+area.toFixed(4)],
+      stats:[{label:"Side c",value:c.toFixed(4)},{label:"Angle B",value:B.toFixed(2)+"°"},{label:"Angle C",value:C.toFixed(2)+"°"},{label:"Area",value:area.toFixed(4)}]
+    }
+  }
+  throw new Error("Enter all 3 sides (SSS) or 2 sides + 1 angle (SSA).")
+
+`
+
+const faqs = [
+  { question: "What is the Pythagorean theorem?", answer: "For right triangles: a^2 + b^2 = c^2, where c is the hypotenuse (longest side, opposite the right angle). If a=3, b=4, then c = sqrt(9+16) = sqrt(25) = 5. This is the most famous equation in geometry and is used throughout engineering and architecture." },
+  { question: "How do I find the area of a triangle?", answer: "Three methods: (1) Base x Height / 2 (if you know base and perpendicular height). (2) Heron formula: s=(a+b+c)/2, Area=sqrt(s(s-a)(s-b)(s-c)) (if you know all 3 sides). (3) (1/2) x a x b x sin(C) (if you know 2 sides and included angle)." },
+  { question: "What are SSS, SAS, ASA, AAS, and SSA?", answer: "These are ways to specify a triangle: SSS=three sides, SAS=two sides and included angle, ASA=two angles and included side, AAS=two angles and non-included side, SSA=two sides and non-included angle (may have ambiguous case). All except SSA uniquely determine a triangle." },
+  { question: "What are the types of triangles?", answer: "By sides: Equilateral (all 3 sides equal), Isosceles (2 sides equal), Scalene (no sides equal). By angles: Acute (all angles < 90deg), Right (one angle = 90deg), Obtuse (one angle > 90deg). An equilateral triangle is always acute. A right triangle can be scalene or isosceles." },
+  { question: "What is the law of cosines?", answer: "c^2 = a^2 + b^2 - 2ab*cos(C). It generalizes the Pythagorean theorem to any triangle. When angle C = 90deg, cos(C) = 0 and it reduces to c^2 = a^2 + b^2. Use it when you know SSS or SAS and need to find unknown sides or angles." }
+]
+---
+<Layout
+  title="Triangle Calculator: Area, Perimeter, Angles & Sides"
+  description="Calculate triangle area, perimeter, all angles and sides from any 3 inputs (SSS, SAS, ASA, AAS). Free triangle calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Triangle Calculator", href: "/calculators/triangle-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Triangle Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Triangle Calculator"
+          description="Calculate triangle area, angles, and perimeter from any combination of inputs"
+          formulaId="triangle"
+          formulaFn={formulaFn}
+          resultLabel="Area"
+          inputs={[
+            {id:"a",label:"Side a",type:"number",placeholder:"3",min:0,step:0.001,defaultValue:3},
+            {id:"b",label:"Side b",type:"number",placeholder:"4",min:0,step:0.001,defaultValue:4},
+            {id:"c",label:"Side c (or 0 to use angle below)",type:"number",placeholder:"5",min:0,step:0.001,defaultValue:5},
+            {id:"angleA",label:"Angle A in degrees (optional if all 3 sides known)",type:"number",placeholder:"0",min:0,max:180,step:0.01,defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small area", color: "#3b82f6", from: 0, to: 10 },
+              { label: "Medium", color: "#22c55e", from: 10, to: 50 },
+              { label: "Large", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Angle Converter", href: "/calculators/angle-converter-calculator" },
+            { name: "Law of Cosines Calculator", href: "/calculators/law-of-cosines-calculator" },
+            { name: "Distance Calculator", href: "/calculators/distance-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Triangle Formulas</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-1">
+            <div>Area = b x h / 2</div>
+            <div>Area = sqrt(s(s-a)(s-b)(s-c))</div>
+            <div>Perimeter = a + b + c</div>
+            <div>a^2 + b^2 = c^2 (right triangle)</div>
+            <div>A + B + C = 180 degrees</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Triangle Types</h2>
+        <div class="space-y-2">
+          {[
+            {t:"Equilateral",d:"All 3 sides equal, all angles = 60 degrees. Most symmetric triangle."},
+            {t:"Isosceles",d:"Two sides equal, two base angles equal. Many architectural forms."},
+            {t:"Right Triangle",d:"One 90-degree angle. Pythagorean theorem applies. Foundation of trigonometry."},
+            {t:"Scalene",d:"No sides equal, no angles equal. Most triangles in nature are scalene."},
+          ].map(t => (
+            <div class="bg-gray-50 rounded-lg p-3"><div class="font-semibold text-xs text-blue-700">{t.t}</div><div class="text-xs text-gray-600">{t.d}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Pythagorean Triples</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">a</th><th class="p-2 text-xs font-semibold text-right">b</th><th class="p-2 text-xs font-semibold text-right">c (hypotenuse)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[3,4,5],[5,12,13],[8,15,17],[7,24,25],[20,21,29]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

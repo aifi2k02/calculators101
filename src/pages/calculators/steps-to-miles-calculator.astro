@@ -1,0 +1,124 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const steps = parseFloat(inputs.steps)||0
+  const height = parseFloat(inputs.height)||0
+  const unit = inputs.unit||"imperial"
+  const weight = parseFloat(inputs.weight)||0
+  if(steps<=0) throw new Error("Enter number of steps.")
+  const heightInches = unit==="imperial"?height:height*0.393701
+  const strideLength = heightInches>0?heightInches*0.413:30
+  const miles = (steps*strideLength)/(5280*12)
+  const km = miles*1.60934
+  const wkg = unit==="imperial"?weight*0.453592:(weight||70)
+  const hours = miles/3.0
+  const met = 3.5
+  const calories = met*wkg*hours
+  return {
+    value:miles.toFixed(2)+" miles",
+    gaugeValue:Math.min((steps/10000)*100,100),
+    breakdown:["Steps: "+steps.toLocaleString(),"Stride length: "+strideLength.toFixed(1)+"\"","Distance: "+miles.toFixed(2)+" miles / "+km.toFixed(2)+"km","Estimated calories: "+Math.round(calories)+" kcal","Steps for 1 mile: ~"+Math.round(5280*12/strideLength)],
+    stats:[
+      {label:"Distance",value:miles.toFixed(2)+" miles"},
+      {label:"Kilometers",value:km.toFixed(2)+" km"},
+      {label:"Steps per Mile",value:Math.round(5280*12/strideLength).toLocaleString()},
+      {label:"Est. Calories",value:Math.round(calories)+" kcal"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How many steps are in a mile?", answer: "The average is 2,000-2,500 steps per mile, depending on height and stride length. Taller people have longer strides and take fewer steps per mile. A person who is 5ft 4in takes about 2,400 steps/mile. Someone 6ft tall takes about 1,900 steps/mile. Your stride length = height x 0.413 (approximately)." },
+  { question: "Is 10,000 steps a day really the goal?", answer: "The 10,000 steps goal originated from a marketing campaign for a Japanese pedometer, not medical research. However, research confirms benefits: walking 7,000-10,000 steps/day significantly reduces mortality risk. Even 7,000 steps provides most of the health benefit, with diminishing returns beyond 10,000 steps." },
+  { question: "How long does it take to walk 10,000 steps?", answer: "At an average pace of 3 mph (2,000 steps/mile), 10,000 steps takes about 80-100 minutes. At a brisk 3.5 mph pace: ~70-85 minutes. You can split this throughout the day — 15-20 minute walks 4-5 times daily is achievable for most people and eliminates prolonged sitting." },
+  { question: "How many calories does 10,000 steps burn?", answer: "Approximately 300-500 calories for a 155 lb person walking 10,000 steps (about 5 miles). Calorie burn varies by speed, terrain, and body weight. Heavier people burn more; walking uphill burns significantly more than flat walking. Running the same distance burns about 2x more calories than walking." },
+  { question: "What is a good daily step count for health?", answer: "Research shows clear health benefits at different thresholds: 4,000+ steps/day significantly reduces mortality risk vs. sedentary; 7,000-8,000 steps/day provides most cardiovascular benefits; 10,000 steps is a good general goal. For weight management, more is better — aim for 12,000-15,000 if weight loss is a priority." }
+]
+---
+<Layout
+  title="Steps to Miles Calculator: Convert Steps to Distance"
+  description="Convert steps to miles, kilometers, and calories burned based on your height and stride length. Free steps to distance calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Steps to Miles Calculator", href: "/calculators/steps-to-miles-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Steps to Miles Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Steps to Miles Calculator"
+          description="Convert steps to miles, kilometers, and calories burned"
+          formulaId="steps-to-miles"
+          formulaFn={formulaFn}
+          resultLabel="Distance (miles)"
+          inputs={[
+            {id:"steps",label:"Number of Steps",type:"number",placeholder:"10000",min:0,defaultValue:10000},
+            {id:"height",label:"Your Height (for stride estimate)",type:"number",placeholder:"68",min:40,max:90,defaultValue:68},
+            {id:"unit",label:"Units",type:"select",options:[{value:"imperial",label:"Imperial (inches, lbs, miles)"},{value:"metric",label:"Metric (cm, kg, km)"}],defaultValue:"imperial"},
+            {id:"weight",label:"Weight (optional, for calorie estimate)",type:"number",placeholder:"155",min:0,defaultValue:155}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Under 5,000", color: "#ef4444", from: 0, to: 50 },
+              { label: "5,000-7,500", color: "#f59e0b", from: 50, to: 75 },
+              { label: "7,500-10,000", color: "#3b82f6", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Calories Burned Calculator", href: "/calculators/calories-burned-calculator" },
+            { name: "Running Calorie Calculator", href: "/calculators/running-calorie-calculator" },
+            { name: "BMI Calculator", href: "/calculators/bmi-calculator" },
+            { name: "TDEE Calculator", href: "/calculators/tdee-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Steps by Height (per mile)</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Height</th><th class="text-right pb-1">Steps/Mile</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["5ft (152cm)","2,640"],["5ft 6in (168cm)","2,371"],["6ft (183cm)","2,112"],["6ft 6in (198cm)","1,907"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Daily Step Goals</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Steps/Day</th><th class="text-right p-2 text-xs font-semibold">Miles</th><th class="text-right p-2 text-xs font-semibold">Health Benefit</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["3,000","~1.5 mi","Basic movement"],["5,000","~2.5 mi","Sedentary limit"],["7,500","~3.75 mi","Good health"],["10,000","~5 mi","Optimal goal"],["15,000","~7.5 mi","Weight management"]].map(r => (
+              <tr><td class="p-2 text-xs font-medium">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Tips to Increase Daily Steps</h2>
+        <div class="space-y-2">
+          {["Take stairs instead of elevator whenever possible","Park farther from the entrance and walk","Walk during phone calls and meetings","Take a 10-minute walk after each meal","Set hourly reminders to stand and move","Walk to nearby errands instead of driving","Use a lunch break walk — 20 minutes adds ~2,500 steps","Get a dog — dog owners walk 22 more minutes daily on average"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

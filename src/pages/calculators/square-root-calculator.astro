@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const num = parseFloat(inputs.number) || 0
+  const n = parseInt(inputs.root) || 2
+  if (n < 1) throw new Error('Root must be 1 or greater.')
+  if (num < 0 && n % 2 === 0) throw new Error('Cannot take even root of negative number.')
+  const result = num < 0 ? -Math.pow(-num, 1/n) : Math.pow(num, 1/n)
+  const isExact = Number.isInteger(result)
+  return {
+    value: isExact ? String(result) : result.toFixed(8),
+    gaugeValue: Math.min(Math.abs(result), 100),
+    breakdown: [
+      'Input: ' + num, 'Root: ' + n, 'Result: ' + result.toFixed(8), 'Exact: ' + (isExact ? 'Yes — ' + result : 'No (irrational)'), 'Squared back: ' + Math.pow(result, n).toFixed(4),
+    ],
+    stats: [
+      { label: 'Result', value: result.toFixed(8) },
+      { label: 'Root Type', value: n === 2 ? 'Square Root' : n === 3 ? 'Cube Root' : n + 'th Root' },
+      { label: 'Exact?', value: isExact ? 'Yes' : 'Irrational' },
+      { label: 'Rounded (4dp)', value: result.toFixed(4) },
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: 'What is a square root?', answer: 'The square root of a number x is a value y such that y² = x. For example, √144 = 12 because 12² = 144. Every positive number has two square roots (positive and negative), but we conventionally report the positive (principal) root.' },
+  { question: 'What is an irrational square root?', answer: 'Most square roots are irrational — they cannot be expressed as a simple fraction and their decimals go on forever without repeating. √2 = 1.41421356... Perfect squares (1, 4, 9, 16, 25...) have exact integer square roots.' },
+  { question: 'What are perfect squares?', answer: 'Numbers whose square roots are whole integers: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361, 400... The square root of a perfect square is always an integer.' },
+  { question: 'How do I simplify a square root?', answer: 'Factor out perfect squares. Example: √72 = √(36×2) = 6√2. Find the largest perfect square factor, take its root, and leave the remainder under the radical.' },
+  { question: 'What is the difference between square root and exponent 0.5?', answer: 'They are identical. √x = x^(1/2) = x^0.5. Similarly, cube root = x^(1/3). This is why calculators use the ^ operator for roots as well as powers.' },
+]
+---
+<Layout
+  title='Square Root Calculator: √x, Cube Root, and Nth Root'
+  description='Calculate the square root, cube root, or any nth root of a number. Shows step-by-step simplification. Free square root calculator.'
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Square Root Calculator', href: '/calculators/square-root-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href='/calculators/math' class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Square Root Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title='Square Root Calculator'
+          description='Calculate square root, cube root, or any nth root with decimal precision'
+          formulaId='square-root'
+          formulaFn={formulaFn}
+          resultLabel='Result'
+          inputs={[
+            { id: 'number', label: 'Number', type: 'number', placeholder: '144', defaultValue: 144 },
+            { id: 'root', label: 'Root (n)', type: 'select', options: [
+              { value: '2', label: 'Square Root (√)' },
+              { value: '3', label: 'Cube Root (∛)' },
+              { value: '4', label: '4th Root' },
+              { value: '5', label: '5th Root' },
+              { value: '10', label: '10th Root' },
+            ], defaultValue: '2' },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: 'result magnitude',
+            zones: [
+              { label: '0–25', color: '#3b82f6', from: 0, to: 25 },
+              { label: '25–50', color: '#22c55e', from: 25, to: 50 },
+              { label: '50–75', color: '#f59e0b', from: 50, to: 75 },
+              { label: '75–100+', color: '#8b5cf6', from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+    { name: 'Exponent Calculator', href: '/calculators/exponent-calculator' },
+    { name: 'Scientific Notation Calculator', href: '/calculators/scientific-notation-calculator' },
+    { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+  ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Perfect Squares</h3>
+          <div class="grid grid-cols-2 gap-1 text-xs text-blue-800">
+            {[[1,1],[4,2],[9,3],[16,4],[25,5],[36,6],[49,7],[64,8],[81,9],[100,10],[121,11],[144,12]].map(([n,r]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-0.5"><span>{n}</span><span>√ = {r}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Square Roots</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Number</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Square Root</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Exact?</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[2,'1.41421','No'],[3,'1.73205','No'],[5,'2.23607','No'],[7,'2.64575','No'],[10,'3.16228','No'],[12,'3.46410','No'],[25,'5','Yes'],[50,'7.07107','No']].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-mono">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Simplifying Square Roots</h2>
+        <p class="text-gray-600 text-sm mb-3">Factor out perfect squares to simplify:</p>
+        <div class="space-y-2">
+          {[
+            { from: '√12', to: '√(4×3) = 2√3 ≈ 3.464' },
+            { from: '√18', to: '√(9×2) = 3√2 ≈ 4.243' },
+            { from: '√50', to: '√(25×2) = 5√2 ≈ 7.071' },
+            { from: '√72', to: '√(36×2) = 6√2 ≈ 8.485' },
+            { from: '√98', to: '√(49×2) = 7√2 ≈ 9.899' },
+          ].map(e => (
+            <div class="flex gap-3 bg-gray-50 rounded-lg p-2 text-xs">
+              <span class="font-mono text-blue-600 w-12">{e.from}</span>
+              <span class="text-gray-400">=</span>
+              <span class="font-mono text-green-600">{e.to}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

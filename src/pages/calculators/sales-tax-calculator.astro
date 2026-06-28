@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const price = parseFloat(inputs.price) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  if (price <= 0) throw new Error('Enter a price.')
+  const tax = price * (rate / 100)
+  const total = price + tax
+  return {
+    value: '$' + total.toFixed(2),
+    gaugeValue: rate,
+    breakdown: [
+      'Pre-tax price: $' + price.toFixed(2),
+      'Tax rate: ' + rate + '%',
+      'Tax amount: $' + tax.toFixed(2),
+      'Total with tax: $' + total.toFixed(2),
+    ],
+    stats: [
+      { label: 'Total Price', value: '$' + total.toFixed(2) },
+      { label: 'Tax Amount', value: '$' + tax.toFixed(2) },
+      { label: 'Tax Rate', value: rate + '%' },
+      { label: 'Pre-Tax Price', value: '$' + price.toFixed(2) },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How do I calculate sales tax?', answer: 'Multiply the price by the tax rate (as a decimal). Example: $50 item with 8% sales tax → $50 × 0.08 = $4.00 tax → $54.00 total. Or multiply the price by (1 + rate): $50 × 1.08 = $54.00.' },
+  { question: 'What states have no sales tax?', answer: 'Oregon, Montana, New Hampshire, Delaware, and Alaska have no statewide sales tax (though Alaska allows local taxes). These 5 states are popular for large purchases. Most states range from 4–10%.' },
+  { question: 'What is the highest sales tax in the US?', answer: 'Combined state + local rates can exceed 12% in some areas. Louisiana, Tennessee, Arkansas, Alabama, and Oklahoma regularly top the combined rate rankings. California has the highest base state rate at 7.25%.' },
+  { question: 'Do online purchases require sales tax?', answer: 'Yes, since the 2018 South Dakota v. Wayfair Supreme Court decision. Online retailers are now required to collect sales tax in states where they have economic nexus (usually $100,000+ in sales or 200+ transactions per year).' },
+  { question: 'Are groceries taxed?', answer: 'It depends on the state. Many states exempt food for home consumption (groceries). However, prepared food (restaurants, hot deli items) is usually taxable. About 37 states exempt most grocery items from sales tax.' },
+]
+---
+<Layout
+  title="Sales Tax Calculator: Price After Tax"
+  description="Calculate total price after sales tax for any state. Add tax to any purchase amount instantly. Free sales tax calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Sales Tax Calculator', href: '/calculators/sales-tax-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Sales Tax Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Sales Tax Calculator"
+          description="Calculate the total price of any purchase including sales tax"
+          formulaId="sales-tax"
+          formulaFn={formulaFn}
+          resultLabel="Total with Tax"
+          inputs={[
+            { id: 'price', label: 'Purchase Price', type: 'number', placeholder: '100', min: 0, step: 0.01, unit: '$', defaultValue: 100 },
+            { id: 'rate', label: 'Sales Tax Rate', type: 'number', placeholder: '8', min: 0, max: 15, step: 0.1, unit: '%', defaultValue: 8 },
+          ]}
+          gauge={{
+            min: 0, max: 15, unit: '% tax rate',
+            zones: [
+              { label: 'Low', color: '#22c55e', from: 0, to: 4 },
+              { label: 'Average', color: '#3b82f6', from: 4, to: 8 },
+              { label: 'High', color: '#f59e0b', from: 8, to: 10 },
+              { label: 'Very High', color: '#ef4444', from: 10, to: 15 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Discount Calculator', href: '/calculators/discount-calculator' },
+            { name: 'Tip Calculator', href: '/calculators/tip-calculator' },
+            { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+            { name: 'GST/VAT Calculator', href: '/calculators/gst-vat-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">US State Sales Tax Rates</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[['Oregon, Montana, NH, DE','0%'],['Colorado','2.9%'],['New York','4%'],['Florida','6%'],['California','7.25%'],['Tennessee','7%'],['Local taxes can add','0–5%+']].map(([s,r]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{s}</span><span class="font-medium">{r}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">Tax on $1,000 Purchase</h3>
+          <div class="space-y-1 text-xs text-amber-800">
+            {[['5% rate','$1,050 total'],['8% rate','$1,080 total'],['10% rate','$1,100 total'],['12% rate','$1,120 total']].map(([r,t]) => (
+              <div class="flex justify-between"><span>{r}</span><span class="font-medium">{t}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Reverse Sales Tax Calculation</h2>
+        <p class="text-gray-600 text-sm mb-3">If you know the total paid (with tax) and want to find the pre-tax price:</p>
+        <div class="bg-gray-50 rounded-lg p-4 text-sm mb-3">
+          <p class="font-medium text-gray-800 mb-1">Pre-tax price = Total ÷ (1 + tax rate)</p>
+          <p class="text-xs text-gray-600">Example: $108 total with 8% tax → $108 ÷ 1.08 = $100 pre-tax</p>
+        </div>
+        <p class="text-xs text-gray-500">Useful when a receipt shows the total and you need to separate the tax for expense reports or accounting.</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">What Is and Isn't Taxed</h2>
+        <div class="space-y-2">
+          {[
+            { label: 'Usually Taxable', items: 'Electronics, clothing (most states), furniture, cars, prepared food, alcohol' },
+            { label: 'Often Exempt', items: 'Groceries (37 states), prescription drugs (most states), medical devices, some services' },
+            { label: 'Varies by State', items: 'Clothing (NY/PA exempt, others tax), digital downloads, SaaS software' },
+          ].map(c => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-gray-800 text-xs mb-1">{c.label}</div>
+              <div class="text-xs text-gray-600">{c.items}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

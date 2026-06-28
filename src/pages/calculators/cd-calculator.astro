@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const principal = parseFloat(inputs.principal)||0
+  const apy = parseFloat(inputs.apy)||5
+  const term = parseInt(inputs.term)||12
+  if(principal<=0) throw new Error("Enter deposit amount.")
+  const years = term/12
+  const finalBalance = principal*Math.pow(1+apy/100,years)
+  const interest = finalBalance-principal
+  const effectiveDaily = Math.pow(1+apy/100,1/365)-1
+  const dailyInterest = principal*effectiveDaily
+  return {
+    value:"$"+finalBalance.toLocaleString("en-US",{maximumFractionDigits:2}),
+    gaugeValue:Math.min((interest/principal)*100*2,100),
+    breakdown:["Principal: $"+principal.toLocaleString("en-US"),"APY: "+apy+"%","Term: "+term+" months","Interest earned: $"+interest.toFixed(2),"Final balance: $"+finalBalance.toFixed(2),"Daily interest: $"+dailyInterest.toFixed(2)],
+    stats:[
+      {label:"Final Balance",value:"$"+finalBalance.toFixed(2)},
+      {label:"Interest Earned",value:"$"+interest.toFixed(2)},
+      {label:"Return %",value:((interest/principal)*100).toFixed(2)+"%"},
+      {label:"Daily Interest",value:"$"+dailyInterest.toFixed(2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a CD (Certificate of Deposit)?", answer: "A CD is a savings account that holds a fixed amount of money for a fixed term (months to years) and earns interest at a higher rate than regular savings. At maturity, you get your principal plus interest back. If you withdraw early, you pay a penalty (typically 3-6 months of interest)." },
+  { question: "What is a good CD rate right now?", answer: "In 2024-2025, competitive CD rates range from 4.5-5.5% APY for 6-12 month CDs. Rates vary by institution — online banks and credit unions typically offer significantly higher rates than traditional big banks. Always compare rates before committing." },
+  { question: "What is the early withdrawal penalty for CDs?", answer: "Common penalties: 3 months interest (CDs under 1 year), 6 months interest (1-2 year CDs), 12 months interest (2-5 year CDs). Some banks have more severe penalties. Calculate the penalty before breaking a CD early — it can eat into your principal." },
+  { question: "What is a CD ladder strategy?", answer: "Instead of locking all money in one CD, split it into multiple CDs with staggered maturities. Example: $20,000 split into four $5,000 CDs maturing in 6, 12, 18, and 24 months. As each matures, reinvest at the current rate. You get liquidity every 6 months." },
+  { question: "CD vs high-yield savings account: which is better?", answer: "HYSAs offer flexibility — no maturity date, can add/withdraw money, competitive rates. CDs offer higher rates in exchange for locking money away. If rates are rising, prefer HYSAs (you can move money as rates improve). If rates are falling, lock in CDs at the current higher rate." }
+]
+---
+<Layout
+  title="CD Calculator: Certificate of Deposit Interest Calculator"
+  description="Calculate how much you earn with a certificate of deposit. Compare CD terms and APY rates. Free CD interest calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "CD Calculator", href: "/calculators/cd-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">CD Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="CD Calculator"
+          description="Calculate your CD earnings and compare term options"
+          formulaId="cd"
+          formulaFn={formulaFn}
+          resultLabel="Final Balance"
+          inputs={[
+            {id:"principal",label:"Deposit Amount",type:"number",placeholder:"10000",min:0,unit:"$",defaultValue:10000},
+            {id:"apy",label:"APY (Annual Percentage Yield)",type:"number",placeholder:"5",min:0,max:15,step:0.05,unit:"%",defaultValue:5},
+            {id:"term",label:"Term",type:"select",options:[{value:"3",label:"3 months"},{value:"6",label:"6 months"},{value:"12",label:"1 year"},{value:"18",label:"18 months"},{value:"24",label:"2 years"},{value:"36",label:"3 years"},{value:"60",label:"5 years"}],defaultValue:"12"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Low (< 2%)", color: "#ef4444", from: 0, to: 4 },
+              { label: "Fair (2-4%)", color: "#f59e0b", from: 4, to: 8 },
+              { label: "Good (4-5.5%)", color: "#3b82f6", from: 8, to: 11 },
+              { label: "Excellent (5.5%+)", color: "#22c55e", from: 11, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Compound Interest Calculator", href: "/calculators/compound-interest-calculator" },
+            { name: "Interest Calculator", href: "/calculators/interest-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">$10,000 CD at 5% APY</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Term</th><th class="text-right pb-1">Interest</th><th class="text-right pb-1">Balance</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["6 months","$247","$10,247"],["1 year","$500","$10,500"],["2 years","$1,025","$11,025"],["5 years","$2,763","$12,763"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right font-medium">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">CD Ladder Example</h2>
+        <p class="text-xs text-gray-600 mb-3">$20,000 split into 4 CDs at 5% APY:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">CD</th><th class="text-right p-2 text-xs font-semibold">Amount</th><th class="text-right p-2 text-xs font-semibold">Matures</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["CD #1","$5,000","6 months"],["CD #2","$5,000","12 months"],["CD #3","$5,000","18 months"],["CD #4","$5,000","24 months"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Access $5,000 every 6 months. Reinvest at current rates.</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">CD vs Alternatives</h2>
+        <div class="space-y-3">
+          {[
+            {opt:"CD",pros:"Guaranteed rate, FDIC insured",cons:"Lock-up period, early withdrawal penalty"},
+            {opt:"HYSA",pros:"Flexible, no lock-in, competitive rates",cons:"Rate can drop anytime, no rate guarantee"},
+            {opt:"T-Bills",pros:"No state tax on interest, very safe",cons:"Rates vary, less accessible"},
+            {opt:"I-Bonds",pros:"Inflation-protected, tax advantages",cons:"$10k limit/year, 12-month lock-up"},
+          ].map(c => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-gray-800 text-xs">{c.opt}</div>
+              <div class="text-xs text-green-700">+ {c.pros}</div>
+              <div class="text-xs text-red-600">- {c.cons}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

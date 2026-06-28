@@ -1,0 +1,125 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const amount = parseFloat(inputs.amount) || 0
+  const fromYear = parseInt(inputs.fromYear) || 2000
+  const toYear = parseInt(inputs.toYear) || 2024
+  const rate = parseFloat(inputs.rate) || 3
+  if (amount <= 0) throw new Error("Enter an amount.")
+  const years = toYear - fromYear
+  const adjusted = amount * Math.pow(1 + rate / 100, years)
+  const purchasingPower = amount / Math.pow(1 + rate / 100, Math.abs(years))
+  const totalInflation = ((adjusted - amount) / amount) * 100
+  return {
+    value: "$" + adjusted.toFixed(2) + " in " + toYear,
+    gaugeValue: Math.min(totalInflation, 100),
+    breakdown: ["Original: $" + amount + " in " + fromYear, "Adjusted: $" + adjusted.toFixed(2) + " in " + toYear, "Total inflation: " + totalInflation.toFixed(1) + "%", "Annual rate used: " + rate + "%"],
+    stats: [
+      { label: "Adjusted Value", value: "$" + adjusted.toFixed(2) },
+      { label: "Total Inflation", value: totalInflation.toFixed(1) + "%" },
+      { label: "Years", value: String(Math.abs(years)) },
+      { label: "Real Loss", value: "$" + (adjusted - amount).toFixed(2) },
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is inflation?", answer: "Inflation is the rate at which the general price level rises over time, reducing purchasing power. If inflation is 3%, something that costs $100 today will cost $103 next year. The dollar buys less as prices rise." },
+  { question: "What is the historical US inflation rate?", answer: "The US CPI (Consumer Price Index) has averaged about 3.1% annually since 1913. The 1970s saw high inflation (10%+). The 2021-2023 period saw post-pandemic spikes of 7-9%. The Federal Reserve targets 2% annual inflation." },
+  { question: "How does inflation affect savings?", answer: "If your savings earn less interest than the inflation rate, you lose purchasing power. $10,000 in a 0.5% savings account during 3% inflation loses ~$250 of real value per year. This is why holding too much cash long-term is risky." },
+  { question: "What is hyperinflation?", answer: "Hyperinflation is extremely rapid inflation, typically above 50% per month. Historical examples include Germany (1923), Zimbabwe (2008), and Venezuela (2018). It destroys savings and economic stability." },
+  { question: "How can I protect against inflation?", answer: "Invest in assets that typically outpace inflation: stocks (historically ~7% real return), real estate, Treasury Inflation-Protected Securities (TIPS), I-Bonds (inflation-indexed savings bonds), and commodities. Holding only cash or low-yield bonds loses ground to inflation over time." }
+]
+---
+<Layout
+  title="Inflation Calculator: Purchasing Power Over Time"
+  description="Calculate how inflation affects purchasing power over time. See what past or future dollars are worth today. Free inflation calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Inflation Calculator", href: "/calculators/inflation-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Inflation Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Inflation Calculator"
+          description="See how inflation erodes purchasing power and what past money is worth today"
+          formulaId="inflation"
+          formulaFn={formulaFn}
+          resultLabel="Inflation-Adjusted Value"
+          inputs={[
+            { id: "amount", label: "Amount", type: "number", placeholder: "1000", min: 0, unit: "$", defaultValue: 1000 },
+            { id: "fromYear", label: "From Year", type: "number", placeholder: "2000", min: 1900, max: 2030, defaultValue: 2000 },
+            { id: "toYear", label: "To Year", type: "number", placeholder: "2024", min: 1900, max: 2030, defaultValue: 2024 },
+            { id: "rate", label: "Annual Inflation Rate", type: "number", placeholder: "3", min: 0, max: 20, step: 0.1, unit: "%", defaultValue: 3 }
+          ]}
+          gauge={{min: 0, max: 100, unit: "% total inflation",
+            zones: [
+              { label: "Low", color: "#22c55e", from: 0, to: 25 },
+              { label: "Moderate", color: "#3b82f6", from: 25, to: 50 },
+              { label: "High", color: "#f59e0b", from: 50, to: 75 },
+              { label: "Very High", color: "#ef4444", from: 75, to: 100 },
+            ]}}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Compound Interest Calculator", href: "/calculators/compound-interest-calculator" }
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">$1,000 Purchasing Power Over Time</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["1950","$12,680 today"],["1970","$7,890 today"],["1980","$3,780 today"],["1990","$2,420 today"],["2000","$1,770 today"],["2010","$1,420 today"],["2020","$1,250 today"]].map(([y,v]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{y}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+          <p class="text-xs text-blue-600 mt-1">Based on ~3% average US inflation</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">US Inflation by Decade</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Decade</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Avg Annual Rate</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["1960s","2.5%"],["1970s","7.1%"],["1980s","5.6%"],["1990s","3.0%"],["2000s","2.6%"],["2010s","1.8%"],["2020–2023","5.9%"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Inflation Hedges</h2>
+        <div class="space-y-2">
+          {[
+            { asset: "Stocks (equities)", detail: "Historically outpace inflation by ~7% real return annually" },
+            { asset: "Real Estate", detail: "Tends to appreciate with or above inflation; rental income rises" },
+            { asset: "TIPS (Treasury I-P Securities)", detail: "Principal adjusts with CPI; guaranteed inflation protection" },
+            { asset: "I-Bonds", detail: "US savings bonds with rate tied to CPI; $10k/yr limit" },
+            { asset: "Commodities", detail: "Gold, silver, oil — tend to rise with inflation" },
+          ].map(h => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-gray-800 text-xs mb-1">{h.asset}</div>
+              <div class="text-xs text-gray-600">{h.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

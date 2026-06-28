@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const from = inputs.from||"feet"
+  const feetVal = parseFloat(inputs.feet)||0
+  const inchesVal = parseFloat(inputs.inches)||0
+  const cmVal = parseFloat(inputs.cm)||0
+  let totalInches
+  if(from==="feet") totalInches=feetVal*12+inchesVal
+  else if(from==="cm") totalInches=cmVal/2.54
+  else if(from==="meters") totalInches=cmVal*100/2.54
+  else throw new Error("Unknown unit.")
+  const cm=totalInches*2.54
+  const meters=cm/100
+  const totalFeet=Math.floor(totalInches/12)
+  const remInches=totalInches%12
+  return {
+    value:totalFeet+"ft "+remInches.toFixed(2)+"in = "+cm.toFixed(1)+"cm",
+    gaugeValue:Math.min(cm/200*100,100),
+    breakdown:[from==="feet"?feetVal+"ft "+inchesVal+"in → "+cm.toFixed(2)+"cm":cmVal+"cm → "+totalFeet+"ft "+remInches.toFixed(2)+"in","Centimeters: "+cm.toFixed(2)+" cm","Meters: "+meters.toFixed(4)+" m","Total inches: "+totalInches.toFixed(4)+" in","Total feet: "+(totalInches/12).toFixed(4)+" ft"],
+    stats:[
+      {label:"Feet & Inches",value:totalFeet+"ft "+remInches.toFixed(1)+"in"},
+      {label:"Centimeters",value:cm.toFixed(1)+" cm"},
+      {label:"Meters",value:meters.toFixed(3)+" m"},
+      {label:"Total Inches",value:totalInches.toFixed(2)+" in"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I convert feet and inches to centimeters?", answer: "Total inches = feet x 12 + inches. Then cm = total inches x 2.54. Example: 5ft 11in = (5 x 12) + 11 = 71 inches. 71 x 2.54 = 180.34 cm. Shortcut: roughly 1 foot ≈ 30.48 cm, 1 inch ≈ 2.54 cm." },
+  { question: "What is the average height for men and women?", answer: "US average: Men 5ft 9in (175.3 cm), Women 5ft 4in (162.6 cm). Global averages vary: Netherlands men average 6ft (182.9 cm), Bolivian women average 4ft 11in (149.8 cm). Heights have been increasing over the 20th century due to improved nutrition and healthcare." },
+  { question: "How do I convert cm to feet and inches?", answer: "Divide cm by 2.54 to get total inches. Then floor(total inches / 12) = feet, and total inches mod 12 = remaining inches. Example: 180 cm / 2.54 = 70.866 inches. 70.866 / 12 = 5 feet remainder 10.866 inches ≈ 5ft 10.9in." },
+  { question: "What height is considered tall?", answer: "Culturally varies by country. In the US: men above 6ft (183 cm) are often considered tall, while 6ft 2in+ (188 cm) is very tall. Women: above 5ft 8in (173 cm) is often considered tall. Medically, tall stature means height above the 95th percentile. Extremely tall heights may be investigated for growth hormone disorders." },
+  { question: "Why do some countries use centimeters for height?", answer: "The metric system (centimeters, kilograms) is used in most countries worldwide. The US, Liberia, and Myanmar primarily use the imperial system (feet, inches, pounds). Medically and scientifically, metric is standard globally. Many US-born individuals know their height in feet/inches but have to look up the centimeter equivalent." }
+]
+---
+<Layout
+  title="Height Converter: Feet Inches to cm and Meters"
+  description="Convert height between feet and inches, centimeters, and meters instantly. Free height converter for people and objects."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Height Converter", href: "/calculators/height-converter-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Height Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Height Converter"
+          description="Convert height between feet/inches and centimeters"
+          formulaId="height-converter"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            {id:"from",label:"Convert from",type:"select",options:[
+              {value:"feet",label:"Feet and inches"},
+              {value:"cm",label:"Centimeters"},
+              {value:"meters",label:"Meters (enter value in cm field)"},
+            ],defaultValue:"feet"},
+            {id:"feet",label:"Feet",type:"number",placeholder:"5",min:0,step:1,defaultValue:5},
+            {id:"inches",label:"Inches (for feet+inches input)",type:"number",placeholder:"11",min:0,max:11,step:0.5,defaultValue:11},
+            {id:"cm",label:"Centimeters or meters value (for cm/m input)",type:"number",placeholder:"180",min:0,step:0.1,defaultValue:180}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Short (<155cm)", color: "#3b82f6", from: 0, to: 40 },
+              { label: "Average (155-180cm)", color: "#22c55e", from: 40, to: 75 },
+              { label: "Tall (180-200cm)", color: "#f59e0b", from: 75, to: 90 },
+              { label: "Very tall (200+cm)", color: "#ef4444", from: 90, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "BMI Calculator", href: "/calculators/bmi-calculator" },
+            { name: "Ideal Weight Calculator", href: "/calculators/ideal-weight-calculator" },
+            { name: "Shoe Size Calculator", href: "/calculators/shoe-size-calculator" },
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Quick Reference</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left">Feet & In</th><th class="text-right">cm</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["5ft 0in","152.4"],["5ft 4in","162.6"],["5ft 9in","175.3"],["6ft 0in","182.9"],["6ft 4in","193.0"],["6ft 8in","203.2"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Height Conversion Formula</h2>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <div class="text-xs text-gray-600 space-y-2 font-mono">
+            <div>1 inch = 2.54 cm exactly</div>
+            <div>1 foot = 12 inches = 30.48 cm</div>
+            <div>1 meter = 100 cm = ~3 ft 3.4 in</div>
+            <div class="mt-2">Feet+Inches → cm:</div>
+            <div>cm = (feet × 12 + inches) × 2.54</div>
+            <div class="mt-1">cm → Feet+Inches:</div>
+            <div>inches = cm / 2.54</div>
+            <div>feet = floor(inches / 12)</div>
+            <div>remaining = inches mod 12</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Average Heights by Country</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Country</th><th class="p-2 text-xs text-right">Men</th><th class="p-2 text-xs text-right">Women</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Netherlands","182.9cm","170.7cm"],["USA","175.4cm","162.1cm"],["Germany","179.9cm","165.9cm"],["Japan","171.2cm","158.8cm"],["India","165.3cm","152.6cm"],["Brazil","170.7cm","159.3cm"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

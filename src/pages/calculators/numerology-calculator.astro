@@ -1,0 +1,139 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const name = (inputs.name||"").toUpperCase().replace(/[^A-Z]/g,"")
+  const dob = inputs.dob||""
+  const reduceNum = n => {
+    while(n>9&&n!==11&&n!==22&&n!==33){
+      n=n.toString().split("").reduce((a,d)=>a+parseInt(d),0)
+    }
+    return n
+  }
+  const vowels="AEIOU"
+  const letterVals={A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,I:9,J:1,K:2,L:3,M:4,N:5,O:6,P:7,Q:8,R:9,S:1,T:2,U:3,V:4,W:5,X:6,Y:7,Z:8}
+  // Life Path from DOB
+  let lifePathNum=0
+  if(dob){
+    const parts=dob.replace(/[^0-9]/g," ").trim().split(/\s+/)
+    const digits=dob.replace(/[^0-9]/g,"").split("").map(Number)
+    lifePathNum=reduceNum(digits.reduce((a,b)=>a+b,0))
+  }
+  // Expression (full name)
+  const expressionSum=name.split("").reduce((a,c)=>a+(letterVals[c]||0),0)
+  const expressionNum=reduceNum(expressionSum)
+  // Soul urge (vowels only)
+  const soulSum=name.split("").filter(c=>vowels.includes(c)).reduce((a,c)=>a+(letterVals[c]||0),0)
+  const soulNum=soulSum>0?reduceNum(soulSum):0
+  // Personality (consonants only)
+  const persSum=name.split("").filter(c=>!vowels.includes(c)).reduce((a,c)=>a+(letterVals[c]||0),0)
+  const persNum=persSum>0?reduceNum(persSum):0
+  const meanings={1:"Leadership",2:"Cooperation",3:"Creativity",4:"Stability",5:"Freedom",6:"Nurturing",7:"Wisdom",8:"Power",9:"Humanitarianism",11:"Intuition",22:"Master Builder",33:"Master Teacher"}
+  return {
+    value:"Life Path "+lifePathNum+(lifePathNum?"":" (enter DOB)"),
+    gaugeValue:Math.min((lifePathNum||expressionNum)/33*100,100),
+    breakdown:["Life Path: "+lifePathNum+" ("+( meanings[lifePathNum]||"enter DOB")+")","Expression: "+expressionNum+" ("+(meanings[expressionNum]||"unknown")+")","Soul Urge: "+soulNum+" ("+(meanings[soulNum]||"unknown")+")","Personality: "+persNum+" ("+(meanings[persNum]||"unknown")+")" ],
+    stats:[
+      {label:"Life Path",value:String(lifePathNum||"enter DOB")},
+      {label:"Expression",value:String(expressionNum)},
+      {label:"Soul Urge",value:String(soulNum)},
+      {label:"Personality",value:String(persNum)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a Life Path number in numerology?", answer: "The Life Path number is calculated by adding all digits of your birth date and reducing to a single digit (or master number 11, 22, 33). It is considered the most important number in numerology, representing your life purpose and the traits you carry throughout life." },
+  { question: "How do I calculate my Life Path number?", answer: "Add all digits of your birthdate: born June 15, 1990: 6+1+5+1+9+9+0 = 31 → 3+1 = 4. Life Path = 4. Exception: if the sum equals 11, 22, or 33 (master numbers), do not reduce further. These master numbers carry additional significance in numerology." },
+  { question: "What are the master numbers in numerology?", answer: "11, 22, and 33 are called master numbers. They are not reduced further. 11 = The Intuitive, 22 = The Master Builder, 33 = The Master Teacher. Master numbers are considered more spiritually evolved and carry both the positive potential and the challenges of both their digits. Not everyone with these numbers will express them at the master level." },
+  { question: "What do the Life Path numbers mean?", answer: "1: Leadership, independence. 2: Cooperation, sensitivity. 3: Creativity, expression. 4: Stability, hard work. 5: Freedom, adventure. 6: Nurturing, responsibility. 7: Spirituality, introspection. 8: Power, ambition. 9: Humanitarianism, idealism. 11: Intuition, inspiration. 22: Master building, practicality. 33: Service, compassion." },
+  { question: "Is numerology scientifically valid?", answer: "Numerology is a metaphysical tradition, not a science. There is no peer-reviewed evidence that birth dates or name values predict personality traits or life outcomes. It is used as a tool for self-reflection and inspiration by many people. Approach it as entertainment and personal exploration rather than definitive prediction." }
+]
+---
+<Layout
+  title="Numerology Calculator: Life Path, Expression & Soul Number"
+  description="Calculate your numerology numbers: life path, expression (destiny), soul urge, and personality numbers. Free numerology calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Numerology Calculator", href: "/calculators/numerology-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Numerology Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Numerology Calculator"
+          description="Calculate life path, expression, soul urge, and personality numbers"
+          formulaId="numerology"
+          formulaFn={formulaFn}
+          resultLabel="Life Path"
+          inputs={[
+            {id:"name",label:"Full birth name",type:"text",placeholder:"John Michael Smith",defaultValue:"John Michael Smith"},
+            {id:"dob",label:"Date of birth (YYYY-MM-DD)",type:"date",defaultValue:"1990-05-15"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "life path",
+            zones: [
+              { label: "1-3 (Pioneer/Creative)", color: "#22c55e", from: 0, to: 33 },
+              { label: "4-6 (Builder/Nurturer)", color: "#3b82f6", from: 33, to: 66 },
+              { label: "7-9 (Seeker/Humanitarian)", color: "#f59e0b", from: 66, to: 90 },
+              { label: "Master (11/22/33)", color: "#ef4444", from: 90, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Zodiac Calculator", href: "/calculators/zodiac-calculator" },
+            { name: "Love Calculator", href: "/calculators/love-calculator" },
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+            { name: "Date Calculator", href: "/calculators/date-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Life Path Meanings</h3>
+          <div class="text-xs text-blue-800 space-y-0.5">
+            {[[1,"Leadership"],[2,"Cooperation"],[3,"Creativity"],[4,"Stability"],[5,"Freedom"],[6,"Nurturing"],[7,"Wisdom"],[8,"Ambition"],[9,"Humanitarian"],[11,"Intuition"],[22,"Master Builder"],[33,"Master Teacher"]].map(([n,m]) => (
+              <div class="flex gap-2 border-b border-blue-100 pb-0.5"><span class="font-bold w-6">{n}:</span><span>{m}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Letter Number Values</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Value</th><th class="p-2 text-xs font-semibold text-right">Letters</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[1,"A, J, S"],[2,"B, K, T"],[3,"C, L, U"],[4,"D, M, V"],[5,"E, N, W"],[6,"F, O, X"],[7,"G, P, Y"],[8,"H, Q, Z"],[9,"I, R"]].map(r => (
+              <tr><td class="p-2 text-xs font-bold">{r[0]}</td><td class="p-2 text-xs text-right font-mono">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Four Core Numbers</h2>
+        <div class="space-y-2">
+          {[
+            {n:"Life Path",s:"From date of birth",d:"Your life purpose and natural tendencies — the most important number."},
+            {n:"Expression (Destiny)",s:"All letters of full name",d:"Your natural abilities and potential — what you are meant to do."},
+            {n:"Soul Urge",s:"Vowels of full name",d:"Your inner desires and what motivates you at the deepest level."},
+            {n:"Personality",s:"Consonants of full name",d:"How others perceive you — the mask you present to the world."},
+          ].map(n => (
+            <div class="bg-gray-50 rounded-lg p-2"><div class="font-semibold text-xs text-blue-700">{n.n} <span class="text-gray-500">({n.s})</span></div><div class="text-xs text-gray-600">{n.d}</div></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

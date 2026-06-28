@@ -1,0 +1,129 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = parseFloat(inputs.value)||0
+  const base = inputs.base||"10"
+  if(value<=0) throw new Error("Value must be positive.")
+  let result, logName
+  if(base==="e"){
+    result=Math.log(value); logName="ln("+value+")"
+  } else if(base==="2"){
+    result=Math.log2(value); logName="log2("+value+")"
+  } else {
+    const b=parseFloat(base)||10
+    if(b<=0||b===1) throw new Error("Base must be positive and not equal to 1.")
+    result=Math.log(value)/Math.log(b); logName="log_"+b+"("+value+")"
+  }
+  const antilog=Math.pow(parseFloat(base==="e"?Math.E:parseFloat(base)||10),result)
+  return {
+    value:logName+" = "+result.toFixed(6),
+    gaugeValue:Math.min(Math.max(result*10+50,0),100),
+    breakdown:[logName+" = "+result.toFixed(8),"Antilog verification: "+antilog.toFixed(4)+" ≈ "+value,"ln("+value+") = "+Math.log(value).toFixed(6),"log10("+value+") = "+Math.log10(value).toFixed(6),"log2("+value+") = "+Math.log2(value).toFixed(6)],
+    stats:[
+      {label:"Result",value:result.toFixed(6)},
+      {label:"ln (natural log)",value:Math.log(value).toFixed(6)},
+      {label:"log10",value:Math.log10(value).toFixed(6)},
+      {label:"log2",value:Math.log2(value).toFixed(6)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a logarithm?", answer: "log_b(x) = y means b^y = x. The logarithm answers: what power must I raise b to, to get x? log10(1000) = 3 because 10^3 = 1000. ln(e) = 1 because e^1 = e. log2(8) = 3 because 2^3 = 8." },
+  { question: "What is the natural logarithm (ln)?", answer: "The natural logarithm uses base e ≈ 2.71828. ln(x) = log_e(x). It is the inverse of e^x: ln(e^x) = x, e^(ln(x)) = x. Natural logs appear naturally in calculus, growth models, and compound interest: A = Pe^(rt)." },
+  { question: "What are the logarithm rules?", answer: "Product: log(ab) = log(a) + log(b). Quotient: log(a/b) = log(a) - log(b). Power: log(a^n) = n*log(a). Change of base: log_b(x) = log(x)/log(b) = ln(x)/ln(b). These rules simplify multiplication into addition." },
+  { question: "When is log base 2 used?", answer: "log2 is used in computer science and information theory. Bits needed to represent n values = ceil(log2(n)). Binary search takes log2(n) steps. Sorting n items takes O(n log2(n)) comparisons. log2(1,000,000) ≈ 20, so 20 bits encode 1 million values." },
+  { question: "What is the difference between log and ln?", answer: "log (or log10) is the common logarithm, base 10. Used in pH, decibels, Richter scale. ln is the natural logarithm, base e. Used in calculus, probability, growth models. They are related: ln(x) = log(x) / log(e) ≈ log(x) / 0.4343, or ln(x) = 2.3026 x log10(x)." }
+]
+---
+<Layout
+  title="Logarithm Calculator: log, ln, log2, log base n"
+  description="Calculate logarithms in any base: log10, natural log (ln), log2, or any base. Step-by-step antilog calculation. Free log calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Logarithm Calculator", href: "/calculators/logarithm-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Logarithm Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Logarithm Calculator"
+          description="Calculate log in any base with step-by-step solution"
+          formulaId="logarithm"
+          formulaFn={formulaFn}
+          resultLabel="Logarithm"
+          inputs={[
+            {id:"value",label:"Value (x)",type:"number",placeholder:"100",min:0.000001,step:0.001,defaultValue:100},
+            {id:"base",label:"Logarithm base",type:"select",options:[
+              {value:"10",label:"log₁₀ (common log)"},
+              {value:"e",label:"ln (natural log, base e)"},
+              {value:"2",label:"log₂ (binary log)"},
+              {value:"3",label:"log₃"},
+              {value:"5",label:"log₅"},
+            ],defaultValue:"10"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "gauge",
+            zones: [
+              { label: "Negative result", color: "#ef4444", from: 0, to: 40 },
+              { label: "Near zero", color: "#f59e0b", from: 40, to: 55 },
+              { label: "Positive", color: "#22c55e", from: 55, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Exponent Calculator", href: "/calculators/exponent-calculator" },
+            { name: "Scientific Notation", href: "/calculators/scientific-notation-calculator" },
+            { name: "Z-Score Calculator", href: "/calculators/z-score-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Log Rules</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-1">
+            <div>log(ab) = log a + log b</div>
+            <div>log(a/b) = log a − log b</div>
+            <div>log(a^n) = n × log a</div>
+            <div>log_b(x) = log(x)/log(b)</div>
+            <div>ln(e) = 1, log10(10) = 1</div>
+            <div>log(1) = 0 for any base</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Logarithm Values</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">x</th><th class="p-2 text-xs font-semibold text-right">log10(x)</th><th class="p-2 text-xs font-semibold text-right">ln(x)</th><th class="p-2 text-xs font-semibold text-right">log2(x)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[1,0,0,0],[2,"0.3010","0.6931",1],[10,1,"2.3026","3.3219"],[100,2,"4.6052","6.6439"],[1000,3,"6.9078","9.9658"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right">{r[3]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Real-World Uses</h2>
+        <div class="space-y-2">
+          {["pH = -log10([H+]) — acidity scale","Decibels dB = 10 x log10(P2/P1) — sound","Richter scale = log10 of earthquake amplitude","Compound interest: t = ln(A/P)/(r) — time to grow","Bits in binary: log2(n) bits encode n values","Shannon entropy uses log2 in information theory"].map(a => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{a}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

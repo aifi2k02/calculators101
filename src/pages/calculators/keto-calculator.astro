@@ -1,0 +1,171 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const weight = parseFloat(inputs.weight)||0
+  const height = parseFloat(inputs.height)||0
+  const age = parseInt(inputs.age)||30
+  const sex = inputs.sex||"male"
+  const activity = inputs.activity||"moderate"
+  const goal = inputs.goal||"lose"
+  const unit = inputs.unit||"imperial"
+  if(weight<=0||height<=0) throw new Error("Enter weight and height.")
+  const wkg = unit==="imperial"?weight*0.453592:weight
+  const hcm = unit==="imperial"?height*2.54:height
+  const bmr = sex==="male"?88.362+13.397*wkg+4.799*hcm-5.677*age:447.593+9.247*wkg+3.098*hcm-4.330*age
+  const activityMultiplier = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725,very_active:1.9}
+  const tdee = bmr*(activityMultiplier[activity]||1.55)
+  const calories = goal==="lose"?tdee-500:goal==="gain"?tdee+250:tdee
+  const proteinG = wkg*1.76
+  const carbG = 25
+  const fatG = (calories-proteinG*4-carbG*4)/9
+  const proteinCal = proteinG*4
+  const carbCal = carbG*4
+  const fatCal = fatG*9
+  return {
+    value:"Fat: "+fatG.toFixed(0)+"g | Protein: "+proteinG.toFixed(0)+"g | Carbs: "+carbG+"g",
+    gaugeValue:Math.min(fatCal/calories*100,100),
+    breakdown:["TDEE: "+tdee.toFixed(0)+" cal","Target calories: "+calories.toFixed(0)+" cal","Fat: "+fatG.toFixed(0)+"g ("+fatCal.toFixed(0)+" cal, "+(fatCal/calories*100).toFixed(0)+"%)","Protein: "+proteinG.toFixed(0)+"g ("+proteinCal.toFixed(0)+" cal)","Carbs: "+carbG+"g ("+carbCal+" cal, keep under 50g net)"],
+    stats:[
+      {label:"Daily Calories",value:calories.toFixed(0)+" kcal"},
+      {label:"Fat Target",value:fatG.toFixed(0)+"g"},
+      {label:"Protein Target",value:proteinG.toFixed(0)+"g"},
+      {label:"Carb Limit",value:carbG+"g net"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the ketogenic diet?", answer: "Keto is a very-low-carbohydrate, high-fat diet that shifts your body from using glucose (from carbs) to using ketones (from fat) as primary fuel — a metabolic state called ketosis. Standard keto macro split: 70-75% fat, 20-25% protein, 5-10% carbs (typically under 25-50g net carbs per day)." },
+  { question: "How many carbs can I eat on keto?", answer: "Most people achieve ketosis with under 25-50g net carbs per day. Net carbs = Total carbs - Fiber (fiber does not spike blood sugar). Active people may tolerate up to 50g. Very metabolically resistant individuals may need under 20g. Start at 25g net carbs and adjust based on whether ketone strips show you are in ketosis." },
+  { question: "How long does it take to get into ketosis?", answer: "Typically 2-4 days of strict low-carb eating (under 25g net carbs/day). The process is faster if you exercise intensely (depletes glycogen stores). Signs of ketosis: reduced appetite, increased energy after initial adaptation, fruity breath smell (acetone), possibly increased urination in first days (water weight loss)." },
+  { question: "What is the keto flu?", answer: "During the first 1-2 weeks, many people experience fatigue, headaches, brain fog, irritability, and muscle cramps as the body adapts. This is often caused by electrolyte loss (sodium, potassium, magnesium) from increased urination. Fix: add more salt, eat potassium-rich foods, supplement magnesium. Usually resolves within a week." },
+  { question: "Is keto safe long-term?", answer: "Research on long-term keto (5+ years) is limited. Short-term (1-2 years): generally safe and effective for weight loss and blood sugar control. Potential concerns: kidney stone risk, nutrient deficiencies without careful food choices, high saturated fat intake (choose healthy fats). Those with kidney disease or diabetes should consult a doctor before starting." }
+]
+---
+<Layout
+  title="Keto Calculator: Ketogenic Diet Macros"
+  description="Calculate your ketogenic diet macros (fat, protein, carbs) based on your goals. Get personalized keto macro targets. Free keto calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Keto Calculator", href: "/calculators/keto-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Keto Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Keto Calculator"
+          description="Calculate your personalized ketogenic diet macro targets"
+          formulaId="keto"
+          formulaFn={formulaFn}
+          resultLabel="Keto Macros"
+          inputs={[
+            {id:"weight",label:"Weight",type:"number",placeholder:"170",min:50,max:500,defaultValue:170},
+            {id:"height",label:"Height",type:"number",placeholder:"68",min:40,max:90,defaultValue:68},
+            {id:"unit",label:"Units",type:"select",options:[{value:"imperial",label:"Imperial (lbs, inches)"},{value:"metric",label:"Metric (kg, cm)"}],defaultValue:"imperial"},
+            {id:"age",label:"Age",type:"number",placeholder:"35",min:15,max:90,unit:"years",defaultValue:35},
+            {id:"sex",label:"Sex",type:"select",options:[{value:"male",label:"Male"},{value:"female",label:"Female"}],defaultValue:"male"},
+            {id:"activity",label:"Activity Level",type:"select",options:[
+              {value:"sedentary",label:"Sedentary"},
+              {value:"light",label:"Lightly Active"},
+              {value:"moderate",label:"Moderately Active"},
+              {value:"active",label:"Very Active"},
+              {value:"very_active",label:"Extra Active"},
+            ],defaultValue:"moderate"},
+            {id:"goal",label:"Goal",type:"select",options:[
+              {value:"lose",label:"Lose Weight (-500 cal/day)"},
+              {value:"maintain",label:"Maintain Weight"},
+              {value:"gain",label:"Gain Muscle (+250 cal/day)"},
+            ],defaultValue:"lose"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% fat",
+            zones: [
+              { label: "Moderate fat %", color: "#f59e0b", from: 0, to: 60 },
+              { label: "Good keto (60-75%)", color: "#3b82f6", from: 60, to: 75 },
+              { label: "Standard keto (75%+)", color: "#22c55e", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Calorie Calculator", href: "/calculators/calorie-calculator" },
+            { name: "Macro Calculator", href: "/calculators/macro-calculator" },
+            { name: "TDEE Calculator", href: "/calculators/tdee-calculator" },
+            { name: "BMR Calculator", href: "/calculators/bmr-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Standard Keto Macro Split</h3>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-xs text-blue-800">
+              <div class="h-2 w-16 bg-yellow-500 rounded"></div>
+              <span>Fat: <strong>70–75%</strong> of calories</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-blue-800">
+              <div class="h-2 w-8 bg-blue-500 rounded"></div>
+              <span>Protein: <strong>20–25%</strong> of calories</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-blue-800">
+              <div class="h-2 w-2 bg-green-500 rounded"></div>
+              <span>Carbs: <strong>5–10%</strong> (under 25-50g net)</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Keto-Friendly Foods</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-green-50 rounded-xl p-3">
+            <div class="font-bold text-green-800 text-xs mb-2">Good for Keto</div>
+            <ul class="text-xs text-green-700 space-y-1">
+              <li>Meat & poultry</li>
+              <li>Fish & seafood</li>
+              <li>Eggs</li>
+              <li>Cheese & butter</li>
+              <li>Avocado & oils</li>
+              <li>Leafy greens</li>
+              <li>Nuts & seeds</li>
+            </ul>
+          </div>
+          <div class="bg-red-50 rounded-xl p-3">
+            <div class="font-bold text-red-800 text-xs mb-2">Avoid on Keto</div>
+            <ul class="text-xs text-red-700 space-y-1">
+              <li>Bread & pasta</li>
+              <li>Rice & grains</li>
+              <li>Sugar & sweets</li>
+              <li>Fruit (most)</li>
+              <li>Potatoes</li>
+              <li>Beans & legumes</li>
+              <li>Soft drinks</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Net Carbs in Common Foods</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Food (100g)</th><th class="text-right p-2 text-xs font-semibold">Net Carbs</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Chicken breast","0g"],["Eggs (per egg)","0.5g"],["Spinach","1.4g"],["Broccoli","4g"],["Almonds","5g"],["Blueberries","12g"],["Apple","14g"],["Rice (cooked)","28g"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

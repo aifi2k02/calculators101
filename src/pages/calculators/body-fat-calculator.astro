@@ -1,0 +1,194 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const sex = inputs.sex
+  const unit = inputs.unit
+  let weight = parseFloat(inputs.weight)
+  let waist = parseFloat(inputs.waist)
+  let neck = parseFloat(inputs.neck)
+  let hip = parseFloat(inputs.hip)
+  let height = parseFloat(inputs.height)
+  if ([weight,waist,neck,height].some(v=>isNaN(v)||v<=0)) throw new Error('Enter weight, height, waist, and neck measurements.')
+  if (sex==='female'&&(isNaN(hip)||hip<=0)) throw new Error('Hip measurement is required for women.')
+  if (unit==='imperial') { waist*=2.54; neck*=2.54; height*=2.54; if(sex==='female') hip*=2.54 }
+  let bf
+  if (sex==='male') bf = 495/(1.0324-0.19077*Math.log10(waist-neck)+0.15456*Math.log10(height))-450
+  else bf = 495/(1.29579-0.35004*Math.log10(waist+hip-neck)+0.22100*Math.log10(height))-450
+  bf = Math.max(1, Math.min(bf, 65))
+  const weightUnit = unit==='imperial' ? 'lbs' : 'kg'
+  const fatMass = (bf/100)*weight
+  const leanMass = weight-fatMass
+  let category, color
+  if (sex==='male') {
+    if (bf<6){category='Essential Fat';color='#60a5fa'}
+    else if(bf<14){category='Athletic';color='#22c55e'}
+    else if(bf<18){category='Fit';color='#4ade80'}
+    else if(bf<25){category='Average';color='#facc15'}
+    else{category='Obese';color='#ef4444'}
+  } else {
+    if(bf<14){category='Essential Fat';color='#60a5fa'}
+    else if(bf<21){category='Athletic';color='#22c55e'}
+    else if(bf<25){category='Fit';color='#4ade80'}
+    else if(bf<32){category='Average';color='#facc15'}
+    else{category='Obese';color='#ef4444'}
+  }
+  return {
+    value: bf.toFixed(1) + '%',
+    gaugeValue: bf,
+    stats: [
+      { label: 'Category', value: category },
+      { label: 'Fat Mass', value: fatMass.toFixed(1) + ' ' + weightUnit },
+      { label: 'Lean Mass', value: leanMass.toFixed(1) + ' ' + weightUnit },
+      { label: 'Method', value: 'US Navy' },
+    ],
+    breakdown: [
+      'Sex: ' + sex + ', Unit: ' + unit,
+      'Body fat: ' + bf.toFixed(2) + '%',
+      'Category: ' + category,
+      'Fat mass: ' + fatMass.toFixed(2) + ' ' + weightUnit,
+      'Lean mass: ' + leanMass.toFixed(2) + ' ' + weightUnit,
+      '—',
+      'Method: US Navy circumference formula',
+      'For more accuracy use DEXA scan or hydrostatic weighing.',
+    ]
+  }
+`
+
+const gaugeMale = {
+  min: 2, max: 40, clampMax: 40, unit: '%',
+  zones: [
+    { label: 'Essential', color: '#60a5fa', from: 2, to: 6 },
+    { label: 'Athletic', color: '#22c55e', from: 6, to: 14 },
+    { label: 'Fit', color: '#4ade80', from: 14, to: 18 },
+    { label: 'Average', color: '#facc15', from: 18, to: 25 },
+    { label: 'Obese', color: '#ef4444', from: 25, to: 40 },
+  ]
+}
+---
+<Layout
+  title="Body Fat Calculator: US Navy Method with Categories"
+  description="Calculate your body fat percentage using the US Navy circumference method. Get fat mass, lean mass, and category (athletic, fit, average, obese)."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"Body Fat Calculator",href:"/calculators/body-fat-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <span class="text-gray-900">Body Fat Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Body Fat Calculator"
+          description="Estimate body fat % with the US Navy circumference method"
+          formulaId="body-fat"
+          formulaFn={formulaFn}
+          resultLabel="Body Fat Percentage"
+          resultUnit="%"
+          gauge={gaugeMale}
+          inputs={[
+            { id: 'unit', label: 'Units', type: 'select', options: [
+              {value:'imperial',label:'Imperial (lbs, inches)'},
+              {value:'metric',label:'Metric (kg, cm)'},
+            ], defaultValue: 'imperial' },
+            { id: 'sex', label: 'Biological Sex', type: 'select', options: [
+              {value:'male',label:'Male'},{value:'female',label:'Female'}
+            ], defaultValue: 'male' },
+            { id: 'weight', label: 'Body Weight', type: 'number', placeholder: '180', min: 1, defaultValue: 180 },
+            { id: 'height', label: 'Height', type: 'number', placeholder: '70', min: 1, defaultValue: 70 },
+            { id: 'neck', label: 'Neck Circumference', type: 'number', placeholder: '15', min: 1, step: 0.5, defaultValue: 15 },
+            { id: 'waist', label: 'Waist Circumference (at navel)', type: 'number', placeholder: '34', min: 1, step: 0.5, defaultValue: 34 },
+            { id: 'hip', label: 'Hip Circumference (women only)', type: 'number', placeholder: '0', min: 0, step: 0.5, defaultValue: 0 },
+          ]}
+          relatedCalcs={[
+            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
+            { name: 'Ideal Weight Calculator', href: '/calculators/ideal-weight-calculator' },
+            { name: 'Lean Body Mass', href: '/calculators/lean-body-mass-calculator' },
+            { name: 'Waist-to-Hip Ratio', href: '/calculators/waist-hip-calculator' },
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+          ]}
+          faqs={[
+            { question: 'How does the US Navy body fat formula work?', answer: 'The Navy method uses circumference measurements and height to estimate body density, then converts to body fat %. For men: uses waist and neck. For women: waist, hip, and neck. It\'s accurate to within 3–4% of DEXA scans.' },
+            { question: 'Where exactly do I measure?', answer: 'Neck: just below the larynx (Adam\'s apple), slight downward slope forward. Waist: at the navel level, not the narrowest point. Hip (women): at the widest point around the buttocks. Measure in the morning, before eating.' },
+            { question: 'What is a healthy body fat percentage?', answer: 'Men: 6–13% athletic, 14–17% fit, 18–24% average. Women: 14–20% athletic, 21–24% fit, 25–31% average. Essential fat (minimum for organ function) is 2–5% for men and 10–13% for women.' },
+            { question: 'Is the Navy method accurate?', answer: 'The US Navy formula has a margin of error of ±3–4% compared to gold-standard DEXA scans. It\'s more accurate than BMI for estimating adiposity but less accurate than hydrostatic weighing or DEXA. Best used for tracking trends over time.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Body Fat Categories</h3>
+          </div>
+          <table class="w-full text-xs">
+            <thead><tr class="border-b border-gray-100">
+              <th class="text-left px-4 py-2 text-gray-500 font-medium">Category</th>
+              <th class="text-center px-4 py-2 text-gray-500 font-medium">Men</th>
+              <th class="text-center px-4 py-2 text-gray-500 font-medium">Women</th>
+            </tr></thead>
+            <tbody>
+              {[
+                ['Essential Fat', '2–5%', '10–13%', '#60a5fa'],
+                ['Athletic', '6–13%', '14–20%', '#22c55e'],
+                ['Fit', '14–17%', '21–24%', '#4ade80'],
+                ['Average', '18–24%', '25–31%', '#facc15'],
+                ['Obese', '25%+', '32%+', '#ef4444'],
+              ].map(([cat, m, f, color]) => (
+                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                  <td class="px-4 py-2 text-gray-700 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 inline-block" style={`background:${color}`}></span>
+                    {cat}
+                  </td>
+                  <td class="px-4 py-2 text-center text-gray-600">{m}</td>
+                  <td class="px-4 py-2 text-center text-gray-600">{f}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h3 class="font-semibold text-blue-900 text-sm mb-2">How to Measure Accurately</h3>
+          <ul class="text-xs text-blue-800 space-y-1.5">
+            <li>• Measure in the morning before eating</li>
+            <li>• Use a flexible tape measure, not rigid</li>
+            <li>• Pull tape snug but don\'t compress skin</li>
+            <li>• Take 2–3 readings and average them</li>
+            <li>• Waist: at navel, not narrowest point</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Body Fat vs BMI: What\'s the Difference?</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">BMI (Body Mass Index) measures weight relative to height — it can\'t distinguish between muscle and fat. Body fat percentage directly measures what fraction of your weight is fat tissue, making it a much better indicator of health and fitness.</p>
+        <p class="text-gray-600 leading-relaxed">A 200 lb bodybuilder and a 200 lb sedentary person have the same BMI, but the bodybuilder might have 8% body fat while the sedentary person might have 28%. Only body fat measurement reveals this difference.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Body Fat Measurement Methods Compared</h2>
+        <div class="space-y-2">
+          {[
+            ['DEXA Scan', '±1–2%', 'Gold standard; uses X-ray to differentiate bone, fat, and lean mass. Costs $50–$100 at medical facilities.'],
+            ['Hydrostatic Weighing', '±2–3%', 'Highly accurate; measures body density by underwater weight. Requires full submersion.'],
+            ['Air Displacement (Bod Pod)', '±2–3%', 'Very accurate; measures body volume using air displacement. Found at universities and gyms.'],
+            ['US Navy Formula', '±3–4%', 'What this calculator uses. Uses circumference measurements. Free and convenient.'],
+            ['BIA (Smart Scales)', '±4–8%', 'Bioelectrical impedance. Highly variable based on hydration. Good for trends, not absolute accuracy.'],
+            ['Skinfold Calipers', '±3–5%', 'Accurate when done by a professional. Requires 3–7 pinch sites depending on protocol.'],
+          ].map(([method, accuracy, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <div class="flex justify-between items-start mb-1">
+                <span class="font-semibold text-gray-800 text-sm">{method}</span>
+                <span class="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">{accuracy}</span>
+              </div>
+              <p class="text-xs text-gray-600">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

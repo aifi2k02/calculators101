@@ -1,0 +1,172 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const unit = inputs.unit
+  const sex = inputs.sex
+  const activity = parseFloat(inputs.activity)
+  let weight = parseFloat(inputs.weight)
+  let height = parseFloat(inputs.height)
+  const age = parseFloat(inputs.age)
+  if (isNaN(weight) || isNaN(height) || isNaN(age) || weight<=0 || height<=0 || age<=0)
+    throw new Error('Please enter valid weight, height, and age.')
+  if (unit === 'imperial') { weight = weight * 0.453592; height = height * 2.54 }
+  let bmr
+  if (sex === 'male') bmr = 10*weight + 6.25*height - 5*age + 5
+  else bmr = 10*weight + 6.25*height - 5*age - 161
+  const tdee = bmr * activity
+  const activityLabels = {'1.2':'Sedentary','1.375':'Lightly active','1.55':'Moderately active','1.725':'Very active','1.9':'Extra active'}
+  return {
+    value: Math.round(tdee) + ' cal/day',
+    stats: [
+      { label: 'BMR', value: Math.round(bmr) + ' cal' },
+      { label: 'Activity Factor', value: activity + 'x' },
+      { label: 'Weight Loss Target', value: Math.round(tdee - 500) + ' cal/day' },
+      { label: 'Weight Gain Target', value: Math.round(tdee + 500) + ' cal/day' },
+      { label: 'Aggressive Cut', value: Math.round(tdee - 750) + ' cal/day' },
+    ],
+    breakdown: [
+      'BMR (Mifflin-St Jeor): ' + Math.round(bmr) + ' cal',
+      'Activity multiplier: ' + activity + 'x (' + (activityLabels[String(activity)] || '') + ')',
+      'TDEE (maintenance): ' + Math.round(tdee) + ' cal/day',
+      '—',
+      'Lose 0.5 lb/week (−250 cal): ' + Math.round(tdee - 250) + ' cal/day',
+      'Lose 1 lb/week (−500 cal): ' + Math.round(tdee - 500) + ' cal/day',
+      'Lose 1.5 lbs/week (−750 cal): ' + Math.round(tdee - 750) + ' cal/day',
+      'Gain 0.5 lb/week (+250 cal): ' + Math.round(tdee + 250) + ' cal/day',
+      'Gain 1 lb/week (+500 cal): ' + Math.round(tdee + 500) + ' cal/day',
+    ]
+  }
+`
+
+const gauge = {
+  min: 1000, max: 4000, unit: 'cal/day',
+  zones: [
+    { label: 'Low 1000-1500', color: '#3b82f6', from: 1000, to: 1500 },
+    { label: 'Moderate 1500-2500', color: '#22c55e', from: 1500, to: 2500 },
+    { label: 'Active 2500-3500', color: '#f59e0b', from: 2500, to: 3500 },
+    { label: 'Very Active 3500+', color: '#ef4444', from: 3500, to: 4000 },
+  ]
+}
+---
+<Layout
+  title="TDEE Calculator: Total Daily Energy Expenditure"
+  description="Calculate your Total Daily Energy Expenditure (TDEE) — calories burned per day. Set calorie targets for weight loss, maintenance, or muscle gain."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"TDEE Calculator",href:"/calculators/tdee-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <span class="text-gray-900">TDEE Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="TDEE Calculator"
+          description="Total Daily Energy Expenditure — calories burned per day"
+          formulaId="tdee"
+          formulaFn={formulaFn}
+          resultLabel="Daily Calories Burned (TDEE)"
+          inputs={[
+            { id: 'unit', label: 'Units', type: 'select', options: [
+              {value:'metric',label:'Metric (kg, cm)'},
+              {value:'imperial',label:'Imperial (lbs, inches)'},
+            ], defaultValue: 'metric' },
+            { id: 'sex', label: 'Biological Sex', type: 'select', options: [
+              {value:'male',label:'Male'},{value:'female',label:'Female'},
+            ], defaultValue: 'male' },
+            { id: 'age', label: 'Age', type: 'number', placeholder: '30', min: 15, max: 100, defaultValue: 30 },
+            { id: 'weight', label: 'Weight', type: 'number', placeholder: '75', min: 1, defaultValue: 75 },
+            { id: 'height', label: 'Height', type: 'number', placeholder: '175', min: 1, defaultValue: 175 },
+            { id: 'activity', label: 'Activity Level', type: 'select', options: [
+              {value:'1.2',label:'Sedentary (desk job, no exercise)'},
+              {value:'1.375',label:'Lightly active (1–3 days/week exercise)'},
+              {value:'1.55',label:'Moderately active (3–5 days/week)'},
+              {value:'1.725',label:'Very active (6–7 days/week)'},
+              {value:'1.9',label:'Extra active (physical job + daily training)'},
+            ], defaultValue: '1.375' },
+          ]}
+          gauge={gauge}
+          relatedCalcs={[
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
+            { name: 'Caloric Deficit Calculator', href: '/calculators/caloric-deficit-calculator' },
+            { name: 'Macro Calculator', href: '/calculators/macro-calculator' },
+            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
+          ]}
+          faqs={[
+            { question: 'What is TDEE?', answer: 'TDEE (Total Daily Energy Expenditure) is the total number of calories you burn in a day, including your basal metabolic rate (BMR) plus all physical activity. It is the most important number for setting your calorie target.' },
+            { question: 'What is the difference between BMR and TDEE?', answer: 'BMR is the calories your body burns at complete rest — just to keep organs functioning. TDEE multiplies your BMR by an activity factor (1.2–1.9) to account for movement. TDEE is what you actually burn in a day.' },
+            { question: 'How accurate is TDEE?', answer: 'The Mifflin-St Jeor formula is accurate to within 10% for most people. Activity multipliers are the biggest source of error — most people underestimate their activity. For precision, track food and weight for 2+ weeks and adjust.' },
+            { question: 'Should I eat at my TDEE?', answer: 'Eating at your TDEE maintains your current weight. Eat 500 cal below TDEE to lose ~1 lb/week. Eat 500 cal above to gain ~1 lb/week. These are estimates; actual results vary by individual metabolism.' },
+            { question: 'Why does TDEE change over time?', answer: 'As you lose weight, your BMR decreases because there is less body mass to maintain. Gaining muscle increases TDEE since muscle is metabolically active. Recalculate every 4–8 weeks or after significant body composition changes.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Activity Multipliers Explained</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['1.2 — Sedentary', 'Office work, minimal movement'],
+              ['1.375 — Light', '1–3 gym sessions per week'],
+              ['1.55 — Moderate', '3–5 gym sessions per week'],
+              ['1.725 — Very active', '6–7 days/week hard training'],
+              ['1.9 — Extra active', 'Physical labor + daily training'],
+            ].map(([level, desc]) => (
+              <div class="px-4 py-2.5">
+                <p class="text-xs font-semibold text-gray-700">{level}</p>
+                <p class="text-xs text-gray-500">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <h3 class="font-semibold text-orange-900 text-sm mb-2">Calorie Targets by Goal</h3>
+          <div class="space-y-1.5 text-xs text-orange-800">
+            <div class="flex justify-between"><span>Lose 2 lbs/week</span><span>TDEE − 1000</span></div>
+            <div class="flex justify-between"><span>Lose 1 lb/week</span><span>TDEE − 500</span></div>
+            <div class="flex justify-between"><span>Maintain weight</span><span>= TDEE</span></div>
+            <div class="flex justify-between"><span>Gain 0.5 lb/week</span><span>TDEE + 250</span></div>
+            <div class="flex justify-between"><span>Gain 1 lb/week</span><span>TDEE + 500</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">What is TDEE and Why Does It Matter?</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Your Total Daily Energy Expenditure (TDEE) is the number of calories your body burns every single day. It is the foundation of any nutrition plan — whether you want to lose fat, build muscle, or simply stay at your current weight.</p>
+        <p class="text-gray-600 leading-relaxed">Eating at your TDEE maintains weight. Eating below it creates a deficit (fat loss). Eating above it creates a surplus (weight gain). Everything else in nutrition — macros, meal timing, supplements — matters far less than this single number.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">TDEE Components</h2>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {[
+            ['BMR (60–70%)', 'Basal Metabolic Rate — calories burned at rest for basic organ function. Largest component.'],
+            ['NEAT (15–30%)', 'Non-Exercise Activity Thermogenesis — calories from daily movement (walking, fidgeting, housework).'],
+            ['EAT (5–10%)', 'Exercise Activity Thermogenesis — calories burned during deliberate exercise.'],
+            ['TEF (8–10%)', 'Thermic Effect of Food — calories burned digesting and processing food. Protein has the highest TEF (~25%).'],
+          ].map(([title, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="font-semibold text-gray-800 text-sm mb-1">{title}</p>
+              <p class="text-xs text-gray-600">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How to Use Your TDEE for Fat Loss</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Create a calorie deficit by eating less than your TDEE. A 500 cal/day deficit leads to approximately 1 lb of fat loss per week (since 1 lb ≈ 3,500 calories). However, as you lose weight, your TDEE decreases — this is why fat loss often plateaus.</p>
+        <p class="text-gray-600 leading-relaxed">To break a plateau: either reduce calories further, increase activity (raising TDEE), or take a short diet break to restore leptin levels. Most people find the sweet spot at a 20–25% calorie deficit from TDEE.</p>
+      </section>
+    </div>
+  </div>
+</Layout>

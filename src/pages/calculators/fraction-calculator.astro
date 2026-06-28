@@ -1,0 +1,147 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const n1 = parseInt(inputs.n1) || 0
+  const d1 = parseInt(inputs.d1) || 1
+  const n2 = parseInt(inputs.n2) || 0
+  const d2 = parseInt(inputs.d2) || 1
+  const op = inputs.op || 'add'
+  if (d1 === 0 || d2 === 0) throw new Error('Denominator cannot be zero.')
+  let rn, rd
+  if (op === 'add') { rn = n1*d2 + n2*d1; rd = d1*d2 }
+  else if (op === 'sub') { rn = n1*d2 - n2*d1; rd = d1*d2 }
+  else if (op === 'mul') { rn = n1*n2; rd = d1*d2 }
+  else { if (n2 === 0) throw new Error('Cannot divide by zero.'); rn = n1*d2; rd = d1*n2 }
+  const gcd = (a,b) => b === 0 ? Math.abs(a) : gcd(b, a%b)
+  const g = gcd(Math.abs(rn), Math.abs(rd))
+  const sn = rn/g, sd = rd/g
+  if (sd < 0) { sn *= -1; sd *= -1 }
+  const decimal = sn/sd
+  return {
+    value: sn + '/' + sd + ' = ' + decimal.toFixed(6),
+    gaugeValue: Math.min(Math.abs(decimal) * 50, 100),
+    breakdown: ['Unsimplified: ' + rn + '/' + rd, 'Simplified: ' + sn + '/' + sd, 'Decimal: ' + decimal.toFixed(8), 'As mixed number: ' + (Math.abs(sn) >= Math.abs(sd) ? Math.floor(Math.abs(sn/sd)) + ' ' + (Math.abs(sn)%Math.abs(sd)) + '/' + Math.abs(sd) : sn + '/' + sd)],
+    stats: [
+      { label: 'Result', value: sn + '/' + sd },
+      { label: 'Decimal', value: decimal.toFixed(6) },
+      { label: 'Percentage', value: (decimal*100).toFixed(2) + '%' },
+      { label: 'GCD used', value: String(g) },
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: 'How do I add fractions?', answer: 'Find a common denominator (LCD), convert both fractions, then add the numerators. Example: 1/3 + 1/4 → LCD=12 → 4/12 + 3/12 = 7/12. Always simplify by dividing numerator and denominator by their GCD.' },
+  { question: 'How do I multiply fractions?', answer: 'Simply multiply numerators together and denominators together. Example: 2/3 × 3/4 = 6/12 = 1/2. Cross-simplification first can make the arithmetic easier.' },
+  { question: 'How do I divide fractions?', answer: "Multiply the first fraction by the reciprocal (flip) of the second. Example: 2/3 ÷ 3/4 = 2/3 × 4/3 = 8/9. 'Keep, Change, Flip' is the common mnemonic." },
+  { question: 'How do I simplify a fraction?', answer: 'Find the Greatest Common Divisor (GCD) of numerator and denominator, then divide both by it. Example: 12/18 — GCD(12,18)=6 → 12/6 = 2, 18/6 = 3 → simplified to 2/3.' },
+  { question: 'What is a mixed number?', answer: 'A mixed number combines a whole number and a proper fraction: 2½. To convert: divide numerator by denominator for the whole part; the remainder is the new numerator. Example: 7/3 = 2 remainder 1 = 2 1/3.' },
+]
+---
+<Layout
+  title='Fraction Calculator: Add, Subtract, Multiply & Divide Fractions'
+  description='Add, subtract, multiply, or divide any two fractions instantly. Shows simplified results and decimal equivalents. Free fraction calculator.'
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Fraction Calculator', href: '/calculators/fraction-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href='/calculators/math' class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Fraction Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title='Fraction Calculator'
+          description='Add, subtract, multiply, or divide fractions with automatic simplification'
+          formulaId='fraction'
+          formulaFn={formulaFn}
+          resultLabel='Result'
+          inputs={[
+            { id: 'n1', label: 'Numerator 1', type: 'number', placeholder: '1', defaultValue: 1 },
+            { id: 'd1', label: 'Denominator 1', type: 'number', placeholder: '2', defaultValue: 2 },
+            { id: 'op', label: 'Operation', type: 'select', options: [
+              { value: 'add', label: 'Add (+)' },
+              { value: 'sub', label: 'Subtract (−)' },
+              { value: 'mul', label: 'Multiply (×)' },
+              { value: 'div', label: 'Divide (÷)' },
+            ], defaultValue: 'add' },
+            { id: 'n2', label: 'Numerator 2', type: 'number', placeholder: '1', defaultValue: 1 },
+            { id: 'd2', label: 'Denominator 2', type: 'number', placeholder: '3', defaultValue: 3 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% value',
+            zones: [
+              { label: '0–25%', color: '#3b82f6', from: 0, to: 25 },
+              { label: '25–50%', color: '#22c55e', from: 25, to: 50 },
+              { label: '50–75%', color: '#f59e0b', from: 50, to: 75 },
+              { label: '75–100%', color: '#8b5cf6', from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+    { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+    { name: 'Ratio Calculator', href: '/calculators/ratio-calculator' },
+    { name: 'Average Calculator', href: '/calculators/average-calculator' },
+  ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Fraction Operations</h3>
+          <div class="space-y-2 text-xs text-blue-800 font-mono">
+            <div>a/b + c/d = (ad+bc)/bd</div>
+            <div>a/b − c/d = (ad−bc)/bd</div>
+            <div>a/b × c/d = ac/bd</div>
+            <div>a/b ÷ c/d = ad/bc</div>
+          </div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-2">Common Fractions</h3>
+          <div class="grid grid-cols-2 gap-1 text-xs text-green-800">
+            {[['1/2','0.5'],['1/3','0.333'],['1/4','0.25'],['3/4','0.75'],['1/8','0.125'],['2/3','0.667']].map(([f,d]) => (
+              <div class="flex justify-between border-b border-green-100 pb-0.5"><span>{f}</span><span>{d}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Step-by-Step: Adding 1/3 + 1/4</h2>
+        <div class="space-y-2">
+          {[
+            { step: '1', text: 'Find LCD of 3 and 4 → LCD = 12' },
+            { step: '2', text: 'Convert: 1/3 = 4/12 and 1/4 = 3/12' },
+            { step: '3', text: 'Add numerators: 4 + 3 = 7' },
+            { step: '4', text: 'Result: 7/12 (already simplified)' },
+          ].map(s => (
+            <div class="flex gap-3 bg-gray-50 rounded-lg p-3">
+              <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">{s.step}</div>
+              <div class="text-sm text-gray-700">{s.text}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Fraction to Decimal Reference</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Fraction</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Decimal</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Percent</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[['1/5','0.2','20%'],['1/6','0.1667','16.67%'],['1/7','0.1429','14.29%'],['1/8','0.125','12.5%'],['1/9','0.1111','11.11%'],['1/10','0.1','10%']].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

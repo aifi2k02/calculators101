@@ -1,0 +1,125 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const amount = parseFloat(inputs.amount)||0
+  const price = parseFloat(inputs.price)||0
+  const buyCost = parseFloat(inputs.buyCost)||0
+  if(amount<=0) throw new Error("Enter an amount of cryptocurrency.")
+  if(price<=0) throw new Error("Enter the current price.")
+  const currentValue = amount*price
+  let profitLoss=0, pctReturn=0, breakEvenPrice=0
+  if(buyCost>0){
+    profitLoss=currentValue-buyCost
+    pctReturn=(profitLoss/buyCost)*100
+    breakEvenPrice=buyCost/amount
+  }
+  return {
+    value:"$"+currentValue.toFixed(2)+" USD",
+    gaugeValue:buyCost>0?Math.min(Math.max(pctReturn+50,0),100):50,
+    breakdown:["Amount: "+amount+" coins/tokens","Current price: $"+price,"Current value: $"+currentValue.toFixed(2),...(buyCost>0?["Cost basis: $"+buyCost,"Profit/Loss: $"+profitLoss.toFixed(2)+(profitLoss>=0?" (profit)":" (loss)"),"Return: "+pctReturn.toFixed(2)+"%","Break-even price: $"+breakEvenPrice.toFixed(4)]:["Enter buy cost for P&L"])],
+    stats:[
+      {label:"Current Value",value:"$"+currentValue.toFixed(2)},
+      {label:"Profit/Loss",value:buyCost>0?"$"+profitLoss.toFixed(2):"Enter buy cost"},
+      {label:"Return",value:buyCost>0?pctReturn.toFixed(2)+"%":"Enter buy cost"},
+      {label:"Break-Even",value:buyCost>0?"$"+breakEvenPrice.toFixed(4):"Enter buy cost"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I calculate my crypto profit or loss?", answer: "Profit = Current Value - Cost Basis. Current Value = Amount × Current Price. Cost Basis = total amount paid (including fees). % Return = (Profit / Cost Basis) × 100. Example: bought 0.5 BTC for $20,000, now worth $25,000: Profit = $5,000, Return = 25%." },
+  { question: "What is the break-even price for crypto?", answer: "Break-even price = Total cost paid / Number of coins. If you paid $20,000 for 0.5 BTC: break-even = $20,000 / 0.5 = $40,000 per BTC. The price must exceed $40,000 for you to be in profit. This is also called your average cost basis per coin." },
+  { question: "How are crypto gains taxed in the US?", answer: "IRS treats crypto as property. Short-term gains (held <1 year): taxed as ordinary income (10-37%). Long-term gains (held >1 year): taxed at 0%, 15%, or 20% depending on income. Each sale, trade, or crypto-to-crypto exchange is a taxable event. You must report gains/losses on Form 8949. Keep detailed records of all transactions." },
+  { question: "What is dollar-cost averaging (DCA) in crypto?", answer: "DCA means investing a fixed amount at regular intervals (e.g., $100 every week in Bitcoin) regardless of price. This reduces the impact of volatility — you buy more when prices are low and less when high. DCA lowers your average cost basis over time and removes the need to time the market perfectly." },
+  { question: "What is market cap in cryptocurrency?", answer: "Market cap = Total coins in circulation × Current price. It represents the total value of a cryptocurrency. Bitcoin market cap: ~$800B-$1T at peak. Used to rank cryptocurrencies by size. Large cap (>$10B) are generally less volatile. Small cap (<$1B) are riskier but potentially higher reward." }
+]
+---
+<Layout
+  title="Crypto Calculator: Convert Crypto to USD & Calculate Gains"
+  description="Calculate cryptocurrency value in USD, profit/loss, and percent return. Supports Bitcoin, Ethereum, and major cryptos. Free crypto calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Crypto Calculator", href: "/calculators/crypto-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Crypto Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Crypto Calculator"
+          description="Calculate crypto value, profit, and return on investment"
+          formulaId="crypto"
+          formulaFn={formulaFn}
+          resultLabel="USD Value"
+          inputs={[
+            {id:"amount",label:"Amount (coins/tokens)",type:"number",placeholder:"0.5",min:0,step:0.000001,defaultValue:0.5},
+            {id:"price",label:"Current price ($ USD)",type:"number",placeholder:"45000",min:0,step:0.01,defaultValue:45000},
+            {id:"buyCost",label:"Total buy cost ($ — optional for P&L)",type:"number",placeholder:"20000",min:0,step:0.01,defaultValue:20000}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "return gauge",
+            zones: [
+              { label: "Loss (< -20%)", color: "#ef4444", from: 0, to: 30 },
+              { label: "Small gain", color: "#f59e0b", from: 30, to: 55 },
+              { label: "Good gain (20%+)", color: "#3b82f6", from: 55, to: 75 },
+              { label: "Large gain (50%+)", color: "#22c55e", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "ROI Calculator", href: "/calculators/roi-calculator" },
+            { name: "Compound Interest Calculator", href: "/calculators/compound-interest-calculator" },
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Crypto Tax Overview (US)</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div><span class="font-semibold">Short-term gain</span> (held &lt;1yr)</div>
+            <div>Taxed as ordinary income (10-37%)</div>
+            <div class="mt-1"><span class="font-semibold">Long-term gain</span> (held &gt;1yr)</div>
+            <div>0%, 15%, or 20% capital gains rate</div>
+            <div class="mt-1">⚠ Crypto-to-crypto trades are taxable</div>
+            <div>⚠ Keep records of ALL transactions</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Crypto Risk Levels</h2>
+        <div class="space-y-2">
+          {[
+            {t:"Large Cap (BTC, ETH)",r:"High",d:"Most liquid, least volatile among crypto. Still very volatile vs stocks."},
+            {t:"Mid Cap (top 20-50)",r:"Very High",d:"Established projects but smaller. 2-3× more volatile than BTC."},
+            {t:"Small Cap (top 50-200)",r:"Extreme",d:"Can gain or lose 90%+ in weeks. High research required."},
+            {t:"Meme coins / New tokens",r:"Speculative",d:"Extremely high risk of total loss. Often pump-and-dump schemes."},
+          ].map(c => (
+            <div class="bg-gray-50 rounded-lg p-2"><div class="font-semibold text-xs text-blue-700">{c.t} — {c.r} risk</div><div class="text-xs text-gray-600">{c.d}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Key Crypto Metrics</h2>
+        <div class="space-y-2">
+          {["Market Cap = Price × Circulating Supply","Volume: higher = more liquidity and price discovery","Circulating vs max supply affects inflation potential","24h change: crypto markets run 24/7/365 unlike stocks","All-time high (ATH) and all-time low (ATL) — key reference points","Hash rate (PoW) and staking (PoS) affect network security"].map(m => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{m}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,112 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const propertyTax = parseFloat(inputs.propertyTax)||0
+  const insurance = parseFloat(inputs.insurance)||0
+  const pmi = parseFloat(inputs.pmi)||0
+  const cushion = parseFloat(inputs.cushion)||2
+  const monthlyEscrow = (propertyTax+insurance+pmi)/12
+  const cushionAmount = monthlyEscrow*(cushion/12)*12
+  const minBalance = monthlyEscrow*2
+  const annualTotal = propertyTax+insurance+pmi
+  return {
+    value:"$"+monthlyEscrow.toFixed(2)+"/mo",
+    gaugeValue:Math.min(monthlyEscrow/500*100,100),
+    breakdown:["Property tax (annual): $"+propertyTax,"Insurance (annual): $"+insurance,"PMI (annual): $"+pmi,"Monthly escrow: $"+monthlyEscrow.toFixed(2),"Required cushion: $"+cushionAmount.toFixed(2),"Min escrow balance: $"+minBalance.toFixed(2)],
+    stats:[
+      {label:"Monthly Escrow",value:"$"+monthlyEscrow.toFixed(2)},
+      {label:"Annual Total",value:"$"+annualTotal.toFixed(0)},
+      {label:"Required Cushion",value:"$"+cushionAmount.toFixed(0)},
+      {label:"Min Balance",value:"$"+minBalance.toFixed(0)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is an escrow account for a mortgage?", answer: "An escrow account is managed by your lender. Each month, you pay a portion of your annual property tax and homeowners insurance into it. When those bills come due, the lender pays them from the escrow account. It ensures taxes and insurance are always paid." },
+  { question: "Is escrow required?", answer: "Most lenders require escrow for conventional loans with less than 20% down payment. FHA and VA loans almost always require escrow. If you have 20%+ equity, you may be able to waive escrow, though some lenders charge a fee for this." },
+  { question: "What is an escrow cushion?", answer: "By law (RESPA), lenders can require you to maintain a cushion of up to 2 months of escrow payments as a buffer. This protects against unexpected increases in taxes or insurance. If your escrow is over-funded by more than the allowed cushion, the lender must refund the excess." },
+  { question: "What is an escrow analysis?", answer: "Lenders perform an annual escrow analysis to review actual costs vs. estimates. If they underestimated (taxes increased), your monthly payment goes up. If overestimated, you get a refund or credit. Expect your escrow payment to change slightly each year as costs change." },
+  { question: "Can I pay property taxes myself instead of through escrow?", answer: "If you have significant equity (usually 20%+) and request to waive escrow, some lenders allow it. You would then be responsible for saving and paying property taxes directly. However, the discipline required is high — many homeowners prefer escrow to avoid a large tax bill surprise." }
+]
+---
+<Layout
+  title="Escrow Calculator: Monthly Escrow Payment for Property Tax & Insurance"
+  description="Calculate your monthly escrow payment for property taxes and homeowners insurance. Free mortgage escrow calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Escrow Calculator", href: "/calculators/escrow-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Escrow Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Escrow Calculator"
+          description="Calculate your monthly escrow for taxes and insurance"
+          formulaId="escrow"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Escrow"
+          inputs={[
+            {id:"propertyTax",label:"Annual Property Tax",type:"number",placeholder:"4800",min:0,unit:"$",defaultValue:4800},
+            {id:"insurance",label:"Annual Homeowners Insurance",type:"number",placeholder:"1800",min:0,unit:"$",defaultValue:1800},
+            {id:"pmi",label:"Annual PMI (if applicable)",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"cushion",label:"Escrow Cushion (months)",type:"select",options:[{value:"1",label:"1 month"},{value:"2",label:"2 months (standard)"},{value:"3",label:"3 months"}],defaultValue:"2"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Low (<$200/mo)", color: "#22c55e", from: 0, to: 40 },
+              { label: "Moderate ($200-400)", color: "#3b82f6", from: 40, to: 80 },
+              { label: "High ($400-600)", color: "#f59e0b", from: 80, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "PMI Calculator", href: "/calculators/pmi-calculator" },
+            { name: "House Affordability Calculator", href: "/calculators/house-affordability-calculator" },
+            { name: "Down Payment Calculator", href: "/calculators/down-payment-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Typical Escrow Costs</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Property tax","1-2% of home value/yr"],["Homeowners insurance","$1,200-2,400/yr avg"],["PMI (if < 20% down)","0.5-1.5% of loan/yr"],["Flood insurance","$700-1,500/yr if req."]].map(([item,cost]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{item}</span><span class="font-medium">{cost}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Your Full PITI Monthly Payment</h2>
+      <div class="grid md:grid-cols-4 gap-4">
+        {[
+          {letter:"P",label:"Principal",desc:"Reduces your loan balance"},
+          {letter:"I",label:"Interest",desc:"Cost of borrowing"},
+          {letter:"T",label:"Taxes",desc:"Property tax via escrow"},
+          {letter:"I",label:"Insurance",desc:"Homeowners + PMI via escrow"},
+        ].map(c => (
+          <div class="bg-gray-50 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600 mb-1">{c.letter}</div>
+            <div class="font-semibold text-sm text-gray-800">{c.label}</div>
+            <div class="text-xs text-gray-600">{c.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

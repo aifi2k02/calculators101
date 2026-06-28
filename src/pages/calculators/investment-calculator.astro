@@ -1,0 +1,149 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const initial = parseFloat(inputs.initial) || 0
+  const monthly = parseFloat(inputs.monthly) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  const years = parseFloat(inputs.years) || 0
+  const inflation = parseFloat(inputs.inflation) || 0
+  if (years <= 0) throw new Error('Investment period must be greater than 0.')
+  const r = rate / 100 / 12
+  const months = years * 12
+  const fv = initial * Math.pow(1 + r, months) + (monthly > 0 && r > 0 ? monthly * (Math.pow(1 + r, months) - 1) / r : monthly * months)
+  const totalInvested = initial + monthly * months
+  const gains = fv - totalInvested
+  const realRate = ((1 + rate / 100) / (1 + inflation / 100) - 1) * 100
+  const realFv = initial * Math.pow(1 + realRate / 100 / 12, months) + (monthly > 0 ? monthly * (Math.pow(1 + realRate / 100 / 12, months) - 1) / (realRate / 100 / 12) : 0)
+  const roi = totalInvested > 0 ? (gains / totalInvested) * 100 : 0
+  return {
+    value: '$' + fv.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+    gaugeValue: Math.min(roi, 500),
+    breakdown: [
+      'Total invested: $' + totalInvested.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+      'Investment gains: $' + gains.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+      'ROI: ' + roi.toFixed(1) + '%',
+      'Inflation-adjusted value: $' + realFv.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+    ],
+    stats: [
+      { label: 'Final Value', value: '$' + fv.toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+      { label: 'Total Gains', value: '$' + gains.toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+      { label: 'ROI', value: roi.toFixed(1) + '%' },
+      { label: 'Real Value (adj.)', value: '$' + realFv.toLocaleString('en-US', { maximumFractionDigits: 0 }) },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is a good ROI for investments?', answer: 'The S&P 500 has averaged ~10% annually since 1926 (~7% after inflation). Bonds average 2–5%. Real estate varies widely. For retirement planning, 6–8% is a conservative assumption for diversified stock portfolios.' },
+  { question: 'How does inflation affect investment returns?', answer: 'Inflation erodes purchasing power. A 10% nominal return with 3% inflation gives a real return of ~6.8%. Always consider real returns for long-term planning — $1M in 30 years is worth far less than $1M today.' },
+  { question: 'What is dollar-cost averaging (DCA)?', answer: 'DCA means investing a fixed amount at regular intervals (e.g., $500/month) regardless of market price. This reduces the impact of volatility — you buy more shares when prices are low and fewer when high, averaging out your cost basis.' },
+  { question: 'How much should I invest monthly?', answer: 'Financial advisors recommend investing 15% of gross income for retirement. If you cannot reach 15% immediately, start with whatever you can (even $50/month) and increase by 1% each year.' },
+  { question: 'When should I start investing?', answer: 'As soon as possible. Thanks to compounding, $10,000 invested at age 25 grows to ~$217,000 by age 65 at 8% annual returns. The same $10,000 invested at 45 only grows to ~$46,600. Every year of delay costs significantly.' },
+]
+---
+<Layout
+  title="Investment Calculator: Project Your Portfolio Growth"
+  description="Calculate how your investments grow over time with compounding returns. Includes inflation adjustment and monthly contribution support."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Investment Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Investment Calculator"
+          description="Project investment growth with compounding and inflation adjustment"
+          formulaId="investment"
+          formulaFn={formulaFn}
+          resultLabel="Portfolio Value"
+          inputs={[
+            { id: 'initial', label: 'Initial Investment', type: 'number', placeholder: '10000', min: 0, unit: '$', defaultValue: 10000 },
+            { id: 'monthly', label: 'Monthly Contribution', type: 'number', placeholder: '500', min: 0, unit: '$', defaultValue: 500 },
+            { id: 'rate', label: 'Annual Return Rate', type: 'number', placeholder: '8', min: 0, max: 30, step: 0.1, unit: '%', defaultValue: 8 },
+            { id: 'years', label: 'Investment Period', type: 'number', placeholder: '20', min: 1, max: 50, unit: 'years', defaultValue: 20 },
+            { id: 'inflation', label: 'Inflation Rate', type: 'number', placeholder: '3', min: 0, max: 15, step: 0.1, unit: '%', defaultValue: 3 },
+          ]}
+          gauge={{
+            min: 0, max: 500, clampMax: 500, unit: '% ROI',
+            zones: [
+              { label: 'Low', color: '#94a3b8', from: 0, to: 50 },
+              { label: 'Moderate', color: '#3b82f6', from: 50, to: 150 },
+              { label: 'Strong', color: '#22c55e', from: 150, to: 300 },
+              { label: 'Exceptional', color: '#f59e0b', from: 300, to: 500 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Compound Interest Calculator', href: '/calculators/compound-interest-calculator' },
+            { name: 'Retirement Calculator', href: '/calculators/retirement-calculator' },
+            { name: 'DCA Calculator', href: '/calculators/dca-calculator' },
+            { name: 'ROI Calculator', href: '/calculators/roi-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Historical Returns by Asset Class</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['US Stocks (S&P 500)','~10%/yr'],['International Stocks','~7–8%/yr'],['Bonds (10-yr Treasury)','~3–5%/yr'],['Real Estate (REITs)','~8–10%/yr'],['Cash / HYSA','~4–5%/yr (2025)']].map(([a,b]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{a}</span><span class="font-medium">{b}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">Rule of 72</h3>
+          <p class="text-xs text-amber-800">Divide 72 by your return rate to find years to double your money:</p>
+          <ul class="text-xs text-amber-900 mt-2 space-y-1 font-medium">
+            <li>• 6% → doubles in 12 years</li>
+            <li>• 8% → doubles in 9 years</li>
+            <li>• 10% → doubles in 7.2 years</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">$500/Month Investment Over Time</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr>
+            <th class="text-left p-3 text-xs font-semibold text-gray-700">Years</th>
+            <th class="text-right p-3 text-xs font-semibold text-gray-700">Total Invested</th>
+            <th class="text-right p-3 text-xs font-semibold text-gray-700">At 8% Return</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[['10','$60,000','$91,473'],['20','$120,000','$294,510'],['30','$180,000','$745,180'],['40','$240,000','$1,750,202']].map(r => (
+              <tr><td class="p-3 text-xs">{r[0]}</td><td class="p-3 text-xs text-right">{r[1]}</td><td class="p-3 text-xs text-right text-green-600 font-medium">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Diversification Basics</h2>
+        <p class="text-gray-600 text-sm mb-3">Don't put all eggs in one basket. A diversified portfolio reduces risk without proportionally reducing returns.</p>
+        <div class="space-y-2">
+          {[
+            { label: 'Aggressive (25–35)', pct: '90% stocks / 10% bonds' },
+            { label: 'Moderate (35–50)', pct: '70% stocks / 30% bonds' },
+            { label: 'Conservative (50–65)', pct: '50% stocks / 50% bonds' },
+            { label: 'Income (65+)', pct: '30% stocks / 70% bonds' },
+          ].map(p => (
+            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
+              <div class="text-xs font-medium text-gray-700 w-36">{p.label}</div>
+              <div class="text-xs text-gray-600">{p.pct}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

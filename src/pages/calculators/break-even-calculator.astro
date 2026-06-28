@@ -1,0 +1,122 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const fixedCosts = parseFloat(inputs.fixedCosts)||0
+  const pricePerUnit = parseFloat(inputs.pricePerUnit)||0
+  const varCostPerUnit = parseFloat(inputs.varCostPerUnit)||0
+  const targetProfit = parseFloat(inputs.targetProfit)||0
+  if(pricePerUnit<=0) throw new Error("Enter price per unit.")
+  if(pricePerUnit<=varCostPerUnit) throw new Error("Price must be higher than variable cost.")
+  const contributionMargin = pricePerUnit-varCostPerUnit
+  const cmRatio = (contributionMargin/pricePerUnit)*100
+  const beUnits = Math.ceil(fixedCosts/contributionMargin)
+  const beRevenue = beUnits*pricePerUnit
+  const targetUnits = Math.ceil((fixedCosts+targetProfit)/contributionMargin)
+  const targetRevenue = targetUnits*pricePerUnit
+  return {
+    value:beUnits.toLocaleString()+" units",
+    gaugeValue:Math.min(cmRatio,100),
+    breakdown:["Fixed costs: $"+fixedCosts,"Contribution margin: $"+contributionMargin.toFixed(2)+" ("+cmRatio.toFixed(1)+"%)","Break-even units: "+beUnits,"Break-even revenue: $"+beRevenue.toLocaleString(),"For $"+targetProfit+" profit: "+targetUnits+" units"],
+    stats:[
+      {label:"Break-Even Units",value:beUnits.toLocaleString()},
+      {label:"Break-Even Revenue",value:"$"+beRevenue.toLocaleString()},
+      {label:"Contribution Margin",value:cmRatio.toFixed(1)+"%"},
+      {label:"Units for Target Profit",value:targetUnits.toLocaleString()},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the break-even point?", answer: "The break-even point is the number of units you must sell (or revenue you must generate) to cover all costs — fixed and variable. At this point, profit = $0. Selling more generates profit; selling less generates a loss. It is a fundamental business planning tool." },
+  { question: "What is contribution margin?", answer: "Contribution margin = Price - Variable Cost per unit. It is the amount each unit sold contributes toward covering fixed costs and then generating profit. Example: $50 price - $20 variable cost = $30 contribution margin. After covering fixed costs, each additional unit generates $30 profit." },
+  { question: "What are fixed vs variable costs?", answer: "Fixed costs stay constant regardless of production volume: rent, insurance, salaries, software subscriptions. Variable costs change with each unit produced: raw materials, packaging, direct labor, shipping. Most businesses have both. Understanding this split is essential for pricing and forecasting." },
+  { question: "How do I reduce my break-even point?", answer: "Three approaches: (1) Increase selling price — most powerful but may reduce demand. (2) Reduce variable costs — negotiate better supplier prices, improve processes. (3) Reduce fixed costs — smaller space, fewer subscriptions, automation. Combination approaches work best." },
+  { question: "What is a good contribution margin ratio?", answer: "Software: often 70-90% (low variable costs). Manufacturing: 20-40% typical. Retail: 10-30%. Service businesses: 40-70%. There is no universal benchmark — compare within your industry. Higher is better because each dollar of revenue contributes more to covering fixed costs and profit." }
+]
+---
+<Layout
+  title="Break-Even Calculator: Break-Even Point for Business & Products"
+  description="Calculate your break-even point in units and revenue. Understand fixed vs variable costs and target profit. Free break-even analysis calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Break-Even Calculator", href: "/calculators/break-even-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Break-Even Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Break-Even Calculator"
+          description="Calculate break-even point, contribution margin, and target profit units"
+          formulaId="break-even"
+          formulaFn={formulaFn}
+          resultLabel="Break-Even Units"
+          inputs={[
+            {id:"fixedCosts",label:"Fixed Costs (monthly)",type:"number",placeholder:"5000",min:0,unit:"$",defaultValue:5000},
+            {id:"pricePerUnit",label:"Price Per Unit",type:"number",placeholder:"50",min:0,unit:"$",defaultValue:50},
+            {id:"varCostPerUnit",label:"Variable Cost Per Unit",type:"number",placeholder:"20",min:0,unit:"$",defaultValue:20},
+            {id:"targetProfit",label:"Target Monthly Profit",type:"number",placeholder:"3000",min:0,unit:"$",defaultValue:3000}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% margin",
+            zones: [
+              { label: "High margin (>50%)", color: "#22c55e", from: 50, to: 100 },
+              { label: "Good (30-50%)", color: "#3b82f6", from: 30, to: 50 },
+              { label: "Moderate (15-30%)", color: "#f59e0b", from: 15, to: 30 },
+              { label: "Low (<15%)", color: "#ef4444", from: 0, to: 15 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "ROI Calculator", href: "/calculators/roi-calculator" },
+            { name: "Markup Calculator", href: "/calculators/markup-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+            { name: "NPV Calculator", href: "/calculators/npv-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-2">Break-Even Formula</h3>
+          <div class="text-xs text-green-800 font-mono bg-green-100 rounded p-2 mb-2">BEP = Fixed Costs ÷ (Price - Variable Cost)</div>
+          <div class="text-xs text-green-800">Contribution Margin = Price - Variable Cost<br/>CM Ratio = CM ÷ Price × 100</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Break-Even Sensitivity</h2>
+        <p class="text-xs text-gray-600 mb-3">$5,000 fixed costs, $20 variable cost, various prices:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Price</th><th class="text-right p-2 text-xs font-semibold">CM</th><th class="text-right p-2 text-xs font-semibold">BEP Units</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["$30","$10","500"],["$40","$20","250"],["$50","$30","167"],["$75","$55","91"],["$100","$80","63"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-blue-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Typical Margin Benchmarks by Industry</h2>
+        <div class="space-y-2">
+          {[["Software / SaaS","70–90%"],["Professional Services","50–70%"],["Food & Beverage","20–35%"],["Retail","20–40%"],["Manufacturing","20–40%"],["Grocery","1–5%"]].map(([ind,cm]) => (
+            <div class="flex justify-between bg-gray-50 rounded px-3 py-1.5 text-xs">
+              <span class="text-gray-700">{ind}</span>
+              <span class="font-medium text-green-700">{cm} CM ratio</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

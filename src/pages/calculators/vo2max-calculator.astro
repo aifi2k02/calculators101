@@ -1,0 +1,132 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const method = inputs.method||"resting_hr"
+  const age = parseInt(inputs.age)||30
+  const restingHR = parseInt(inputs.restingHR)||65
+  const maxHR = inputs.maxHR?parseInt(inputs.maxHR):(220-age)
+  const runTime = parseFloat(inputs.runTime)||12
+  let vo2max, method_used
+  if(method==="resting_hr"){
+    vo2max = 15*(maxHR/restingHR)
+    method_used="Heart Rate Ratio"
+  } else {
+    vo2max = (483/runTime)+3.5
+    method_used="Cooper 12-min Test"
+  }
+  const zones = vo2max>=60?"Superior":vo2max>=52?"Excellent":vo2max>=44?"Good":vo2max>=36?"Fair":"Poor"
+  return {
+    value:vo2max.toFixed(1)+" mL/kg/min",
+    gaugeValue:Math.min(vo2max/70*100,100),
+    breakdown:["Method: "+method_used,"VO2 max: "+vo2max.toFixed(1)+" mL/kg/min","Rating: "+zones,"Max HR: "+maxHR+" bpm","Resting HR: "+restingHR+" bpm"],
+    stats:[
+      {label:"VO2 Max",value:vo2max.toFixed(1)+" mL/kg/min"},
+      {label:"Fitness Rating",value:zones},
+      {label:"Max Heart Rate",value:maxHR+" bpm"},
+      {label:"HRR",value:maxHR+" / "+restingHR},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is VO2 max?", answer: "VO2 max (maximal oxygen uptake) is the maximum rate at which your body can consume oxygen during intense exercise. It is the gold standard measure of cardiovascular fitness. Higher VO2 max means you can sustain higher exercise intensities and have better endurance capacity. It is measured in mL of O2 per kg of body weight per minute." },
+  { question: "What is a good VO2 max for my age?", answer: "For men aged 30-39: Poor <39, Fair 39-43, Good 44-51, Excellent 52-58, Superior 59+. For women aged 30-39: Poor <31, Fair 31-34, Good 35-38, Excellent 39-45, Superior 46+. Elite endurance athletes often have VO2 max of 70-90+ mL/kg/min. Values decline ~1%/year after 25 without training." },
+  { question: "How accurate are these estimation methods?", answer: "These are estimates, not lab measurements. The resting heart rate method has ±10-15% error. The Cooper 12-minute test is more accurate (±5%) if performed properly. Laboratory VO2 max testing (maximal treadmill test with respiratory analysis) is the gold standard. Smartwatches (Garmin, Apple Watch) use wrist HR and GPS data for reasonable estimates." },
+  { question: "How can I improve my VO2 max?", answer: "VO2 max responds well to training. Best methods: high-intensity interval training (HIIT) — 4x4 minutes at 90-95% max HR; long slow distance runs; tempo runs at lactate threshold pace. Expect 5-15% improvement over 8-12 weeks of consistent training. Genetics set the ceiling but training can significantly improve your current level." },
+  { question: "Is VO2 max related to longevity?", answer: "Strongly yes. Low cardiorespiratory fitness (low VO2 max) is one of the strongest predictors of all-cause mortality — stronger than hypertension, diabetes, or smoking in some studies. Going from low to moderate fitness reduces mortality risk by ~35%. Going from moderate to high fitness reduces it another ~15%." }
+]
+---
+<Layout
+  title="VO2 Max Calculator: Estimate Your Aerobic Fitness Level"
+  description="Estimate your VO2 max (maximal oxygen uptake) from resting heart rate or running tests. Free VO2 max calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "VO2 Max Calculator", href: "/calculators/vo2max-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">VO2 Max Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="VO2 Max Calculator"
+          description="Estimate your aerobic fitness level with VO2 max"
+          formulaId="vo2max"
+          formulaFn={formulaFn}
+          resultLabel="VO2 Max (mL/kg/min)"
+          inputs={[
+            {id:"method",label:"Estimation Method",type:"select",options:[{value:"resting_hr",label:"Resting Heart Rate Method"},{value:"cooper",label:"Cooper 12-Minute Run Test"}],defaultValue:"resting_hr"},
+            {id:"age",label:"Age",type:"number",placeholder:"30",min:10,max:90,unit:"years",defaultValue:30},
+            {id:"restingHR",label:"Resting Heart Rate",type:"number",placeholder:"65",min:30,max:100,unit:"bpm",defaultValue:65},
+            {id:"maxHR",label:"Max Heart Rate (leave 0 for age-based estimate)",type:"number",placeholder:"0",min:0,unit:"bpm",defaultValue:0},
+            {id:"runTime",label:"Cooper Test: Distance in 12 min (km) — only if using Cooper method",type:"number",placeholder:"2.4",min:0.5,max:6,step:0.1,defaultValue:2.4}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Poor (<36)", color: "#ef4444", from: 0, to: 51 },
+              { label: "Fair (36-44)", color: "#f59e0b", from: 51, to: 63 },
+              { label: "Good (44-52)", color: "#3b82f6", from: 63, to: 74 },
+              { label: "Excellent (52+)", color: "#22c55e", from: 74, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "BMR Calculator", href: "/calculators/bmr-calculator" },
+            { name: "Running Calorie Calculator", href: "/calculators/running-calorie-calculator" },
+            { name: "Calories Burned Calculator", href: "/calculators/calories-burned-calculator" },
+            { name: "Pace Calculator", href: "/calculators/pace-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">VO2 Max Rating (Men 30-39)</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Superior","59+"],["Excellent","52–58"],["Good","44–51"],["Fair","39–43"],["Poor","Under 39"]].map(([r,v]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{r}</span><span class="font-medium">{v} mL/kg/min</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">VO2 Max of Elite Athletes</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Athlete</th><th class="text-right p-2 text-xs font-semibold">VO2 Max</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Oscar Svendsen (cyclist)","97.5"],["Espen Bjerke (cyclist)","96.0"],["Jon Brown (runner)","85.0"],["Mo Farah (runner)","81.5"],["Usain Bolt (sprinter)","54.9"],["Average fit adult","40–55"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How to Improve VO2 Max</h2>
+        <div class="space-y-2">
+          {[
+            {method:"HIIT",desc:"4 x 4 minutes at 90-95% max HR with 3-min recovery. Most effective method. 2-3x/week."},
+            {method:"Long runs",desc:"Weekly long run at easy pace (60-70% max HR). Builds aerobic base. 1x/week."},
+            {method:"Tempo runs",desc:"20-40 min at lactate threshold pace (~80-85% max HR). Comfortable hard."},
+            {method:"Consistency",desc:"The biggest driver is simply training regularly over months and years. No shortcuts."},
+          ].map(m => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-blue-700">{m.method}</div>
+              <div class="text-xs text-gray-600 mt-0.5">{m.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

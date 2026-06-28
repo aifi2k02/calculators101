@@ -1,0 +1,144 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const weight = parseFloat(inputs.weight)||155
+  const distance = parseFloat(inputs.distance)||5
+  const speed = parseFloat(inputs.speed)||6
+  const unit = inputs.unit||"imperial"
+  const terrain = inputs.terrain||"flat"
+  const wkg = unit==="imperial"?weight*0.453592:weight
+  const distKm = unit==="imperial"?distance*1.60934:distance
+  const speedKmh = unit==="imperial"?speed*1.60934:speed
+  const terrainBonus = {flat:0,slight_incline:0.15,moderate_incline:0.30,steep_incline:0.50,trail:0.10}
+  const bonus = terrainBonus[terrain]||0
+  const met = (speedKmh<8?6:speedKmh<10?8:speedKmh<12?10:speedKmh<14?11:12)*(1+bonus)
+  const hours = distKm/speedKmh
+  const calories = met*wkg*hours
+  const perKm = calories/distKm
+  const perMile = perKm*1.60934
+  return {
+    value:Math.round(calories)+" calories",
+    gaugeValue:Math.min(calories/800*100,100),
+    breakdown:["Weight: "+wkg.toFixed(1)+"kg | Distance: "+distKm.toFixed(1)+"km","Speed: "+speedKmh.toFixed(1)+"km/h","Terrain: "+terrain.replace(/_/g," "),"MET: "+met.toFixed(1),"Calories: "+Math.round(calories),"Per km: "+perKm.toFixed(0)+" | Per mile: "+perMile.toFixed(0)],
+    stats:[
+      {label:"Total Calories",value:Math.round(calories)+" kcal"},
+      {label:"Per Mile",value:Math.round(perMile)+" kcal"},
+      {label:"Per km",value:Math.round(perKm)+" kcal"},
+      {label:"Duration",value:(hours*60).toFixed(0)+" min"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How many calories does running burn?", answer: "Running burns approximately 80-140 calories per mile, depending on body weight and pace. A 155 lb person burns about 100 cal/mile at 6 mph. A 200 lb person burns about 130 cal/mile. Faster speeds and hills increase burn. Running consistently burns more than most other exercises per unit of time." },
+  { question: "Does speed affect calorie burn in running?", answer: "Yes, but less than you might think. Faster running burns more calories per minute, but since you cover more distance faster, the per-mile calorie burn changes less. Running at 8 mph burns ~30% more per mile than 5 mph. Hill running adds 50-75% more calories due to greater effort against gravity." },
+  { question: "Is running or walking better for calorie burn?", answer: "Running burns about 2x more calories per minute than walking at the same body weight. However, per mile, running only burns about 25-30% more than brisk walking. If you can only exercise for a set time, running wins. If you have unlimited time, the difference per mile narrows. Both are excellent for health." },
+  { question: "Why does body weight affect calorie burn so much?", answer: "Heavier people burn more calories doing the same activity because they must move more mass. Moving 220 lbs requires significantly more energy than moving 150 lbs, even at the same speed and distance. This is why calorie burn calculators always require weight as an input — it is the single biggest variable." },
+  { question: "Does running on a treadmill burn fewer calories than outdoors?", answer: "Slightly yes — no wind resistance, slight biomechanical differences. Setting treadmill incline to 1% compensates for the wind resistance difference. Trail running burns 10-15% more than treadmill due to uneven terrain engaging more stabilizer muscles. Treadmill calorie displays are notoriously inaccurate — use a formula-based calculator instead." }
+]
+---
+<Layout
+  title="Running Calorie Calculator: Calories Burned Running"
+  description="Calculate calories burned running based on distance, speed, weight, and terrain. Free running calorie calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Running Calorie Calculator", href: "/calculators/running-calorie-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Running Calorie Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Running Calorie Calculator"
+          description="Calculate calories burned running by distance, speed, and weight"
+          formulaId="running-calorie"
+          formulaFn={formulaFn}
+          resultLabel="Calories Burned"
+          inputs={[
+            {id:"weight",label:"Body Weight",type:"number",placeholder:"155",min:50,max:400,defaultValue:155},
+            {id:"distance",label:"Distance",type:"number",placeholder:"3",min:0.1,max:100,step:0.1,defaultValue:3},
+            {id:"speed",label:"Running Speed",type:"number",placeholder:"6",min:1,max:20,step:0.5,defaultValue:6},
+            {id:"unit",label:"Units",type:"select",options:[{value:"imperial",label:"Imperial (lbs, miles, mph)"},{value:"metric",label:"Metric (kg, km, km/h)"}],defaultValue:"imperial"},
+            {id:"terrain",label:"Terrain",type:"select",options:[
+              {value:"flat",label:"Flat road/treadmill"},
+              {value:"trail",label:"Trail running (+10%)"},
+              {value:"slight_incline",label:"Slight incline (+15%)"},
+              {value:"moderate_incline",label:"Moderate incline (+30%)"},
+              {value:"steep_incline",label:"Steep hill (+50%)"},
+            ],defaultValue:"flat"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Light (<300 cal)", color: "#3b82f6", from: 0, to: 37 },
+              { label: "Moderate (300-500)", color: "#22c55e", from: 37, to: 62 },
+              { label: "High (500-700)", color: "#f59e0b", from: 62, to: 87 },
+              { label: "Very High (700+)", color: "#ef4444", from: 87, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Calories Burned Calculator", href: "/calculators/calories-burned-calculator" },
+            { name: "Steps to Miles Calculator", href: "/calculators/steps-to-miles-calculator" },
+            { name: "Pace Calculator", href: "/calculators/pace-calculator" },
+            { name: "TDEE Calculator", href: "/calculators/tdee-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Calories per Mile by Weight</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Weight</th><th class="text-right pb-1">Cal/mile</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["120 lbs","80 cal"],["150 lbs","100 cal"],["175 lbs","116 cal"],["200 lbs","132 cal"],["225 lbs","149 cal"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="text-xs text-blue-600 mt-1">At 6 mph pace on flat terrain</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Calorie Burn by Pace (155 lbs, 1 mile)</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Pace</th><th class="text-right p-2 text-xs font-semibold">Speed</th><th class="text-right p-2 text-xs font-semibold">Cal/mile</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["15 min/mile","4 mph","83"],["12 min/mile","5 mph","92"],["10 min/mile","6 mph","102"],["8 min/mile","7.5 mph","112"],["7 min/mile","8.5 mph","122"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-blue-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Running for Weight Loss</h2>
+        <div class="space-y-3">
+          {[
+            {dist:"1 mile/day",cal:"~100 cal/day",annual:"~10 lb potential loss/year"},
+            {dist:"3 miles/day",cal:"~300 cal/day",annual:"~30 lb potential loss/year"},
+            {dist:"5 miles/day",cal:"~500 cal/day",annual:"~50 lb potential loss/year"},
+          ].map(r => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800">{r.dist}</div>
+              <div class="text-xs text-blue-600">{r.cal}</div>
+              <div class="text-xs text-gray-500">{r.annual}</div>
+            </div>
+          ))}
+          <p class="text-xs text-gray-500 mt-1">Estimates assume no dietary compensation. Diet adjustment is also needed for actual weight loss.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

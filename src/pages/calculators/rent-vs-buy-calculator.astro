@@ -1,0 +1,141 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const homePrice = parseFloat(inputs.homePrice)||400000
+  const downPct = parseFloat(inputs.downPct)||20
+  const mortgageRate = parseFloat(inputs.mortgageRate)||7
+  const monthlyRent = parseFloat(inputs.monthlyRent)||2000
+  const rentIncrease = parseFloat(inputs.rentIncrease)||3
+  const homeAppreciation = parseFloat(inputs.homeAppreciation)||4
+  const investReturn = parseFloat(inputs.investReturn)||7
+  const years = parseInt(inputs.years)||10
+  if(homePrice<=0||monthlyRent<=0) throw new Error("Enter home price and rent.")
+  const downPayment = homePrice*(downPct/100)
+  const loanAmount = homePrice-downPayment
+  const r=mortgageRate/100/12, n=360
+  const payment = loanAmount*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1)
+  const propTaxMonthly = homePrice*0.012/12
+  const insuranceMonthly = 150
+  const maintenanceMonthly = homePrice*0.01/12
+  const totalBuyCost = (payment+propTaxMonthly+insuranceMonthly+maintenanceMonthly)*years*12
+  const futureHomeValue = homePrice*Math.pow(1+homeAppreciation/100,years)
+  let bal=loanAmount
+  for(let m=0;m<years*12;m++){const int=bal*r;const prin=payment-int;bal-=prin}
+  const buyEquity = futureHomeValue-Math.max(0,bal)
+  const totalRentPaid = monthlyRent*((Math.pow(1+rentIncrease/100/12,years*12)-1)/(rentIncrease/100/12))*((rentIncrease/100/12)?1:years*12)
+  const downInvested = downPayment*Math.pow(1+investReturn/100,years)
+  const netRent = totalRentPaid+downPayment-downInvested
+  const buyWins = buyEquity-totalBuyCost>0
+  return {
+    value:buyEquity>totalRentPaid?"Buying builds more wealth":"Renting may be better short-term",
+    gaugeValue:Math.min((buyEquity/(homePrice))*100,100),
+    breakdown:["Monthly buy cost: $"+(payment+propTaxMonthly+insuranceMonthly+maintenanceMonthly).toFixed(0),"Monthly rent: $"+monthlyRent,"Future home value: $"+futureHomeValue.toLocaleString("en-US",{maximumFractionDigits:0}),"Equity after "+years+"yr: $"+buyEquity.toLocaleString("en-US",{maximumFractionDigits:0}),"Total rent paid: $"+totalRentPaid.toLocaleString("en-US",{maximumFractionDigits:0})],
+    stats:[
+      {label:"Monthly Buy Cost",value:"$"+(payment+propTaxMonthly+insuranceMonthly+maintenanceMonthly).toFixed(0)},
+      {label:"Future Home Value",value:"$"+futureHomeValue.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Home Equity at "+years+"yr",value:"$"+buyEquity.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Total Rent Paid",value:"$"+totalRentPaid.toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "Is it always better to buy than rent?", answer: "No. The answer depends on: how long you stay (buying wins with longer holds), your market (high price-to-rent ratio cities favor renting), opportunity cost of the down payment, home appreciation, transaction costs, and lifestyle flexibility. In very expensive markets, renting and investing the difference can beat buying." },
+  { question: "What is the price-to-rent ratio?", answer: "Price-to-rent ratio = Home price / Annual rent. Under 15: strongly favors buying. 15-20: leans toward buying. 20-25: could go either way. Over 25: often favors renting. In San Francisco or NYC, ratios of 40-50+ are common — renting and investing the savings may be financially smarter in those markets." },
+  { question: "How long do I need to stay for buying to make sense?", answer: "Transaction costs (closing costs 2-5% when buying, 6-8% when selling) are the main hurdle. You typically need to stay at least 3-5 years to offset these costs and build enough equity. The longer you stay, the more buying makes sense. If you might move in 2-3 years, renting is often better." },
+  { question: "What is the true cost of homeownership?", answer: "Mortgage payment is just the start. Add: property taxes (1-2% of value annually), homeowners insurance ($1,500+/year), maintenance and repairs (1-2% of value annually), HOA fees if applicable, and opportunity cost of the down payment. True ownership cost is often 40-50% more than the mortgage payment alone." },
+  { question: "Should I rent and invest the difference?", answer: "If monthly rent is significantly less than buying costs, invest the difference in index funds. The math depends on home appreciation vs. stock market returns. Historically, stocks have returned more than real estate long-term, but a home provides leverage, tax benefits, forced savings, and housing stability that pure investments do not." }
+]
+---
+<Layout
+  title="Rent vs Buy Calculator: Is It Better to Rent or Buy?"
+  description="Compare the true cost of renting vs buying a home over time, including opportunity cost and home appreciation. Free rent vs buy calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Rent vs Buy Calculator", href: "/calculators/rent-vs-buy-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Rent vs Buy Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Rent vs Buy Calculator"
+          description="Compare long-term cost of renting vs buying a home"
+          formulaId="rent-vs-buy"
+          formulaFn={formulaFn}
+          resultLabel="Rent vs Buy Analysis"
+          inputs={[
+            {id:"homePrice",label:"Home Purchase Price",type:"number",placeholder:"400000",min:0,unit:"$",defaultValue:400000},
+            {id:"downPct",label:"Down Payment %",type:"select",options:[{value:"5",label:"5%"},{value:"10",label:"10%"},{value:"20",label:"20%"},{value:"25",label:"25%"}],defaultValue:"20"},
+            {id:"mortgageRate",label:"Mortgage Rate",type:"number",placeholder:"7",min:0,max:15,step:0.1,unit:"%",defaultValue:7},
+            {id:"monthlyRent",label:"Current Monthly Rent",type:"number",placeholder:"2000",min:0,unit:"$",defaultValue:2000},
+            {id:"rentIncrease",label:"Annual Rent Increase",type:"number",placeholder:"3",min:0,max:10,step:0.5,unit:"%",defaultValue:3},
+            {id:"homeAppreciation",label:"Annual Home Appreciation",type:"number",placeholder:"4",min:0,max:15,step:0.5,unit:"%",defaultValue:4},
+            {id:"investReturn",label:"Investment Return (if renting)",type:"number",placeholder:"7",min:0,max:15,step:0.5,unit:"%",defaultValue:7},
+            {id:"years",label:"Years to Compare",type:"number",placeholder:"10",min:1,max:30,unit:"years",defaultValue:10}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% equity/price",
+            zones: [
+              { label: "Strong buy case", color: "#22c55e", from: 75, to: 100 },
+              { label: "Moderate buy", color: "#3b82f6", from: 50, to: 75 },
+              { label: "Moderate rent", color: "#f59e0b", from: 25, to: 50 },
+              { label: "Strong rent case", color: "#ef4444", from: 0, to: 25 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "House Affordability Calculator", href: "/calculators/house-affordability-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Net Worth Calculator", href: "/calculators/net-worth-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Price-to-Rent Ratio Guide</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Under 15","Strongly favors buying"],["15–20","Leans toward buying"],["20–25","Could go either way"],["Over 25","Leans toward renting"],["Over 35","Strongly favors renting"]].map(([r,d]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span class="font-medium">{r}</span><span>{d}</span></div>
+            ))}
+          </div>
+          <p class="text-xs text-blue-600 mt-1">Price/Annual Rent = Ratio</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">True Monthly Cost of Ownership</h2>
+        <p class="text-xs text-gray-600 mb-3">$400,000 home, 7% rate, 20% down:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Cost Component</th><th class="text-right p-2 text-xs font-semibold">Monthly</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Mortgage (P+I)","$2,129"],["Property tax (1.2%)","$400"],["Homeowners insurance","$125"],["Maintenance (1%)","$333"],["Total","$2,987"]].map(([c,a]) => (
+              <tr class={c==="Total"?"bg-blue-50 font-semibold":""}><td class="p-2 text-xs">{c}</td><td class="p-2 text-xs text-right">{a}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Not including HOA or PMI</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Factors Favoring Renting</h2>
+        <div class="space-y-2">
+          {["High price-to-rent ratio (over 25) in your market","Planning to move within 3-5 years","Career or life changes likely in the near term","No emergency fund beyond down payment","Real estate prices appear at a cyclical peak","The flexibility of renting fits your lifestyle better","You can invest the rent/buy payment difference at better returns"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-orange-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

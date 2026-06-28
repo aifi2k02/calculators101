@@ -1,0 +1,134 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const weight = parseFloat(inputs.weight)||0
+  const height = parseFloat(inputs.height)||0
+  const sex = inputs.sex||"male"
+  const unit = inputs.unit||"metric"
+  const wkg = unit==="imperial"?weight*0.453592:weight
+  const hcm = unit==="imperial"?height*2.54:height
+  if(wkg<=0||hcm<=0) throw new Error("Enter weight and height.")
+  let boer, james, hume
+  if(sex==="male"){
+    boer=0.407*wkg+0.267*hcm-19.2
+    james=1.1*wkg-128*Math.pow(wkg/hcm,2)
+    hume=0.3281*wkg+0.3394*hcm-29.5336
+  } else {
+    boer=0.252*wkg+0.473*hcm-48.3
+    james=1.07*wkg-148*Math.pow(wkg/hcm,2)
+    hume=0.2296*wkg+0.4827*hcm-24.0989
+  }
+  const avgLbm=(boer+james+hume)/3
+  const fatMass=wkg-avgLbm
+  const bodyFatPct=(fatMass/wkg)*100
+  return {
+    value:avgLbm.toFixed(1)+"kg LBM",
+    gaugeValue:Math.min((avgLbm/80)*100,100),
+    breakdown:["Weight: "+wkg.toFixed(1)+"kg | Height: "+hcm.toFixed(0)+"cm","Boer formula: "+boer.toFixed(1)+"kg","James formula: "+james.toFixed(1)+"kg","Hume formula: "+hume.toFixed(1)+"kg","Average LBM: "+avgLbm.toFixed(1)+"kg","Fat mass: "+fatMass.toFixed(1)+"kg ("+bodyFatPct.toFixed(1)+"%)"],
+    stats:[
+      {label:"Avg Lean Body Mass",value:avgLbm.toFixed(1)+" kg"},
+      {label:"Estimated Fat Mass",value:fatMass.toFixed(1)+" kg"},
+      {label:"Est. Body Fat %",value:bodyFatPct.toFixed(1)+"%"},
+      {label:"LBM as % of Weight",value:((avgLbm/wkg)*100).toFixed(1)+"%"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is lean body mass?", answer: "LBM = Total body weight - Fat mass. It includes muscle, bone, organs, blood, and everything except body fat. LBM is important for determining appropriate drug doses, calculating BMR, setting protein intake goals, and tracking fitness progress (you can gain muscle while losing fat even if scale weight stays constant)." },
+  { question: "Why is LBM important for fitness?", answer: "Muscle is metabolically active — more muscle means higher calorie burn at rest. Tracking LBM (rather than just weight) gives a clearer picture of body composition changes. It is possible to lose fat and gain muscle simultaneously, which looks like no progress on the scale but represents significant health improvement." },
+  { question: "What is a healthy LBM for men and women?", answer: "Average LBM for men: 60-70kg (130-155 lbs). Average LBM for women: 40-50kg (88-110 lbs). Higher is generally better (up to a point) as it correlates with strength, metabolic health, and reduced injury risk. LBM naturally declines with age (sarcopenia) — resistance training helps preserve it." },
+  { question: "How accurate are formula-based LBM calculations?", answer: "These formulas were developed from population averages and are estimates. Error range: typically ±3-5 kg from actual LBM. For more accurate measurement, use DEXA scan (most accurate), hydrostatic weighing, or air displacement plethysmography (Bod Pod). Bioelectrical impedance scales are convenient but less accurate." },
+  { question: "How much protein do I need per pound of LBM?", answer: "Most evidence suggests 0.7-1.0g protein per pound (1.5-2.2g per kg) of LBM for active individuals trying to build or preserve muscle. Example: 150 lbs LBM = 105-150g protein/day. Higher end of the range for those doing intense strength training or trying to gain muscle." }
+]
+---
+<Layout
+  title="Lean Body Mass Calculator: LBM Using Multiple Formulas"
+  description="Calculate your lean body mass using Boer, James, and Hume formulas. Understand fat mass vs muscle mass. Free LBM calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Lean Body Mass Calculator", href: "/calculators/lean-body-mass-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Lean Body Mass Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Lean Body Mass Calculator"
+          description="Calculate lean body mass using multiple medical formulas"
+          formulaId="lean-body-mass"
+          formulaFn={formulaFn}
+          resultLabel="Lean Body Mass"
+          inputs={[
+            {id:"weight",label:"Weight",type:"number",placeholder:"75",min:30,max:300,defaultValue:75},
+            {id:"height",label:"Height",type:"number",placeholder:"175",min:100,max:250,defaultValue:175},
+            {id:"unit",label:"Units",type:"select",options:[{value:"metric",label:"Metric (kg, cm)"},{value:"imperial",label:"Imperial (lbs, inches)"}],defaultValue:"metric"},
+            {id:"sex",label:"Sex",type:"select",options:[{value:"male",label:"Male"},{value:"female",label:"Female"}],defaultValue:"male"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Low LBM", color: "#ef4444", from: 0, to: 30 },
+              { label: "Average", color: "#f59e0b", from: 30, to: 60 },
+              { label: "Good", color: "#3b82f6", from: 60, to: 80 },
+              { label: "High LBM", color: "#22c55e", from: 80, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "BMI Calculator", href: "/calculators/bmi-calculator" },
+            { name: "Body Fat Calculator", href: "/calculators/body-fat-calculator" },
+            { name: "Ideal Weight Calculator", href: "/calculators/ideal-weight-calculator" },
+            { name: "TDEE Calculator", href: "/calculators/tdee-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Average LBM Reference</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Average male","63-68 kg"],["Average female","43-48 kg"],["Athletic male","70-80+ kg"],["Athletic female","50-60+ kg"]].map(([g,b]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{g}</span><span class="font-medium">{b}</span></div>
+            ))}
+          </div>
+          <p class="text-xs text-blue-600 mt-1">Includes muscle, bone, organs, and water (excludes fat)</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">LBM Formula Comparison</h2>
+        <div class="space-y-3">
+          {[
+            {f:"Boer (1984)",a:"Most accurate for athletes and muscular individuals. Uses weight and height."},
+            {f:"James (1976)",a:"Good for average build adults. May underestimate LBM in very heavy individuals."},
+            {f:"Hume (1966)",a:"Similar to James. Original regression formula for clinical use in drug dosing."},
+          ].map(fo => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-blue-700 mb-1">{fo.f}</div>
+              <div class="text-xs text-gray-600">{fo.a}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Uses of LBM in Medicine & Fitness</h2>
+        <div class="space-y-2">
+          {["Drug dosing for certain medications (antibiotics, chemotherapy)","Calculating BMR and total daily energy expenditure","Setting protein intake targets for muscle building","Anesthesia dosing in surgeries","Nutritional assessment and monitoring","Assessing sarcopenia (age-related muscle loss)","Comparing body composition changes during exercise programs"].map(u => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{u}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

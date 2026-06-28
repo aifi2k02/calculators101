@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const rate = parseFloat(inputs.rate)||8
+  const initial = parseFloat(inputs.initial)||0
+  const cashFlows = (inputs.cashFlows||"").split(/[,\n]+/).map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n))
+  if(cashFlows.length===0) throw new Error("Enter cash flows (comma or newline separated).")
+  const r = rate/100
+  let npv = -initial
+  for(let i=0;i<cashFlows.length;i++){
+    npv += cashFlows[i]/Math.pow(1+r,i+1)
+  }
+  const totalCash = cashFlows.reduce((a,b)=>a+b,0)
+  let irr=0.1, step=0.01
+  for(let attempt=0;attempt<2000;attempt++){
+    let npvTest=-initial
+    for(let i=0;i<cashFlows.length;i++) npvTest+=cashFlows[i]/Math.pow(1+irr,i+1)
+    if(Math.abs(npvTest)<1) break
+    if(npvTest>0) irr+=step; else irr-=step; step*=0.99
+  }
+  return {
+    value:"NPV: $"+npv.toLocaleString("en-US",{maximumFractionDigits:0}),
+    gaugeValue:npv>0?Math.min((npv/initial)*100,100):0,
+    breakdown:["Initial investment: $"+initial,"Discount rate: "+rate+"%","Cash flows: "+cashFlows.length+" periods","Total undiscounted: $"+totalCash.toLocaleString("en-US",{maximumFractionDigits:0}),"NPV: $"+npv.toLocaleString("en-US",{maximumFractionDigits:0}),"IRR: "+(irr*100).toFixed(2)+"%"],
+    stats:[
+      {label:"NPV",value:"$"+npv.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"IRR",value:(irr*100).toFixed(2)+"%"},
+      {label:"Total Cash Flows",value:"$"+totalCash.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Decision",value:npv>0?"Invest":"Reject"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is NPV?", answer: "Net Present Value (NPV) = Present value of all future cash flows minus the initial investment. Positive NPV means the investment creates value above the required return. Negative NPV means it destroys value. NPV is the gold standard for capital budgeting decisions." },
+  { question: "What discount rate should I use for NPV?", answer: "Use your WACC (Weighted Average Cost of Capital) for corporate projects, or your required rate of return for personal investments. If your business requires 12% return on investments, use 12%. Higher discount rates make future cash flows worth less — important for long-term projects." },
+  { question: "What is IRR and how is it related to NPV?", answer: "IRR (Internal Rate of Return) is the discount rate at which NPV = 0. If IRR > your cost of capital/required return, the investment is worthwhile. If IRR < required return, reject it. NPV and IRR usually agree on accept/reject decisions but can conflict when comparing mutually exclusive projects (use NPV in that case)." },
+  { question: "When should I choose NPV over IRR?", answer: "Always trust NPV when they conflict. IRR can give misleading results for: non-conventional cash flows (multiple sign changes), mutually exclusive projects of different sizes or timing, projects with interim cash flows that must be reinvested. NPV directly measures value creation in dollar terms." },
+  { question: "What are the limitations of NPV?", answer: "NPV requires accurately estimating discount rate and future cash flows — both are uncertain. It does not account for real options (ability to expand or abandon). It can favor larger projects over smaller, more efficient ones. It assumes cash flows are reinvested at the discount rate. Despite limitations, NPV remains the most rigorous investment metric." }
+]
+---
+<Layout
+  title="NPV Calculator: Net Present Value of Cash Flows"
+  description="Calculate the net present value (NPV) and IRR of an investment or project. Free NPV and IRR calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "NPV Calculator", href: "/calculators/npv-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">NPV Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="NPV Calculator"
+          description="Calculate net present value and IRR of any investment"
+          formulaId="npv"
+          formulaFn={formulaFn}
+          resultLabel="NPV"
+          inputs={[
+            {id:"initial",label:"Initial Investment",type:"number",placeholder:"100000",min:0,unit:"$",defaultValue:100000},
+            {id:"rate",label:"Discount Rate (WACC or required return)",type:"number",placeholder:"8",min:0,max:50,step:0.5,unit:"%",defaultValue:8},
+            {id:"cashFlows",label:"Annual Cash Flows (comma-separated)",type:"text",placeholder:"20000, 30000, 40000, 40000, 30000",defaultValue:"20000, 30000, 40000, 40000, 30000"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% return",
+            zones: [
+              { label: "Negative NPV", color: "#ef4444", from: 0, to: 5 },
+              { label: "Marginal NPV", color: "#f59e0b", from: 5, to: 20 },
+              { label: "Positive NPV", color: "#3b82f6", from: 20, to: 60 },
+              { label: "Strong NPV", color: "#22c55e", from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "ROI Calculator", href: "/calculators/roi-calculator" },
+            { name: "IRR Calculator", href: "/calculators/investment-calculator" },
+            { name: "Payback Period Calculator", href: "/calculators/payback-period-calculator" },
+            { name: "Annuity Calculator", href: "/calculators/annuity-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">NPV Decision Rule</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            <div class="bg-green-100 rounded p-2"><strong>NPV &gt; 0:</strong> Accept — investment creates value above the required return</div>
+            <div class="bg-red-100 rounded p-2"><strong>NPV &lt; 0:</strong> Reject — investment destroys value relative to the required return</div>
+            <div class="bg-yellow-100 rounded p-2"><strong>NPV = 0:</strong> Indifferent — earns exactly the required return</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">NPV Example Calculation</h2>
+        <p class="text-xs text-gray-600 mb-3">$100,000 investment, 8% rate, 5 years of cash flows:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Year</th><th class="text-right p-2 text-xs font-semibold">Cash Flow</th><th class="text-right p-2 text-xs font-semibold">PV Factor</th><th class="text-right p-2 text-xs font-semibold">Present Value</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["0","−$100,000","1.000","−$100,000"],["1","$20,000","0.926","$18,519"],["2","$30,000","0.857","$25,720"],["3","$40,000","0.794","$31,752"],["4","$40,000","0.735","$29,400"],["5","$30,000","0.681","$20,420"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right font-medium">{r[3]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-700 font-semibold mt-2">NPV = $25,811 (positive — invest!)</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">NPV vs Payback Period vs ROI</h2>
+        <div class="space-y-3">
+          {[
+            {m:"NPV",pros:"Measures actual $ value created, accounts for time value",cons:"Requires accurate discount rate, harder to compare projects of diff size"},
+            {m:"IRR",pros:"Intuitive % return, easy to compare to cost of capital",cons:"Can mislead with unconventional flows, multiple IRRs possible"},
+            {m:"Payback Period",pros:"Simple, quick liquidity test",cons:"Ignores time value of money, ignores cash flows after payback"},
+            {m:"ROI",pros:"Simple ratio, easy to compare",cons:"Ignores timing of cash flows, can be manipulated"},
+          ].map(m => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800">{m.m}</div>
+              <div class="text-xs text-green-700">+ {m.pros}</div>
+              <div class="text-xs text-red-600">- {m.cons}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

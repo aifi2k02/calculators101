@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = parseFloat(inputs.value)
+  const mode = inputs.mode||"decimal"
+  const places = parseInt(inputs.places)||0
+  if(isNaN(value)) throw new Error("Enter a valid number.")
+  let rounded, label
+  if(mode==="decimal"){
+    const factor=Math.pow(10,places)
+    rounded=Math.round(value*factor)/factor; label="to "+places+" decimal places"
+  } else if(mode==="up"){
+    const factor=Math.pow(10,places)
+    rounded=Math.ceil(value*factor)/factor; label="up to "+places+" decimal places"
+  } else if(mode==="down"){
+    const factor=Math.pow(10,places)
+    rounded=Math.floor(value*factor)/factor; label="down to "+places+" decimal places"
+  } else if(mode==="nearest5"){
+    rounded=Math.round(value/5)*5; label="to nearest 5"
+  } else if(mode==="nearest10"){
+    rounded=Math.round(value/10)*10; label="to nearest 10"
+  } else if(mode==="nearest100"){
+    rounded=Math.round(value/100)*100; label="to nearest 100"
+  } else if(mode==="nearest1000"){
+    rounded=Math.round(value/1000)*1000; label="to nearest 1,000"
+  } else throw new Error("Unknown mode.")
+  const diff=rounded-value
+  return {
+    value:rounded.toString(),
+    gaugeValue:Math.abs(diff)/(Math.abs(value)||1)*100*10,
+    breakdown:["Original: "+value,"Rounded "+label+": "+rounded,"Difference: "+diff.toFixed(8),"Error %: "+(Math.abs(diff)/(Math.abs(value)||1)*100).toFixed(4)+"%"],
+    stats:[
+      {label:"Rounded",value:String(rounded)},
+      {label:"Original",value:String(value)},
+      {label:"Difference",value:diff.toFixed(6)},
+      {label:"Rounding Mode",value:mode},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What are the rounding rules?", answer: "Standard rounding (half-up): if the digit after your rounding place is 5 or more, round up; if 4 or less, round down. Example: 3.145 rounded to 2 decimal places = 3.15 (since 5 ≥ 5, round up). 3.144 = 3.14 (since 4 < 5, round down)." },
+  { question: "What is the difference between floor and ceiling?", answer: "Floor (round down): always rounds toward negative infinity. floor(3.9) = 3, floor(-3.1) = -4. Ceiling (round up): always rounds toward positive infinity. ceil(3.1) = 4, ceil(-3.9) = -3. Standard rounding (half-up) rounds 0.5 cases up: round(2.5) = 3, round(3.5) = 4." },
+  { question: "What is banker rounding (round half to even)?", answer: "Banker rounding rounds 0.5 cases to the nearest even digit: 2.5 → 2, 3.5 → 4, 4.5 → 4, 5.5 → 6. This reduces cumulative rounding bias when processing many numbers. Used in Python built-in round(), financial calculations, and IEEE 754 floating-point standard." },
+  { question: "How do I round to the nearest 5?", answer: "Divide by 5, round to nearest integer, multiply by 5. Example: round 17 to nearest 5: 17/5 = 3.4, round to 3, 3 x 5 = 15. Round 18: 18/5 = 3.6, round to 4, 4 x 5 = 20. Used in pricing (prices ending in 0 or 5) and practical measurements." },
+  { question: "Why does floating-point rounding sometimes give unexpected results?", answer: "Floating-point numbers (how computers store decimals) cannot exactly represent most decimal fractions. 0.1 + 0.2 = 0.30000000000000004 in JavaScript. This is not a bug — it is how binary floating-point works. For financial calculations, use integer arithmetic (store cents, not dollars) or decimal libraries to avoid these issues." }
+]
+---
+<Layout
+  title="Rounding Calculator: Round to Decimal Places, Nearest Whole"
+  description="Round any number to decimal places, nearest whole number, nearest 5, 10, 100, etc. Multiple rounding modes. Free rounding calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Rounding Calculator", href: "/calculators/rounding-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Rounding Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Rounding Calculator"
+          description="Round numbers with multiple modes and precision"
+          formulaId="rounding"
+          formulaFn={formulaFn}
+          resultLabel="Rounded"
+          inputs={[
+            {id:"value",label:"Number to round",type:"number",placeholder:"3.14159",step:"any",defaultValue:3.14159},
+            {id:"mode",label:"Rounding mode",type:"select",options:[
+              {value:"decimal",label:"Round to decimal places (standard)"},
+              {value:"up",label:"Round up (ceiling)"},
+              {value:"down",label:"Round down (floor)"},
+              {value:"nearest5",label:"Round to nearest 5"},
+              {value:"nearest10",label:"Round to nearest 10"},
+              {value:"nearest100",label:"Round to nearest 100"},
+              {value:"nearest1000",label:"Round to nearest 1,000"},
+            ],defaultValue:"decimal"},
+            {id:"places",label:"Decimal places (for decimal modes)",type:"number",placeholder:"2",min:0,max:10,defaultValue:2}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% change",
+            zones: [
+              { label: "Exact (no rounding)", color: "#22c55e", from: 0, to: 1 },
+              { label: "Small rounding", color: "#3b82f6", from: 1, to: 10 },
+              { label: "Large rounding", color: "#f59e0b", from: 10, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Significant Figures Calculator", href: "/calculators/sig-figs-calculator" },
+            { name: "Percentage Error Calculator", href: "/calculators/percentage-error-calculator" },
+            { name: "Fraction Calculator", href: "/calculators/fraction-calculator" },
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Rounding Modes</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            <div><span class="font-semibold">Standard:</span> ≥5 rounds up, &lt;5 rounds down</div>
+            <div><span class="font-semibold">Floor:</span> always rounds toward -∞</div>
+            <div><span class="font-semibold">Ceiling:</span> always rounds toward +∞</div>
+            <div><span class="font-semibold">Truncate:</span> always toward zero</div>
+            <div><span class="font-semibold">Banker:</span> 0.5 rounds to nearest even</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Rounding Comparison</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Value</th><th class="p-2 text-xs text-right">Round (2dp)</th><th class="p-2 text-xs text-right">Floor (2dp)</th><th class="p-2 text-xs text-right">Ceil (2dp)</th><th class="p-2 text-xs text-right">To 10</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[3.145,3.15,3.14,3.15,10],[3.144,3.14,3.14,3.15,10],[7.895,7.9,7.89,7.9,10],[-3.145,-3.15,-3.15,-3.14,-10],[17.5,17.5,17.5,17.5,20]].map(r => (
+              <tr><td class="p-2 text-xs font-medium">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right">{r[3]}</td><td class="p-2 text-xs text-right">{r[4]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

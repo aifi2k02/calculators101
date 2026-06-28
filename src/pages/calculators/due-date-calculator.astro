@@ -1,0 +1,124 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const method = inputs.method||"lmp"
+  const date = inputs.date||"2025-01-01"
+  const cycleLength = parseInt(inputs.cycleLength)||28
+  const d = new Date(date)
+  let lmpDate
+  if(method==="conception"){
+    lmpDate = new Date(d)
+    lmpDate.setDate(lmpDate.getDate()-14)
+  } else {
+    lmpDate = new Date(d)
+  }
+  const dueDate = new Date(lmpDate)
+  dueDate.setDate(dueDate.getDate()+280+(cycleLength-28))
+  const today = new Date()
+  const daysPregnant = Math.max(0,Math.floor((today-lmpDate)/(1000*60*60*24)))
+  const weeksPregnant = Math.floor(daysPregnant/7)
+  const extraDays = daysPregnant%7
+  const t1End = new Date(lmpDate); t1End.setDate(t1End.getDate()+91)
+  const t2End = new Date(lmpDate); t2End.setDate(t2End.getDate()+182)
+  const fmt = d => d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})
+  return {
+    value:"Due: "+fmt(dueDate),
+    gaugeValue:Math.min((daysPregnant/280)*100,100),
+    breakdown:["LMP: "+fmt(lmpDate),"Due date: "+fmt(dueDate),"Current: "+weeksPregnant+"w "+extraDays+"d pregnant","1st trimester ends: "+fmt(t1End),"2nd trimester ends: "+fmt(t2End),"3rd trimester: "+fmt(t2End)+" to "+fmt(dueDate)],
+    stats:[
+      {label:"Due Date",value:fmt(dueDate)},
+      {label:"Current Week",value:weeksPregnant+"w "+extraDays+"d"},
+      {label:"Progress",value:(daysPregnant/280*100).toFixed(0)+"%"},
+      {label:"Days Until Due",value:Math.max(0,Math.round((dueDate-today)/(1000*60*60*24)))+" days"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How is a due date calculated?", answer: "The most common method: add 280 days (40 weeks) to the first day of your last menstrual period (LMP). This is Naegele rule. Another way: add 9 months and 7 days to the LMP. The standard assumes a 28-day cycle. If your cycle is longer or shorter, adjust by the difference." },
+  { question: "How accurate is a due date?", answer: "Only about 5% of babies are born on their exact due date. About 80% of births occur within 2 weeks before or after the due date. Ultrasound dating (especially in the first trimester) is considered more accurate than LMP-based calculation because it directly measures fetal size." },
+  { question: "What are the three trimesters?", answer: "First trimester: Weeks 1-12 (conception to 3 months). Second trimester: Weeks 13-26 (most comfortable period for many). Third trimester: Weeks 27-40+ (baby gains weight rapidly). Full term is considered 39-40 weeks. Early term: 37-38 weeks. Late/post-term: after 42 weeks." },
+  { question: "What are important pregnancy milestones by week?", answer: "Week 8-10: heartbeat detectable by Doppler. Week 12: risk of miscarriage drops significantly, end of 1st trimester. Week 18-20: anatomy ultrasound, may learn sex. Week 24: viability milestone. Week 28: 3rd trimester begins. Week 36: weekly visits begin. Week 37-42: full term range." },
+  { question: "What factors can affect the due date?", answer: "IVF conceptions have precise dating. Women with irregular cycles may have different ovulation timing than the LMP assumes. First-trimester ultrasound can adjust the due date. Multiple pregnancies (twins/triplets) typically deliver earlier. Prior pregnancy complications, maternal health, and fetal growth also affect actual delivery timing." }
+]
+---
+<Layout
+  title="Due Date Calculator: Pregnancy Due Date by LMP or Conception"
+  description="Calculate your pregnancy due date by last menstrual period or conception date. Includes trimester dates and weekly milestones. Free due date calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Due Date Calculator", href: "/calculators/due-date-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Due Date Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Due Date Calculator"
+          description="Calculate your pregnancy due date and track trimester milestones"
+          formulaId="due-date"
+          formulaFn={formulaFn}
+          resultLabel="Due Date"
+          inputs={[
+            {id:"method",label:"Calculation Method",type:"select",options:[{value:"lmp",label:"By Last Menstrual Period (LMP)"},{value:"conception",label:"By Conception Date"}],defaultValue:"lmp"},
+            {id:"date",label:"Date",type:"date",defaultValue:"2025-01-01"},
+            {id:"cycleLength",label:"Cycle Length (if using LMP)",type:"number",placeholder:"28",min:21,max:45,unit:"days",defaultValue:28}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "1st Trimester", color: "#3b82f6", from: 0, to: 33 },
+              { label: "2nd Trimester", color: "#22c55e", from: 33, to: 66 },
+              { label: "3rd Trimester", color: "#f59e0b", from: 66, to: 95 },
+              { label: "Full Term", color: "#ef4444", from: 95, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Ovulation Calculator", href: "/calculators/ovulation-calculator" },
+            { name: "Pregnancy Weight Calculator", href: "/calculators/pregnancy-weight-calculator" },
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-pink-50 border border-pink-200 rounded-xl p-5">
+          <h3 class="font-bold text-pink-900 mb-3">Pregnancy Quick Facts</h3>
+          <div class="space-y-1 text-xs text-pink-800">
+            {[["Full term","39-40 weeks"],["Normal range","37-42 weeks"],["Average length","280 days from LMP"],["Full-term birth weight","5.5-10 lbs"],["Typical weight gain","25-35 lbs"]].map(([k,v]) => (
+              <div class="flex justify-between border-b border-pink-100 pb-1"><span>{k}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Pregnancy Trimesters</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        {[
+          {t:"1st Trimester",w:"Weeks 1-12",highlights:["Organ formation begins","Morning sickness common","Heartbeat begins ~week 6","Miscarriage risk highest","Prenatal vitamins critical","Avoid: alcohol, raw fish, high-mercury fish"]},
+          {t:"2nd Trimester",w:"Weeks 13-27",highlights:["Baby starts moving","Anatomy scan (~week 20)","May learn baby sex","Morning sickness improves","Energy often returns","Belly becomes visible"]},
+          {t:"3rd Trimester",w:"Weeks 28-40",highlights:["Rapid weight gain","Baby positions head-down","Weekly OB visits begin","Hospital bag preparation","Braxton Hicks contractions","Baby fully developed by 37 weeks"]},
+        ].map(t => (
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="font-bold text-sm text-blue-700 mb-1">{t.t}</div>
+            <div class="text-xs text-blue-500 mb-2">{t.w}</div>
+            <ul class="text-xs text-gray-600 space-y-1">
+              {t.highlights.map(h => <li>• {h}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const payment = parseFloat(inputs.payment)||0
+  const rate = parseFloat(inputs.rate)||5
+  const periods = parseInt(inputs.periods)||120
+  const type = inputs.type||"ordinary"
+  if(payment<=0) throw new Error("Enter payment amount.")
+  const r = rate/100/12
+  const n = periods
+  const due = type==="due"?1:0
+  const pv = r===0?payment*n:payment*((1-Math.pow(1+r,-n))/r)*Math.pow(1+r,due)
+  const fv = r===0?payment*n:payment*((Math.pow(1+r,n)-1)/r)*Math.pow(1+r,due)
+  const totalPaid = payment*n
+  return {
+    value:"PV: $"+pv.toLocaleString("en-US",{maximumFractionDigits:0}),
+    gaugeValue:Math.min(pv/500000*100,100),
+    breakdown:["Payment: $"+payment+"/period","Rate: "+rate+"% annual","Periods: "+periods,"Present Value: $"+pv.toLocaleString("en-US",{maximumFractionDigits:0}),"Future Value: $"+fv.toLocaleString("en-US",{maximumFractionDigits:0}),"Total Payments: $"+totalPaid.toLocaleString("en-US",{maximumFractionDigits:0})],
+    stats:[
+      {label:"Present Value",value:"$"+pv.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Future Value",value:"$"+fv.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Total Payments",value:"$"+totalPaid.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Interest Earned",value:"$"+(fv-totalPaid).toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is an annuity?", answer: "An annuity is a series of equal payments made at regular intervals. Present value (PV) is what a future series of payments is worth today. Future value (FV) is what regular payments grow to over time with interest. Annuities are used for mortgages, pensions, savings plans, and insurance products." },
+  { question: "What is the difference between ordinary annuity and annuity due?", answer: "Ordinary annuity (most common): payments at the END of each period (mortgages, car loans). Annuity due: payments at the BEGINNING (rent, lease). Annuity due payments are worth slightly more because each payment earns interest for one extra period." },
+  { question: "How is an annuity different from a lump sum?", answer: "A lump sum is a single payment. An annuity spreads payments over time. The time value of money means $1,000/month for 10 years is NOT the same as $120,000 today — the lump sum today is worth more because it can be invested. Present value calculates the lump-sum equivalent." },
+  { question: "What is a good annuity interest rate?", answer: "For insurance annuities, rates depend on market conditions — typically 3-6% for fixed annuities. Variable annuities depend on investment performance. For calculating NPV of business cash flows, use your discount rate or WACC. For personal finance, compare to what you could earn investing the money." },
+  { question: "How do I calculate annuity payments for retirement?", answer: "If you want $3,000/month for 25 years with 5% return: PV = $3,000 x ((1 - (1.05/12)^-300) / (0.05/12)) = ~$511,000 needed at retirement. This is how pension obligations and retirement nest egg requirements are calculated." }
+]
+---
+<Layout
+  title="Annuity Calculator: Present & Future Value of Annuity Payments"
+  description="Calculate the present value, future value, or monthly payment of an annuity. Supports ordinary annuity and annuity due. Free annuity calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Annuity Calculator", href: "/calculators/annuity-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Annuity Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Annuity Calculator"
+          description="Calculate present and future value of annuity payments"
+          formulaId="annuity"
+          formulaFn={formulaFn}
+          resultLabel="Present Value"
+          inputs={[
+            {id:"payment",label:"Payment Amount",type:"number",placeholder:"1000",min:0,unit:"$",defaultValue:1000},
+            {id:"rate",label:"Annual Interest Rate",type:"number",placeholder:"5",min:0,max:30,step:0.1,unit:"%",defaultValue:5},
+            {id:"periods",label:"Number of Periods (months)",type:"number",placeholder:"120",min:1,unit:"months",defaultValue:120},
+            {id:"type",label:"Annuity Type",type:"select",options:[{value:"ordinary",label:"Ordinary Annuity (end of period)"},{value:"due",label:"Annuity Due (beginning of period)"}],defaultValue:"ordinary"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Under $100k", color: "#f59e0b", from: 0, to: 20 },
+              { label: "$100k–$250k", color: "#3b82f6", from: 20, to: 50 },
+              { label: "$250k–$500k", color: "#22c55e", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Retirement Calculator", href: "/calculators/retirement-calculator" },
+            { name: "NPV Calculator", href: "/calculators/npv-calculator" },
+            { name: "Loan Calculator", href: "/calculators/loan-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Annuity Quick Reference</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div><strong>PV:</strong> What is this stream worth TODAY?</div>
+            <div><strong>FV:</strong> What will this stream be worth in the FUTURE?</div>
+            <div><strong>Ordinary:</strong> Payment at END of period</div>
+            <div><strong>Due:</strong> Payment at START of period</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Annuity Types Comparison</h2>
+        <div class="space-y-3">
+          {[
+            {t:"Fixed Annuity",d:"Guaranteed fixed payments. Insurance product. Safe but limited upside. Good for predictable retirement income."},
+            {t:"Variable Annuity",d:"Payments vary based on investment performance. Higher risk, higher potential. Typically higher fees."},
+            {t:"Immediate Annuity",d:"Start payments immediately. Buy with lump sum. Good for converting retirement savings to income."},
+            {t:"Deferred Annuity",d:"Accumulate value now, receive payments later. Tax-deferred growth. Good for long-term retirement planning."},
+          ].map(a => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800 mb-1">{a.t}</div>
+              <div class="text-xs text-gray-600">{a.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">$1,000/Month Annuity — Present Value</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Duration</th><th class="text-right p-2 text-xs font-semibold">3% rate</th><th class="text-right p-2 text-xs font-semibold">6% rate</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["5 years","$55,797","$50,504"],["10 years","$103,797","$90,073"],["20 years","$180,455","$139,581"],["30 years","$237,189","$166,792"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

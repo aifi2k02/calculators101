@@ -1,0 +1,139 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const homePrice = parseFloat(inputs.homePrice)||0
+  const downPayment = parseFloat(inputs.downPayment)||0
+  const loanRate = parseFloat(inputs.loanRate)||7
+  const pmiRate = parseFloat(inputs.pmiRate)||0.8
+  if(homePrice<=0) throw new Error("Enter home price.")
+  const ltv = ((homePrice-downPayment)/homePrice)*100
+  const loanAmount = homePrice-downPayment
+  const pmiAnnual = loanAmount*(pmiRate/100)
+  const pmiMonthly = pmiAnnual/12
+  const r = loanRate/100/12
+  const n = 360
+  const payment = r===0?loanAmount/n:loanAmount*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1)
+  let bal=loanAmount,monthsToRemove=0
+  const targetBalance = homePrice*0.80
+  while(bal>targetBalance&&monthsToRemove<360){
+    const int=bal*r; bal=bal+int-payment; monthsToRemove++
+  }
+  const yearsToRemove = Math.floor(monthsToRemove/12)
+  const pmiSaved = pmiMonthly*monthsToRemove
+  return {
+    value:"$"+pmiMonthly.toFixed(2)+"/mo",
+    gaugeValue:Math.max(0,Math.min(ltv,100)),
+    breakdown:["LTV ratio: "+ltv.toFixed(1)+"%","PMI monthly: $"+pmiMonthly.toFixed(2),"PMI annual: $"+pmiAnnual.toFixed(2),"PMI removed at: ~"+yearsToRemove+"y "+monthsToRemove%12+"m","Total PMI paid: $"+pmiSaved.toFixed(2)],
+    stats:[
+      {label:"Monthly PMI",value:"$"+pmiMonthly.toFixed(2)},
+      {label:"LTV Ratio",value:ltv.toFixed(1)+"%"},
+      {label:"PMI Removed",value:"~"+yearsToRemove+" yrs"},
+      {label:"Total PMI Cost",value:"$"+pmiSaved.toFixed(0)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is PMI?", answer: "Private Mortgage Insurance (PMI) protects the lender (not you) if you default on a loan with less than 20% down. It typically costs 0.5-1.5% of the loan amount annually. On a $320,000 loan at 0.8% PMI, that is $2,560/year ($213/month)." },
+  { question: "When can I cancel PMI?", answer: "By law (Homeowners Protection Act), you can request PMI cancellation when your loan-to-value ratio reaches 80% (20% equity). Lenders must automatically cancel it at 78% LTV based on original value. You can also refinance once you have 20% equity." },
+  { question: "How do I get rid of PMI faster?", answer: "Make extra principal payments to reach 80% LTV sooner. Pay for a new appraisal once your home appreciates — if the current LTV is under 80% of current value, you can request cancellation. Some lenders accept appreciation within 2+ years of ownership." },
+  { question: "Is PMI tax deductible?", answer: "PMI deductibility has varied by tax year and income level. Check the current IRS guidelines — it was deductible for eligible taxpayers through 2021 and has been extended at various times. Consult a tax professional for your specific situation." },
+  { question: "What is a piggyback loan to avoid PMI?", answer: "An 80/10/10 loan: 80% first mortgage, 10% second mortgage (home equity loan), and 10% down payment. This avoids PMI entirely. The second mortgage typically has a higher rate, but may cost less than PMI over time if rates are favorable." }
+]
+---
+<Layout
+  title="PMI Calculator: Private Mortgage Insurance Cost"
+  description="Calculate your monthly PMI payment and find out when you can cancel it. Free private mortgage insurance calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "PMI Calculator", href: "/calculators/pmi-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">PMI Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="PMI Calculator"
+          description="Calculate your PMI payment and find out when you can cancel it"
+          formulaId="pmi"
+          formulaFn={formulaFn}
+          resultLabel="Monthly PMI"
+          inputs={[
+            {id:"homePrice",label:"Home Price",type:"number",placeholder:"400000",min:0,unit:"$",defaultValue:400000},
+            {id:"downPayment",label:"Down Payment",type:"number",placeholder:"40000",min:0,unit:"$",defaultValue:40000},
+            {id:"loanRate",label:"Mortgage Interest Rate",type:"number",placeholder:"7",min:0,max:20,step:0.1,unit:"%",defaultValue:7},
+            {id:"pmiRate",label:"PMI Rate",type:"number",placeholder:"0.8",min:0.1,max:3,step:0.1,unit:"%",defaultValue:0.8}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% LTV",
+            zones: [
+              { label: "20%+ down (no PMI)", color: "#22c55e", from: 0, to: 80 },
+              { label: "15–20% down", color: "#3b82f6", from: 80, to: 85 },
+              { label: "10–15% down", color: "#f59e0b", from: 85, to: 90 },
+              { label: "Less than 10%", color: "#ef4444", from: 90, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "House Affordability Calculator", href: "/calculators/house-affordability-calculator" },
+            { name: "Down Payment Calculator", href: "/calculators/down-payment-calculator" },
+            { name: "Refinance Calculator", href: "/calculators/refinance-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-5">
+          <h3 class="font-bold text-red-900 mb-3">PMI Cost by Loan Amount</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-red-700"><th class="text-left pb-1">Loan Amount</th><th class="text-right pb-1">0.5% PMI</th><th class="text-right pb-1">1.0% PMI</th></tr></thead>
+            <tbody class="text-red-900">
+              {[["$200k","$83/mo","$167/mo"],["$320k","$133/mo","$267/mo"],["$400k","$167/mo","$333/mo"],["$500k","$208/mo","$417/mo"]].map(r => (
+                <tr class="border-t border-red-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Ways to Avoid PMI</h2>
+        <div class="space-y-3">
+          {[
+            {opt:"20% Down Payment",desc:"The simplest way — save 20% of home price and avoid PMI entirely from day one"},
+            {opt:"Piggyback Loan (80/10/10)",desc:"Take a second mortgage for 10%, put 10% down, avoid PMI on the primary 80% loan"},
+            {opt:"Lender-Paid PMI (LPMI)",desc:"Lender pays PMI in exchange for a higher interest rate — better if you plan to sell soon"},
+            {opt:"VA or USDA Loans",desc:"Veterans and rural buyers may qualify for no-down-payment loans with no PMI requirement"},
+          ].map(o => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-gray-800 text-xs mb-1">{o.opt}</div>
+              <div class="text-xs text-gray-600">{o.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">LTV and PMI Rate Reference</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Down Payment</th><th class="text-right p-2 text-xs font-semibold text-gray-700">LTV</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Typical PMI Rate</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["20%+","80% or less","No PMI"],["15%","85%","0.3–0.5%"],["10%","90%","0.5–0.8%"],["5%","95%","0.8–1.2%"],["3%","97%","1.0–1.5%"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

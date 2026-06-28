@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const preWeight = parseFloat(inputs.preWeight)||0
+  const height = parseFloat(inputs.height)||0
+  const week = parseInt(inputs.week)||20
+  const unit = inputs.unit||"imperial"
+  if(preWeight<=0||height<=0) throw new Error("Enter weight and height.")
+  const wkg = unit==="imperial"?preWeight*0.453592:preWeight
+  const hm = unit==="imperial"?height*0.0254:height/100
+  const bmi = wkg/(hm*hm)
+  let minTotal, maxTotal, category
+  if(bmi<18.5){category="Underweight";minTotal=28;maxTotal=40}
+  else if(bmi<25){category="Normal weight";minTotal=25;maxTotal=35}
+  else if(bmi<30){category="Overweight";minTotal=15;maxTotal=25}
+  else{category="Obese";minTotal=11;maxTotal=20}
+  const trimesterRate = week<=12?0.5:week<=27?1.0:1.0
+  const expectedGain = week<=12?0.5*week/4:(0.5*3)+(week-12)*trimesterRate/4
+  const minGain = (expectedGain/40)*minTotal
+  const maxGain = (expectedGain/40)*maxTotal
+  return {
+    value:"Goal: "+minTotal+"-"+maxTotal+" lbs total",
+    gaugeValue:(week/40)*100,
+    breakdown:["Pre-pregnancy BMI: "+bmi.toFixed(1)+" ("+category+")","BMI category: "+category,"Total recommended gain: "+minTotal+"-"+maxTotal+" lbs","At week "+week+": expect "+minGain.toFixed(0)+"-"+maxGain.toFixed(0)+" lbs gained","On track: "+minGain.toFixed(0)+" to "+maxGain.toFixed(0)+" lbs gained so far is normal"],
+    stats:[
+      {label:"Pre-Pregnancy BMI",value:bmi.toFixed(1)},
+      {label:"BMI Category",value:category},
+      {label:"Total Gain Goal",value:minTotal+"-"+maxTotal+" lbs"},
+      {label:"At Week "+week,value:minGain.toFixed(0)+"-"+maxGain.toFixed(0)+" lbs"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How much weight should I gain during pregnancy?", answer: "IOM guidelines by pre-pregnancy BMI: Underweight (<18.5): 28-40 lbs. Normal (18.5-24.9): 25-35 lbs. Overweight (25-29.9): 15-25 lbs. Obese (30+): 11-20 lbs. Gaining in the recommended range is associated with better outcomes for both mother and baby." },
+  { question: "Where does pregnancy weight gain go?", answer: "At delivery: Baby 7-8 lbs, Placenta 1-2 lbs, Amniotic fluid 2 lbs, Breast tissue 2 lbs, Uterus growth 2 lbs, Blood volume increase 3-4 lbs, Fluid retention 4 lbs, Fat stores 5-9 lbs. Total: 25-40 lbs for a normal-weight woman." },
+  { question: "Is it dangerous to gain too much during pregnancy?", answer: "Excessive weight gain increases risks of: gestational diabetes, preeclampsia, large baby (macrosomia) making delivery harder, cesarean section, difficulty losing weight after delivery. It also increases the baby risk of childhood obesity. Gaining within guidelines benefits both mother and child." },
+  { question: "What if I lose weight in the first trimester?", answer: "Mild weight loss in the first trimester is common due to morning sickness and nausea — generally not concerning. However, significant weight loss (5+ lbs) in the first trimester should be discussed with your healthcare provider. The baby draws nutrients from your body regardless, but severe morning sickness (hyperemesis gravidarum) may require medical treatment." },
+  { question: "How fast should I gain weight during pregnancy?", answer: "First trimester: 1-4 lbs total is typical. Second trimester: about 1 lb per week. Third trimester: about 1 lb per week. This is a general guide — every pregnancy is different. Individual variation is normal. What matters most is the total gain, not week-to-week fluctuations." }
+]
+---
+<Layout
+  title="Pregnancy Weight Gain Calculator: Healthy Gestational Weight"
+  description="Calculate recommended pregnancy weight gain based on pre-pregnancy BMI. Track your gestational weight. Free pregnancy weight calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Pregnancy Weight Gain Calculator", href: "/calculators/pregnancy-weight-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Pregnancy Weight Gain Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Pregnancy Weight Gain Calculator"
+          description="Calculate recommended pregnancy weight gain based on pre-pregnancy BMI"
+          formulaId="pregnancy-weight"
+          formulaFn={formulaFn}
+          resultLabel="Pregnancy Weight Goal"
+          inputs={[
+            {id:"preWeight",label:"Pre-Pregnancy Weight",type:"number",placeholder:"140",min:80,max:400,defaultValue:140},
+            {id:"height",label:"Height",type:"number",placeholder:"65",min:50,max:90,defaultValue:65},
+            {id:"unit",label:"Units",type:"select",options:[{value:"imperial",label:"Imperial (lbs, inches)"},{value:"metric",label:"Metric (kg, cm)"}],defaultValue:"imperial"},
+            {id:"week",label:"Current Week of Pregnancy",type:"number",placeholder:"20",min:1,max:42,unit:"weeks",defaultValue:20}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "1st Trimester", color: "#3b82f6", from: 0, to: 30 },
+              { label: "2nd Trimester", color: "#22c55e", from: 30, to: 68 },
+              { label: "3rd Trimester", color: "#f59e0b", from: 68, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Due Date Calculator", href: "/calculators/due-date-calculator" },
+            { name: "BMI Calculator", href: "/calculators/bmi-calculator" },
+            { name: "Ovulation Calculator", href: "/calculators/ovulation-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-pink-50 border border-pink-200 rounded-xl p-5">
+          <h3 class="font-bold text-pink-900 mb-3">Weight Gain by Pre-pregnancy BMI</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-pink-700 border-b border-pink-200"><th class="text-left pb-1">BMI</th><th class="text-right pb-1">Gain Range</th></tr></thead>
+            <tbody class="text-pink-900">
+              {[["Underweight (<18.5)","28–40 lbs"],["Normal (18.5–24.9)","25–35 lbs"],["Overweight (25–29.9)","15–25 lbs"],["Obese (30+)","11–20 lbs"]].map(r => (
+                <tr class="border-t border-pink-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="text-xs text-pink-600 mt-1">Source: Institute of Medicine (IOM) 2009</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Where Does Pregnancy Weight Go?</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          {[["Baby","7–8 lbs"],["Placenta","1–2 lbs"],["Amniotic fluid","2 lbs"],["Breast tissue growth","2 lbs"],["Uterus enlargement","2 lbs"]].map(([comp,wt]) => (
+            <div class="flex justify-between bg-pink-50 rounded-lg px-3 py-2 text-xs">
+              <span class="text-pink-800">{comp}</span>
+              <span class="font-medium text-pink-900">{wt}</span>
+            </div>
+          ))}
+        </div>
+        <div class="space-y-2">
+          {[["Blood volume increase","3–4 lbs"],["Body fluid retention","4 lbs"],["Fat stores (energy reserves)","5–9 lbs"],["Total","25–40 lbs"]].map(([comp,wt]) => (
+            <div class="flex justify-between bg-pink-50 rounded-lg px-3 py-2 text-xs">
+              <span class="text-pink-800">{comp}</span>
+              <span class="font-medium text-pink-900">{wt}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

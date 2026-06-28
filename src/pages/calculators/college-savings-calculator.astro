@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const currentAge = parseInt(inputs.currentAge)||0
+  const collegeAge = parseInt(inputs.collegeAge)||18
+  const annualCost = parseFloat(inputs.annualCost)||40000
+  const inflation = parseFloat(inputs.inflation)||5
+  const returnRate = parseFloat(inputs.returnRate)||7
+  const currentSaved = parseFloat(inputs.currentSaved)||0
+  if(collegeAge<=currentAge) throw new Error("College age must be greater than current age.")
+  const yearsToCollege = collegeAge-currentAge
+  const inflatedCost = annualCost*Math.pow(1+inflation/100,yearsToCollege)
+  const totalNeeded = inflatedCost*4
+  const r = returnRate/100/12
+  const n = yearsToCollege*12
+  const fvCurrent = currentSaved*Math.pow(1+r,n)
+  const stillNeeded = Math.max(0,totalNeeded-fvCurrent)
+  const monthlyNeeded = stillNeeded/(((Math.pow(1+r,n)-1)/r))
+  return {
+    value:"$"+monthlyNeeded.toFixed(2)+"/mo",
+    gaugeValue:Math.min((fvCurrent/totalNeeded)*100,100),
+    breakdown:["Years until college: "+yearsToCollege,"Inflation-adjusted annual cost: $"+inflatedCost.toFixed(0),"Total 4-yr cost: $"+totalNeeded.toFixed(0),"Current savings at college: $"+fvCurrent.toFixed(0),"Still needed: $"+stillNeeded.toFixed(0),"Monthly savings needed: $"+monthlyNeeded.toFixed(2)],
+    stats:[
+      {label:"Total 4-yr Cost",value:"$"+totalNeeded.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Already Funded",value:"$"+fvCurrent.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Still Needed",value:"$"+stillNeeded.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Monthly Savings",value:"$"+monthlyNeeded.toFixed(2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a 529 plan?", answer: "A 529 plan is a tax-advantaged savings account designed for education expenses. Contributions grow tax-free, and withdrawals for qualified education expenses (tuition, room, board, books) are federal income tax-free. Many states offer additional state tax deductions. The 2025 annual gift-tax exclusion limit is $19,000/person." },
+  { question: "How much does college actually cost in 2025?", answer: "Average annual costs (2024-25): Public 4-year in-state: ~$28,000 (tuition + room/board). Private nonprofit 4-year: ~$60,000. Costs typically increase 4-6% annually. Over 4 years, expect $120k-$250k+ depending on school type. Financial aid can significantly reduce actual cost for many families." },
+  { question: "When should I start saving for college?", answer: "The earlier the better due to compounding. Starting at birth vs. age 10 can mean 2-3x more money at college age. Even small amounts invested early grow substantially. If starting late, maximize contributions and consider more aggressive investment allocation in the early years." },
+  { question: "What can 529 funds be used for?", answer: "Qualified expenses: tuition, fees, room and board, books, supplies, computers required for school. Since 2024, up to $35,000 of unused 529 funds can be rolled into a Roth IRA (with some restrictions). K-12 tuition (up to $10,000/year) also qualifies." },
+  { question: "What if my child does not go to college?", answer: "You can transfer the 529 to a sibling or other family member tax-free. Starting 2024, up to $35,000 can roll into a Roth IRA (must be 15+ year old account). Non-qualified withdrawals pay income tax + 10% penalty on earnings only — the principal comes out tax-free since it was already taxed." }
+]
+---
+<Layout
+  title="College Savings Calculator: How Much to Save for College"
+  description="Calculate how much you need to save monthly to fund your child education. Includes 529 plan growth. Free college savings calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "College Savings Calculator", href: "/calculators/college-savings-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">College Savings Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="College Savings Calculator"
+          description="Project college costs and calculate how much to save monthly"
+          formulaId="college-savings"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Savings Needed"
+          inputs={[
+            {id:"currentAge",label:"Child Current Age",type:"number",placeholder:"5",min:0,max:17,unit:"years",defaultValue:5},
+            {id:"collegeAge",label:"Age Starting College",type:"number",placeholder:"18",min:16,max:25,unit:"years",defaultValue:18},
+            {id:"annualCost",label:"Annual College Cost (today)",type:"number",placeholder:"40000",min:0,unit:"$",defaultValue:40000},
+            {id:"inflation",label:"College Cost Inflation Rate",type:"number",placeholder:"5",min:0,max:15,step:0.1,unit:"%",defaultValue:5},
+            {id:"returnRate",label:"Investment Return Rate",type:"number",placeholder:"7",min:0,max:15,step:0.1,unit:"%",defaultValue:7},
+            {id:"currentSaved",label:"Amount Already Saved",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% funded",
+            zones: [
+              { label: "Not started", color: "#ef4444", from: 0, to: 10 },
+              { label: "Building", color: "#f59e0b", from: 10, to: 40 },
+              { label: "On track", color: "#3b82f6", from: 40, to: 75 },
+              { label: "Well funded", color: "#22c55e", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "401k Calculator", href: "/calculators/401k-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Average 4-Year College Costs</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Public in-state","$28k/yr ($112k total)"],["Public out-of-state","$45k/yr ($180k total)"],["Private nonprofit","$60k/yr ($240k total)"]].map(([t,c]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{t}</span><span class="font-medium">{c}</span></div>
+            ))}
+          </div>
+          <p class="text-xs text-blue-600 mt-1">2024-25 estimates including room and board</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Monthly Savings Needed by Start Age</h2>
+        <p class="text-xs text-gray-600 mb-3">Goal: $100,000 at age 18, 7% return, starting from $0</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Start Age</th><th class="text-right p-2 text-xs font-semibold">Years</th><th class="text-right p-2 text-xs font-semibold">Monthly</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Birth","18 years","$229"],["Age 5","13 years","$366"],["Age 10","8 years","$718"],["Age 14","4 years","$1,697"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-blue-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">529 Plan Benefits</h2>
+        <div class="space-y-2">
+          {["Tax-free growth — no federal tax on investment earnings","Tax-free withdrawals for qualified education expenses","Many states offer state income tax deductions on contributions","Flexible beneficiary — transfer to siblings, cousins, even yourself","No income limits to contribute (unlike Roth IRA)","New: up to $35k can roll to Roth IRA if unused (starting 2024)","Can be used for K-12 tuition up to $10k/year"].map(b => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-green-500 mt-0.5">✓</span><span>{b}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

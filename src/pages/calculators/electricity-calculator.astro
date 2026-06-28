@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const watts = parseFloat(inputs.watts)||0
+  const hours = parseFloat(inputs.hours)||0
+  const days = parseFloat(inputs.days)||30
+  const rate = parseFloat(inputs.rate)||0.13
+  if(watts<=0) throw new Error("Enter wattage (watts).")
+  if(hours<=0) throw new Error("Enter hours per day.")
+  const kwh = watts/1000*hours*days
+  const cost = kwh*rate
+  const dailyKwh = watts/1000*hours
+  const dailyCost = dailyKwh*rate
+  const annualKwh = dailyKwh*365
+  const annualCost = annualKwh*rate
+  return {
+    value:"$"+cost.toFixed(2)+" for "+days+" days",
+    gaugeValue:Math.min(cost/100*100,100),
+    breakdown:["Wattage: "+watts+"W","Hours per day: "+hours,"Days: "+days,"kWh used: "+kwh.toFixed(3),"Rate: $"+rate+"/kWh","Total cost: $"+cost.toFixed(2),"Daily cost: $"+dailyCost.toFixed(3),"Annual kWh: "+annualKwh.toFixed(0),"Annual cost: $"+annualCost.toFixed(2)],
+    stats:[
+      {label:"Total Cost",value:"$"+cost.toFixed(2)},
+      {label:"Daily Cost",value:"$"+dailyCost.toFixed(3)},
+      {label:"kWh Used",value:kwh.toFixed(2)},
+      {label:"Annual Cost",value:"$"+annualCost.toFixed(2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I calculate electricity cost?", answer: "Cost = Watts / 1000 x Hours x Days x Rate ($/kWh). Example: 1500W heater running 8 hours/day for 30 days at $0.13/kWh: 1.5 x 8 x 30 x 0.13 = $46.80. Most utility bills show rate per kWh (kilowatt-hour). The US average is about $0.12-0.16/kWh." },
+  { question: "How many watts does a typical house use?", answer: "Average US home: 10,500 kWh/year = 875 kWh/month ≈ 1,200W average. High-draw appliances: electric water heater (4,000W), dryer (5,000W), HVAC (3,500-7,000W), electric oven (2,000-5,000W). Low-draw: LED bulbs (8-12W), laptop (45-100W), phone charger (5-20W)." },
+  { question: "What is a kilowatt-hour (kWh)?", answer: "1 kWh = 1,000 watts used for 1 hour. A 100W bulb running 10 hours uses 1 kWh. A 1,000W microwave running 1 hour uses 1 kWh. Your utility charges by the kWh. US average electricity price: ~$0.13/kWh. California: ~$0.25/kWh. Hawaii: ~$0.40/kWh." },
+  { question: "How can I reduce my electricity bill?", answer: "Replace incandescent bulbs with LEDs (75% less energy). Unplug vampire loads (devices on standby draw power). Use a programmable thermostat. Wash clothes in cold water. Air dry dishes. Use Energy Star appliances. Seal windows and doors to improve HVAC efficiency." },
+  { question: "What is a smart meter?", answer: "A smart meter records electricity usage in 30-minute intervals and sends data wirelessly to the utility. Benefits: accurate bills (no estimation), time-of-use pricing awareness, and real-time monitoring via apps. Time-of-use rates charge more during peak hours (evenings) — shifting usage to off-peak can save significantly." }
+]
+---
+<Layout
+  title="Electricity Cost Calculator: kWh Usage & Electric Bill"
+  description="Calculate electricity cost for any appliance or monthly bill. Find kWh usage, annual cost, and savings. Free electricity calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Electricity Cost Calculator", href: "/calculators/electricity-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Electricity Cost Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Electricity Cost Calculator"
+          description="Calculate electricity cost for any appliance or device"
+          formulaId="electricity"
+          formulaFn={formulaFn}
+          resultLabel="Cost"
+          inputs={[
+            {id:"watts",label:"Appliance wattage (W)",type:"number",placeholder:"1500",min:0,step:1,defaultValue:1500},
+            {id:"hours",label:"Hours used per day",type:"number",placeholder:"8",min:0,step:0.5,defaultValue:8},
+            {id:"days",label:"Number of days",type:"number",placeholder:"30",min:1,step:1,defaultValue:30},
+            {id:"rate",label:"Electricity rate ($/kWh)",type:"number",placeholder:"0.13",min:0,step:0.001,defaultValue:0.13}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "$ cost",
+            zones: [
+              { label: "Low cost (<$10)", color: "#22c55e", from: 0, to: 10 },
+              { label: "Moderate ($10-50)", color: "#f59e0b", from: 10, to: 50 },
+              { label: "High ($50+)", color: "#ef4444", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Fuel Cost Calculator", href: "/calculators/fuel-cost-calculator" },
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common Wattages</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            {[["LED bulb","8-12W"],["Laptop","45-100W"],["TV (LED 55in)","80-150W"],["Refrigerator","150-400W"],["Dishwasher","1,200-2,400W"],["Dryer","4,000-5,800W"],["AC (window)","500-1,440W"],["Water heater","3,500-5,500W"]].map(([a,w]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-0.5"><span>{a}</span><span class="font-mono">{w}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Annual Cost Estimates (US avg rate)</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Appliance</th><th class="p-2 text-xs font-semibold text-right">Annual Cost</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Refrigerator (run 24/7)","~$65"],["Electric water heater","~$580"],["HVAC (avg use)","~$600-900"],["Washer + Dryer","~$150"],["TV (4h/day)","~$20-45"],["Lighting (whole home)","~$100-300"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Energy Saving Tips</h2>
+        <div class="space-y-2">
+          {["LED bulbs: 75% less energy than incandescent","Smart thermostat: saves $50-100/year on HVAC","Cold wash: 90% of washer energy is heating water","Unplug chargers: idle draw adds up over a year","Seal air leaks: HVAC is the biggest energy user","Solar panels: can cut electric bills by 50-90%"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-green-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

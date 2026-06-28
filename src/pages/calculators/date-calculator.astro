@@ -1,0 +1,152 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const type = inputs.type || 'diff'
+  const date1 = inputs.date1 ? new Date(inputs.date1) : new Date()
+  const date2 = inputs.date2 ? new Date(inputs.date2) : new Date()
+  const days = parseInt(inputs.days) || 0
+  if (type === 'diff') {
+    if (!inputs.date1 || !inputs.date2) throw new Error('Select both dates.')
+    const diffMs = Math.abs(date2 - date1)
+    const diffDays = Math.floor(diffMs / 86400000)
+    const diffWeeks = Math.floor(diffDays / 7)
+    const years = Math.floor(diffDays / 365.25)
+    const months = Math.floor(diffDays / 30.44)
+    const hours = Math.floor(diffMs / 3600000)
+    return {
+      value: diffDays + ' days between dates',
+      gaugeValue: Math.min(diffDays / 3.65, 100),
+      breakdown: ['Days: ' + diffDays, 'Weeks: ' + diffWeeks, 'Months: ~' + months, 'Years: ~' + years, 'Hours: ' + hours.toLocaleString()],
+      stats: [
+        { label: 'Days', value: diffDays.toLocaleString() },
+        { label: 'Weeks', value: diffWeeks.toLocaleString() },
+        { label: 'Months', value: '~' + months },
+        { label: 'Years', value: '~' + years },
+      ]
+    }
+  } else {
+    if (!inputs.date1) throw new Error('Select a start date.')
+    const result = new Date(date1.getTime() + days * 86400000)
+    const formatted = result.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    return {
+      value: formatted,
+      gaugeValue: 50,
+      breakdown: ['Start: ' + date1.toLocaleDateString(), 'Days added: ' + days, 'Result: ' + formatted],
+      stats: [
+        { label: 'Result Date', value: result.toLocaleDateString() },
+        { label: 'Day of Week', value: result.toLocaleDateString('en-US', { weekday: 'long' }) },
+        { label: 'Days Added', value: String(days) },
+        { label: 'Week Number', value: String(Math.ceil((result - new Date(result.getFullYear(), 0, 1)) / 604800000 + 1)) },
+      ]
+    }
+  }
+`
+
+const faqs = [
+  { question: 'How do I calculate the number of days between two dates?', answer: 'Subtract the earlier date from the later date in milliseconds, then divide by 86,400,000 (ms per day). Our calculator handles leap years, different month lengths, and daylight saving time automatically.' },
+  { question: 'What is the difference between business days and calendar days?', answer: 'Calendar days count all 7 days per week. Business days count only weekdays (Monday–Friday), excluding weekends and sometimes public holidays. Shipping estimates and legal deadlines often use business days.' },
+  { question: 'How do I add or subtract days from a date?', answer: 'Add or subtract the number of days in milliseconds (1 day = 86,400,000 ms). The result will cross month and year boundaries automatically. Use our calculator to instantly find the date 30, 60, or 90 days from any date.' },
+  { question: 'How many days until a specific date?', answer: 'Subtract today\'s date from the target date. Our calculator does this automatically when you enter today as date 1 and your target as date 2. Use the Age Calculator for birthdays and the Days Until calculator for countdowns.' },
+  { question: 'Why do date calculations get complicated near month ends?', answer: 'Months have 28–31 days, and leap years affect February. Adding "one month" to January 31 is ambiguous — does it become February 28 or March 3? Our calculator adds exact calendar days to avoid ambiguity.' },
+]
+---
+<Layout
+  title="Date Calculator: Days Between Dates & Date Math"
+  description="Calculate the number of days between two dates, or add/subtract days from a date. Free date calculator with weeks, months, and years breakdown."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Date Calculator', href: '/calculators/date-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Date Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Date Calculator"
+          description="Find days between dates, or calculate a new date by adding or subtracting days"
+          formulaId="date"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            { id: 'type', label: 'Calculation Type', type: 'select', options: [
+              { value: 'diff', label: 'Days between two dates' },
+              { value: 'add', label: 'Add/subtract days from date' },
+            ], defaultValue: 'diff' },
+            { id: 'date1', label: 'Start Date', type: 'date', defaultValue: '2025-01-01' },
+            { id: 'date2', label: 'End Date (for difference)', type: 'date', defaultValue: '2025-01-31' },
+            { id: 'days', label: 'Days to Add/Subtract (for date math)', type: 'number', placeholder: '30', defaultValue: 30 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% of year',
+            zones: [
+              { label: '< 1 month', color: '#22c55e', from: 0, to: 8 },
+              { label: '1–3 months', color: '#3b82f6', from: 8, to: 25 },
+              { label: '3–6 months', color: '#f59e0b', from: 25, to: 50 },
+              { label: '6–12 months', color: '#8b5cf6', from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Age Calculator', href: '/calculators/age-calculator' },
+            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
+            { name: 'Time Calculator', href: '/calculators/time-calculator' },
+            { name: 'Due Date Calculator', href: '/calculators/due-date-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common Date Intervals</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[['1 week','7 days'],['1 month','~30 days'],['90 days','~3 months'],['1 quarter','91–92 days'],['6 months','~182 days'],['1 year','365 or 366 days']].map(([l,r]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{l}</span><span class="font-medium">{r}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-2">Leap Years</h3>
+          <p class="text-xs text-green-800">Leap years occur every 4 years (e.g., 2024, 2028), except centuries not divisible by 400 (1900 was not a leap year; 2000 was). February has 29 days in a leap year.</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Days in Each Month</h2>
+        <div class="grid grid-cols-3 gap-2">
+          {[['January','31'],['February','28/29'],['March','31'],['April','30'],['May','31'],['June','30'],['July','31'],['August','31'],['September','30'],['October','31'],['November','30'],['December','31']].map(([m,d]) => (
+            <div class="bg-gray-50 rounded-lg p-2 text-center">
+              <div class="text-xs font-medium text-gray-700">{m}</div>
+              <div class="text-sm font-bold text-blue-600">{d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Useful Date Facts</h2>
+        <div class="space-y-2">
+          {[
+            { fact: 'Days in a year', value: '365 (or 366 in a leap year)' },
+            { fact: 'Weeks in a year', value: '52 weeks + 1 day (or 2 in leap year)' },
+            { fact: 'Days in a quarter', value: '90–92 days' },
+            { fact: '100 days from Jan 1', value: 'April 10 (or 11 in leap year)' },
+            { fact: '10,000 days', value: '~27.4 years' },
+            { fact: '1 million seconds', value: '~11.6 days' },
+          ].map(f => (
+            <div class="flex justify-between bg-gray-50 rounded-lg p-2 text-xs">
+              <span class="text-gray-600">{f.fact}</span>
+              <span class="font-medium text-gray-800">{f.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

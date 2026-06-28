@@ -1,0 +1,150 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const cash = parseFloat(inputs.cash)||0
+  const investments = parseFloat(inputs.investments)||0
+  const retirement = parseFloat(inputs.retirement)||0
+  const realEstate = parseFloat(inputs.realEstate)||0
+  const vehicles = parseFloat(inputs.vehicles)||0
+  const otherAssets = parseFloat(inputs.otherAssets)||0
+  const mortgage = parseFloat(inputs.mortgage)||0
+  const carLoans = parseFloat(inputs.carLoans)||0
+  const studentLoans = parseFloat(inputs.studentLoans)||0
+  const creditCards = parseFloat(inputs.creditCards)||0
+  const otherDebt = parseFloat(inputs.otherDebt)||0
+  const assets = cash+investments+retirement+realEstate+vehicles+otherAssets
+  const liabilities = mortgage+carLoans+studentLoans+creditCards+otherDebt
+  const netWorth = assets-liabilities
+  const debtRatio = assets>0?(liabilities/assets)*100:0
+  return {
+    value:"$"+netWorth.toLocaleString("en-US",{maximumFractionDigits:0}),
+    gaugeValue:Math.min(Math.max((netWorth/500000)*100,0),100),
+    breakdown:["Total assets: $"+assets.toLocaleString("en-US",{maximumFractionDigits:0}),"Total liabilities: $"+liabilities.toLocaleString("en-US",{maximumFractionDigits:0}),"Net worth: $"+netWorth.toLocaleString("en-US",{maximumFractionDigits:0}),"Debt-to-asset ratio: "+debtRatio.toFixed(1)+"%"],
+    stats:[
+      {label:"Net Worth",value:"$"+netWorth.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Total Assets",value:"$"+assets.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Total Debt",value:"$"+liabilities.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Debt-to-Asset %",value:debtRatio.toFixed(1)+"%"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is net worth?", answer: "Net worth = Total Assets - Total Liabilities. It is the most comprehensive snapshot of your financial health. Positive net worth means you own more than you owe. Tracking it over time shows whether your financial position is improving." },
+  { question: "What is the average net worth in the US?", answer: "US median net worth is ~$192,700 (2022 Federal Reserve SCF). Mean net worth is ~$1.06 million, heavily skewed by the ultra-wealthy. Median is more representative. At age 35, median net worth is ~$76k; at 55-64, ~$364k." },
+  { question: "How do I grow my net worth?", answer: "Two levers: increase assets (invest, save, appreciate real estate) and decrease liabilities (pay off debt). Investing consistently over time has the biggest impact due to compounding. Eliminating high-interest debt also rapidly improves net worth." },
+  { question: "Should I include home equity in net worth?", answer: "Yes. Home equity (market value minus mortgage balance) is an asset. However, it is illiquid — you cannot easily spend it. Some financial planners separate liquid net worth (excludes home) from total net worth for this reason." },
+  { question: "What is a good net worth for my age?", answer: "Rough benchmark: net worth = Annual Income x Age / 10 (from The Millionaire Next Door). At 35 with $70k income: target ~$245k. This varies enormously by income, cost of living, and career stage. Focus on trajectory (improving year over year) more than absolute numbers." }
+]
+---
+<Layout
+  title="Net Worth Calculator: Total Assets Minus Liabilities"
+  description="Calculate your net worth by subtracting total debts from total assets. Track your financial progress. Free net worth calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Net Worth Calculator", href: "/calculators/net-worth-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Net Worth Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Net Worth Calculator"
+          description="Calculate your total net worth from all assets and liabilities"
+          formulaId="net-worth"
+          formulaFn={formulaFn}
+          resultLabel="Net Worth"
+          inputs={[
+            {id:"cash",label:"Cash & Savings",type:"number",placeholder:"10000",min:0,unit:"$",defaultValue:10000},
+            {id:"investments",label:"Investments & Brokerage",type:"number",placeholder:"50000",min:0,unit:"$",defaultValue:50000},
+            {id:"retirement",label:"401(k) / IRA / Pension",type:"number",placeholder:"80000",min:0,unit:"$",defaultValue:80000},
+            {id:"realEstate",label:"Real Estate Value",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"vehicles",label:"Vehicles",type:"number",placeholder:"20000",min:0,unit:"$",defaultValue:20000},
+            {id:"otherAssets",label:"Other Assets",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"mortgage",label:"Mortgage Balance",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"carLoans",label:"Car Loans",type:"number",placeholder:"15000",min:0,unit:"$",defaultValue:15000},
+            {id:"studentLoans",label:"Student Loans",type:"number",placeholder:"30000",min:0,unit:"$",defaultValue:30000},
+            {id:"creditCards",label:"Credit Card Debt",type:"number",placeholder:"5000",min:0,unit:"$",defaultValue:5000},
+            {id:"otherDebt",label:"Other Debt",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% to $500k",
+            zones: [
+              { label: "Negative", color: "#ef4444", from: 0, to: 10 },
+              { label: "Under $100k", color: "#f59e0b", from: 10, to: 30 },
+              { label: "$100k–$300k", color: "#3b82f6", from: 30, to: 60 },
+              { label: "$300k–$500k+", color: "#22c55e", from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+            { name: "Retirement Calculator", href: "/calculators/retirement-calculator" },
+            { name: "Debt Payoff Calculator", href: "/calculators/debt-payoff-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Median Net Worth by Age (US)</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Under 35","$39,000"],["35–44","$135,000"],["45–54","$247,000"],["55–64","$364,000"],["65–74","$410,000"],["75+","$335,000"]].map(([a,v]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{a}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+          <p class="text-xs text-blue-600 mt-1">Source: Federal Reserve SCF 2022</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Assets vs Liabilities</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-green-50 rounded-xl p-4">
+            <h3 class="font-bold text-green-800 text-sm mb-2">Assets (+)</h3>
+            <ul class="text-xs text-green-700 space-y-1">
+              <li>Cash & checking accounts</li>
+              <li>Investment accounts</li>
+              <li>401(k), IRA, pension</li>
+              <li>Home equity</li>
+              <li>Vehicle value</li>
+              <li>Business equity</li>
+              <li>Valuables (art, jewelry)</li>
+            </ul>
+          </div>
+          <div class="bg-red-50 rounded-xl p-4">
+            <h3 class="font-bold text-red-800 text-sm mb-2">Liabilities (-)</h3>
+            <ul class="text-xs text-red-700 space-y-1">
+              <li>Mortgage balance</li>
+              <li>Car loan balances</li>
+              <li>Student loan debt</li>
+              <li>Credit card balances</li>
+              <li>Personal loans</li>
+              <li>Medical debt</li>
+              <li>Any other debt owed</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How to Grow Net Worth Faster</h2>
+        <div class="space-y-2">
+          {["Invest consistently — even $200/month compounds to $200k+ over 25 years at 7%","Pay off high-interest debt aggressively — guaranteed return equal to the interest rate","Avoid depreciating debt — car loans and consumer debt reduce net worth","Increase income through skills, raises, or side income — invest the difference","Review and rebalance investments annually","Avoid lifestyle inflation as income grows — save the raise"].map(tip => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{tip}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,140 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const face = parseFloat(inputs.face)||1000
+  const price = parseFloat(inputs.price)||950
+  const couponRate = parseFloat(inputs.couponRate)||5
+  const years = parseFloat(inputs.years)||10
+  const freq = parseInt(inputs.freq)||2
+  if(face<=0||price<=0) throw new Error("Enter face value and price.")
+  const coupon = face*(couponRate/100)/freq
+  const n = years*freq
+  const currentYield = (face*(couponRate/100)/price)*100
+  let ytm=couponRate/100/freq, step=0.001
+  for(let i=0;i<2000;i++){
+    const pv = coupon*((1-Math.pow(1+ytm,-n))/ytm)+face*Math.pow(1+ytm,-n)
+    if(Math.abs(pv-price)<0.01) break
+    if(pv>price) ytm+=step; else ytm-=step; step*=0.99
+  }
+  const ytmAnnual = ytm*freq*100
+  const premium = price>face?"premium":price<face?"discount":"par"
+  return {
+    value:"YTM: "+ytmAnnual.toFixed(3)+"%",
+    gaugeValue:Math.min(ytmAnnual/15*100,100),
+    breakdown:["Face value: $"+face,"Price: $"+price+" ("+premium+")","Coupon: "+couponRate+"% ($"+(face*couponRate/100).toFixed(2)+"/yr)","Current yield: "+currentYield.toFixed(3)+"%","YTM: "+ytmAnnual.toFixed(3)+"%","Payments/yr: "+freq],
+    stats:[
+      {label:"YTM",value:ytmAnnual.toFixed(3)+"%"},
+      {label:"Current Yield",value:currentYield.toFixed(3)+"%"},
+      {label:"Annual Coupon",value:"$"+(face*couponRate/100).toFixed(2)},
+      {label:"Price vs Par",value:premium.charAt(0).toUpperCase()+premium.slice(1)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is yield to maturity (YTM)?", answer: "YTM is the total return anticipated if you hold the bond until it matures, accounting for current price, coupon payments, and the difference between price and face value. It is the most comprehensive bond yield measure and allows apples-to-apples comparison between different bonds." },
+  { question: "What is the difference between current yield and YTM?", answer: "Current yield = Annual coupon / Market price. Simple but ignores price appreciation/depreciation. YTM accounts for the gain/loss from buying at a discount/premium plus all coupon payments. When comparing bonds, always use YTM." },
+  { question: "Why do bond prices move opposite to interest rates?", answer: "If rates rise, newly issued bonds offer higher coupons. Your existing bond with a lower coupon becomes less attractive, so its price falls to compensate. If rates fall, your higher-coupon bond becomes more valuable and its price rises. This inverse relationship is fundamental to bond investing." },
+  { question: "What is bond duration?", answer: "Duration measures how sensitive a bond price is to interest rate changes. A 10-year duration bond drops ~10% in price if rates rise 1%. Longer maturity and lower coupon = higher duration = more rate sensitivity. Duration helps investors manage interest rate risk." },
+  { question: "What is a bond premium vs discount?", answer: "Discount bond: price below face value (market rate > coupon rate). Premium bond: price above face value (market rate < coupon rate). At maturity, you always receive the face value, so discount bonds have built-in capital gains and premium bonds have built-in losses — both reflected in YTM." }
+]
+---
+<Layout
+  title="Bond Yield Calculator: Current Yield & Yield to Maturity (YTM)"
+  description="Calculate current yield, yield to maturity (YTM), and yield to call for bonds. Free bond yield calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Bond Yield Calculator", href: "/calculators/bond-yield-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Bond Yield Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Bond Yield Calculator"
+          description="Calculate bond yield, current yield, and yield to maturity"
+          formulaId="bond-yield"
+          formulaFn={formulaFn}
+          resultLabel="Yield to Maturity"
+          inputs={[
+            {id:"face",label:"Face Value",type:"number",placeholder:"1000",min:0,unit:"$",defaultValue:1000},
+            {id:"price",label:"Current Market Price",type:"number",placeholder:"950",min:0,unit:"$",defaultValue:950},
+            {id:"couponRate",label:"Coupon Rate",type:"number",placeholder:"5",min:0,max:30,step:0.1,unit:"%",defaultValue:5},
+            {id:"years",label:"Years to Maturity",type:"number",placeholder:"10",min:0.5,max:50,step:0.5,defaultValue:10},
+            {id:"freq",label:"Coupon Frequency",type:"select",options:[{value:"1",label:"Annual"},{value:"2",label:"Semi-annual"},{value:"4",label:"Quarterly"}],defaultValue:"2"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Very Low (<2%)", color: "#ef4444", from: 0, to: 13 },
+              { label: "Low (2-4%)", color: "#f59e0b", from: 13, to: 27 },
+              { label: "Moderate (4-7%)", color: "#3b82f6", from: 27, to: 47 },
+              { label: "High (7%+)", color: "#22c55e", from: 47, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "NPV Calculator", href: "/calculators/npv-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Annuity Calculator", href: "/calculators/annuity-calculator" },
+            { name: "Interest Calculator", href: "/calculators/interest-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Bond Price vs Yield Relationship</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div class="font-medium">Price ↑ → Yield ↓</div>
+            <div class="font-medium">Price ↓ → Yield ↑</div>
+            <div class="mt-2 text-blue-700">$1,000 face, 5% coupon bond:</div>
+            {[["$950 (discount)","5.53% YTM"],["$1,000 (par)","5.00% YTM"],["$1,050 (premium)","4.50% YTM"]].map(r => (
+              <div class="flex justify-between border-b border-blue-100 pb-0.5"><span>{r[0]}</span><span class="font-medium">{r[1]}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Types of Bond Yield</h2>
+        <div class="space-y-3">
+          {[
+            {t:"Current Yield",f:"Annual coupon ÷ Price",d:"Simple but ignores capital gain/loss at maturity"},
+            {t:"Yield to Maturity (YTM)",f:"Complex IRR calculation",d:"Total return if held to maturity — the standard for comparison"},
+            {t:"Yield to Call (YTC)",f:"Like YTM but to call date",d:"For callable bonds that may be redeemed early by the issuer"},
+            {t:"Tax-Equivalent Yield",f:"Muni yield ÷ (1 - tax rate)",d:"Compares tax-free muni bonds to taxable bonds"},
+          ].map(y => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-gray-800">{y.t}</div>
+              <div class="text-xs text-blue-600 font-mono">{y.f}</div>
+              <div class="text-xs text-gray-600 mt-0.5">{y.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Interest Rate Sensitivity (Duration)</h2>
+        <p class="text-xs text-gray-600 mb-3">If interest rates rise 1%, approximate price change:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Bond</th><th class="text-right p-2 text-xs font-semibold">Duration</th><th class="text-right p-2 text-xs font-semibold">Price Change</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["2-yr Treasury","~1.9 yrs","−1.9%"],["10-yr Treasury","~8.5 yrs","−8.5%"],["30-yr Treasury","~18 yrs","−18%"],["Zero-coupon 20yr","20 yrs","−20%"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right text-red-600">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,127 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const monthly = parseFloat(inputs.monthly)||0
+  const years = parseInt(inputs.years)||10
+  const annualReturn = parseFloat(inputs.annualReturn)||10
+  const initialInvestment = parseFloat(inputs.initialInvestment)||0
+  if(monthly<=0) throw new Error("Enter monthly investment amount.")
+  const r = annualReturn/100/12
+  const n = years*12
+  const fvMonthly = monthly*((Math.pow(1+r,n)-1)/r)
+  const fvInitial = initialInvestment*Math.pow(1+r,n)
+  const totalFV = fvMonthly+fvInitial
+  const totalInvested = monthly*n+initialInvestment
+  const totalGains = totalFV-totalInvested
+  const roi = (totalGains/totalInvested)*100
+  return {
+    value:"$"+totalFV.toLocaleString("en-US",{maximumFractionDigits:0}),
+    gaugeValue:Math.min(roi,200)/2,
+    breakdown:["Monthly investment: $"+monthly,"Years: "+years,"Annual return: "+annualReturn+"%","Total invested: $"+totalInvested.toLocaleString("en-US",{maximumFractionDigits:0}),"Investment gains: $"+totalGains.toLocaleString("en-US",{maximumFractionDigits:0}),"Final portfolio: $"+totalFV.toLocaleString("en-US",{maximumFractionDigits:0}),"ROI: "+roi.toFixed(1)+"%"],
+    stats:[
+      {label:"Final Portfolio",value:"$"+totalFV.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Total Invested",value:"$"+totalInvested.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Investment Gains",value:"$"+totalGains.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Total ROI",value:roi.toFixed(1)+"%"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is dollar-cost averaging?", answer: "DCA means investing a fixed dollar amount at regular intervals (e.g., $500/month) regardless of price. When prices are high, you buy fewer shares. When prices are low, you buy more. Over time, this averages out your cost per share and removes the pressure of timing the market." },
+  { question: "Does DCA outperform lump sum investing?", answer: "Studies show lump sum investing outperforms DCA about 2/3 of the time in rising markets — because money is invested sooner and earns more returns. However, DCA is psychologically easier, reduces timing risk, and is often the only practical option (you invest as you earn). Both beat not investing." },
+  { question: "What is the S&P 500 average annual return for DCA?", answer: "Historical S&P 500 return: ~10% nominal, ~7% inflation-adjusted per year. Some years are down 30%, some up 30%. DCA into index funds over long periods has historically produced strong results because you buy more shares during downturns. Always use diversified index funds for DCA." },
+  { question: "How often should I invest with DCA?", answer: "Monthly aligns with most paychecks and is most practical. Bi-weekly or weekly DCA statistically produces slightly lower average cost but the difference is small. Automate it — set up automatic investment on payday so the money is invested before you can spend it." },
+  { question: "What are the best DCA investments?", answer: "Broad index funds work best for DCA: S&P 500 index (like VFIAX or VOO), total market index (like VTI), international index (like VXUS). Individual stocks add company-specific risk. Target-date funds simplify it further. Low expense ratios (under 0.1%) matter more over long time horizons." }
+]
+---
+<Layout
+  title="Dollar-Cost Averaging Calculator: DCA Investment Returns"
+  description="Calculate returns from dollar-cost averaging (DCA) into stocks, ETFs, or Bitcoin over time. Free DCA investment calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Dollar-Cost Averaging Calculator", href: "/calculators/dca-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Dollar-Cost Averaging Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Dollar-Cost Averaging Calculator"
+          description="Calculate your DCA investment returns over time"
+          formulaId="dca"
+          formulaFn={formulaFn}
+          resultLabel="Final Portfolio Value"
+          inputs={[
+            {id:"monthly",label:"Monthly Investment",type:"number",placeholder:"500",min:0,unit:"$",defaultValue:500},
+            {id:"years",label:"Investment Duration",type:"number",placeholder:"10",min:1,max:50,unit:"years",defaultValue:10},
+            {id:"annualReturn",label:"Expected Annual Return",type:"number",placeholder:"10",min:0,max:30,step:0.5,unit:"%",defaultValue:10},
+            {id:"initialInvestment",label:"Initial Lump Sum (optional)",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Under 50%", color: "#f59e0b", from: 0, to: 25 },
+              { label: "50-100% ROI", color: "#3b82f6", from: 25, to: 50 },
+              { label: "100-200% ROI", color: "#22c55e", from: 50, to: 75 },
+              { label: "200%+ ROI", color: "#22c55e", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Compound Interest Calculator", href: "/calculators/compound-interest-calculator" },
+            { name: "Retirement Calculator", href: "/calculators/retirement-calculator" },
+            { name: "Stock Profit Calculator", href: "/calculators/stock-profit-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">$500/Month at 10% Annual Return</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Years</th><th class="text-right pb-1">Invested</th><th class="text-right pb-1">Value</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["5","$30k","$39k"],["10","$60k","$103k"],["20","$120k","$382k"],["30","$180k","$1.13M"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right font-medium">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">DCA in a Volatile Market</h2>
+        <p class="text-xs text-gray-600 mb-3">Investing $1,000/month into a volatile fund:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Month</th><th class="text-right p-2 text-xs font-semibold">Price</th><th class="text-right p-2 text-xs font-semibold">Shares Bought</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["1","$100","10.0"],["2","$80","12.5"],["3","$60","16.7"],["4","$100","10.0"],["5","$120","8.3"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Average cost: $85.11 vs avg price: $92. DCA wins in volatility.</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">DCA Best Practices</h2>
+        <div class="space-y-2">
+          {["Automate — set recurring investments and do not watch the market daily","Stay consistent during downturns — they are when DCA works best (buy more shares)","Use tax-advantaged accounts: 401(k), IRA before taxable brokerage","Low-cost index funds over individual stocks for most investors","Increase contributions when income rises — a small % raises can compound significantly","Do not stop during crashes — the recovery is where you earn the most"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

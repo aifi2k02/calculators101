@@ -1,0 +1,140 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const purchase = parseFloat(inputs.purchase)||0
+  const salePrice = parseFloat(inputs.salePrice)||0
+  const held = inputs.held||"long"
+  const income = parseFloat(inputs.income)||75000
+  const filingStatus = inputs.filingStatus||"single"
+  if(salePrice<=0) throw new Error("Enter sale price.")
+  const gain = salePrice-purchase
+  if(gain<=0){
+    return {value:"No taxable gain",gaugeValue:0,stats:[{label:"Loss",value:"$"+Math.abs(gain).toFixed(0)},{label:"Tax Owed",value:"$0"},{label:"After-Tax Proceeds",value:"$"+salePrice.toFixed(0)},{label:"Return %",value:((gain/purchase)*100).toFixed(1)+"%"}]}
+  }
+  let taxRate
+  if(held==="short"){
+    if(income<=11600) taxRate=0.10
+    else if(income<=47150) taxRate=0.12
+    else if(income<=100525) taxRate=0.22
+    else if(income<=191950) taxRate=0.24
+    else taxRate=0.32
+  } else {
+    const brackets = filingStatus==="married"?[94050,583750]:[47025,518900]
+    if(income<=brackets[0]) taxRate=0
+    else if(income<=brackets[1]) taxRate=0.15
+    else taxRate=0.20
+  }
+  const tax = gain*taxRate
+  const afterTax = salePrice-tax
+  return {
+    value:"$"+tax.toFixed(2)+" tax",
+    gaugeValue:taxRate*100,
+    breakdown:["Purchase price: $"+purchase,"Sale price: $"+salePrice,"Capital gain: $"+gain.toFixed(2),"Holding period: "+held+"-term","Tax rate: "+(taxRate*100)+"%","Tax owed: $"+tax.toFixed(2),"After-tax: $"+afterTax.toFixed(2)],
+    stats:[
+      {label:"Capital Gain",value:"$"+gain.toFixed(0)},
+      {label:"Tax Rate",value:(taxRate*100)+"%"},
+      {label:"Tax Owed",value:"$"+tax.toFixed(0)},
+      {label:"After-Tax Proceeds",value:"$"+afterTax.toFixed(0)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the capital gains tax rate for 2025?", answer: "Long-term capital gains (held over 1 year) rates for 2025: 0% if taxable income under $47,025 (single) or $94,050 (MFJ); 15% for most taxpayers; 20% for high earners. Short-term gains are taxed as ordinary income at your marginal tax bracket (10-37%)." },
+  { question: "How long must I hold an asset for long-term capital gains?", answer: "More than one year (at least 366 days). If you sell on day 365 or sooner, the gain is short-term and taxed at ordinary income rates — which can be dramatically higher. For someone in the 22% bracket, waiting one more day can cut the tax rate from 22% to 15%." },
+  { question: "What is cost basis?", answer: "Cost basis is your original purchase price plus any commissions, fees, or improvements. For inherited assets, basis is usually the fair market value at the date of death (stepped-up basis). For gifted assets, it depends on whether the recipient sells at a gain or loss." },
+  { question: "Can capital losses offset capital gains?", answer: "Yes. Capital losses directly offset capital gains, dollar for dollar. If losses exceed gains, you can deduct up to $3,000 against ordinary income per year. Remaining losses carry forward indefinitely. This is called tax-loss harvesting when done strategically." },
+  { question: "Does the home sale exclusion apply?", answer: "Yes! If you owned and lived in your home for at least 2 of the past 5 years, you can exclude up to $250,000 in gains (single) or $500,000 (married) from capital gains tax. This exclusion applies once every 2 years. Most primary home sales are tax-free because of this rule." }
+]
+---
+<Layout
+  title="Capital Gains Tax Calculator: Short & Long Term Rates"
+  description="Calculate your capital gains tax on investments, stocks, and real estate. Includes federal short-term and long-term rates. Free capital gains calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Capital Gains Tax Calculator", href: "/calculators/capital-gains-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Capital Gains Tax Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Capital Gains Tax Calculator"
+          description="Calculate your capital gains tax on investments and real estate"
+          formulaId="capital-gains"
+          formulaFn={formulaFn}
+          resultLabel="Capital Gains Tax"
+          inputs={[
+            {id:"purchase",label:"Purchase Price (Cost Basis)",type:"number",placeholder:"10000",min:0,unit:"$",defaultValue:10000},
+            {id:"salePrice",label:"Sale Price",type:"number",placeholder:"25000",min:0,unit:"$",defaultValue:25000},
+            {id:"held",label:"Holding Period",type:"select",options:[{value:"long",label:"Long-term (over 1 year)"},{value:"short",label:"Short-term (1 year or less)"}],defaultValue:"long"},
+            {id:"income",label:"Annual Taxable Income",type:"number",placeholder:"75000",min:0,unit:"$",defaultValue:75000},
+            {id:"filingStatus",label:"Filing Status",type:"select",options:[{value:"single",label:"Single"},{value:"married",label:"Married Filing Jointly"}],defaultValue:"single"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% tax rate",
+            zones: [
+              { label: "0% rate", color: "#22c55e", from: 0, to: 1 },
+              { label: "10-15% rate", color: "#3b82f6", from: 1, to: 16 },
+              { label: "20-24% rate", color: "#f59e0b", from: 16, to: 25 },
+              { label: "High rate 25%+", color: "#ef4444", from: 25, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Income Tax Calculator", href: "/calculators/income-tax-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Stock Profit Calculator", href: "/calculators/stock-profit-calculator" },
+            { name: "ROI Calculator", href: "/calculators/roi-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">2025 Long-Term Rates (Single)</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Taxable Income</th><th class="text-right pb-1">Rate</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["$0–$47,025","0%"],["$47,025–$518,900","15%"],["Over $518,900","20%"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="text-xs text-blue-600 mt-1">Net Investment Income Tax (3.8%) may apply at higher incomes</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Short vs Long Term Tax Impact</h2>
+        <p class="text-xs text-gray-600 mb-3">$50,000 gain, $100,000 income (single):</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Holding Period</th><th class="text-right p-2 text-xs font-semibold">Rate</th><th class="text-right p-2 text-xs font-semibold">Tax Owed</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["< 1 year (short)","22%","$11,000"],["> 1 year (long)","15%","$7,500"],["Savings by waiting","—","$3,500"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Tax-Loss Harvesting Strategies</h2>
+        <div class="space-y-2">
+          {["Sell losing positions before year end to offset gains","Capital losses offset capital gains dollar for dollar","Up to $3,000 excess loss deductible against ordinary income","Remaining losses carry forward to future tax years","Beware wash-sale rule: no repurchase within 30 days of selling at a loss","Harvest losses in taxable accounts; keep winners in tax-advantaged accounts"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

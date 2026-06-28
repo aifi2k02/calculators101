@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const initial = parseFloat(inputs.initial)||0
+  const cashFlow = parseFloat(inputs.cashFlow)||0
+  const rate = parseFloat(inputs.rate)||0
+  if(initial<=0||cashFlow<=0) throw new Error("Enter investment amount and annual cash flow.")
+  const simplePayback = initial/cashFlow
+  const simpleYears = Math.floor(simplePayback)
+  const simpleMo = Math.round((simplePayback-simpleYears)*12)
+  let discountedPayback=0, balance=initial, year=0
+  while(balance>0&&year<100){
+    year++
+    const discountedFlow = cashFlow/Math.pow(1+(rate||0)/100,year)
+    balance-=discountedFlow
+    if(balance<=0){
+      discountedPayback=year+(balance/(cashFlow/Math.pow(1+(rate||0)/100,year)))
+      break
+    }
+  }
+  const roi5 = (cashFlow*5-initial)/initial*100
+  return {
+    value:simpleYears+"y "+simpleMo+"mo payback",
+    gaugeValue:Math.min(100/simplePayback*10,100),
+    breakdown:["Initial investment: $"+initial.toLocaleString("en-US",{maximumFractionDigits:0}),"Annual cash flow: $"+cashFlow.toLocaleString("en-US",{maximumFractionDigits:0}),"Simple payback: "+simpleYears+"y "+simpleMo+"mo","Discounted payback: "+(rate>0?discountedPayback.toFixed(1)+" years":"N/A (rate = 0)"),"5-year ROI: "+roi5.toFixed(1)+"%"],
+    stats:[
+      {label:"Simple Payback",value:simpleYears+"y "+simpleMo+"mo"},
+      {label:"Annual Cash Flow",value:"$"+cashFlow.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"5-Year ROI",value:roi5.toFixed(1)+"%"},
+      {label:"Discounted Payback",value:rate>0?discountedPayback.toFixed(1)+" yrs":"N/A"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the payback period?", answer: "The payback period is how long it takes for an investment to recover its initial cost from generated cash flows. Simple payback = Initial Investment / Annual Cash Flow. A 3-year payback means the investment pays for itself in 3 years. After that, all cash flows are profit." },
+  { question: "What is a good payback period?", answer: "It depends on industry and investment type. Solar panels: 6-10 years (with 25yr lifespan = great). Equipment: typically under 3-5 years. Real estate: 5-15 years common. Software: often 1-3 years. The shorter the better, but context matters — a 10-year payback is fine if the asset lasts 30 years." },
+  { question: "What is discounted payback period?", answer: "Discounted payback accounts for the time value of money — future cash flows are worth less than present ones. Divide each future cash flow by (1 + rate)^year before tallying. The discounted payback period is always longer than simple payback, giving a more realistic picture of true break-even." },
+  { question: "What are the limitations of payback period?", answer: "It ignores cash flows after the payback period (a 3-year payback project that generates $1 billion afterward looks the same as one that generates $0 after). It ignores the time value of money (unless using discounted version). It does not measure profitability, only liquidity/speed of recovery." },
+  { question: "Should I use payback period or NPV?", answer: "Use both: NPV measures value creation (the right answer for investment decisions); payback period measures liquidity risk (how quickly can you recover the capital). A project with 8-year payback but hugely positive NPV is still worth doing. Short payback is especially important for small businesses with limited capital." }
+]
+---
+<Layout
+  title="Payback Period Calculator: Investment Break-Even Timeline"
+  description="Calculate how long until your investment pays back its initial cost. Includes discounted payback period. Free payback period calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Payback Period Calculator", href: "/calculators/payback-period-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Payback Period Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Payback Period Calculator"
+          description="Calculate how quickly your investment pays back its initial cost"
+          formulaId="payback-period"
+          formulaFn={formulaFn}
+          resultLabel="Payback Period"
+          inputs={[
+            {id:"initial",label:"Initial Investment",type:"number",placeholder:"50000",min:0,unit:"$",defaultValue:50000},
+            {id:"cashFlow",label:"Annual Cash Flow / Savings",type:"number",placeholder:"15000",min:0,unit:"$",defaultValue:15000},
+            {id:"rate",label:"Discount Rate (for discounted payback)",type:"number",placeholder:"8",min:0,max:30,step:0.5,unit:"%",defaultValue:8}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Under 2yr", color: "#22c55e", from: 0, to: 10 },
+              { label: "2-5 years", color: "#3b82f6", from: 10, to: 50 },
+              { label: "5-10 years", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "NPV Calculator", href: "/calculators/npv-calculator" },
+            { name: "ROI Calculator", href: "/calculators/roi-calculator" },
+            { name: "Break-Even Calculator", href: "/calculators/break-even-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Payback Formula</h3>
+          <div class="font-mono text-xs text-blue-800 bg-blue-100 rounded p-2 mb-2">Payback = Investment ÷ Annual Cash Flow</div>
+          <div class="text-xs text-blue-700">Example: $50,000 investment, $15,000/year cash flows<br/>Payback = $50,000 ÷ $15,000 = 3.33 years (3y 4mo)</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Simple vs Discounted Payback</h2>
+        <p class="text-xs text-gray-600 mb-3">$50,000 investment, $15,000/year, 8% rate:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Year</th><th class="text-right p-2 text-xs font-semibold">Simple Balance</th><th class="text-right p-2 text-xs font-semibold">Discounted Balance</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["0","−$50,000","−$50,000"],["1","−$35,000","−$36,111"],["2","−$20,000","−$23,079"],["3","−$5,000","−$10,987"],["4","$10,000","$0,120"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Simple: 3.33yr | Discounted: ~3.85yr</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Investment Evaluation Framework</h2>
+        <div class="space-y-3">
+          {[
+            {q:"Will it pay back quickly?",tool:"Payback Period",use:"Liquidity assessment"},
+            {q:"Does it create value?",tool:"NPV",use:"Value creation"},
+            {q:"What is the % return?",tool:"IRR or ROI",use:"Profitability"},
+            {q:"Is revenue > costs?",tool:"Break-Even",use:"Viability"},
+            {q:"Worth it vs. alternatives?",tool:"Compare NPVs",use:"Selection"},
+          ].map(f => (
+            <div class="flex gap-3 bg-gray-50 rounded-lg p-2.5">
+              <div class="flex-1 text-xs text-gray-600">{f.q}</div>
+              <div class="text-xs font-medium text-blue-700 text-right">{f.tool}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

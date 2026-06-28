@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const cost = parseFloat(inputs.cost)||0
+  const markup = parseFloat(inputs.markup)||0
+  if(cost<=0) throw new Error("Enter cost.")
+  const sellingPrice = cost*(1+markup/100)
+  const profit = sellingPrice-cost
+  const margin = (profit/sellingPrice)*100
+  return {
+    value:"$"+sellingPrice.toFixed(2),
+    gaugeValue:Math.min(markup,100),
+    breakdown:["Cost: $"+cost.toFixed(2),"Markup: "+markup+"%","Selling price: $"+sellingPrice.toFixed(2),"Gross profit: $"+profit.toFixed(2),"Profit margin: "+margin.toFixed(2)+"%"],
+    stats:[
+      {label:"Selling Price",value:"$"+sellingPrice.toFixed(2)},
+      {label:"Gross Profit",value:"$"+profit.toFixed(2)},
+      {label:"Profit Margin",value:margin.toFixed(2)+"%"},
+      {label:"Markup %",value:markup+"%"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the difference between markup and margin?", answer: "Markup is profit divided by COST. Margin is profit divided by SELLING PRICE. A 50% markup does NOT equal 50% margin. Example: $10 cost, $15 price. Markup = ($5/$10) = 50%. Margin = ($5/$15) = 33.3%. Businesses often confuse these — always clarify which you mean." },
+  { question: "How do I convert markup to margin?", answer: "Margin = Markup / (1 + Markup). Example: 50% markup = 50/150 = 33.3% margin. To convert margin to markup: Markup = Margin / (1 - Margin). 33.3% margin = 0.333/0.667 = 50% markup. Use this conversion when comparing prices with suppliers vs. customers." },
+  { question: "What is a good markup percentage?", answer: "It varies enormously by industry. Grocery stores: 5-25%. Retail clothing: 50-100%+. Jewelry: 100-300%. Restaurants: 200-400% on food. Software: often infinite (cost of goods is near zero). The right markup depends on: industry norms, competition, customer willingness to pay, and your overhead costs." },
+  { question: "Why is markup different from margin in practice?", answer: "When you tell a customer your price includes a 50% margin, they expect $1 to become $1.50 (50% of $1). When a supplier offers a product with 50% markup, they mean cost $1, sell at $1.50. The confusion is real and costly — businesses have lost money quoting the wrong metric to partners." },
+  { question: "How do overhead costs factor into pricing?", answer: "Markup must cover not just profit but also overhead: rent, salaries, utilities, marketing, insurance. If overhead is 30% of revenue, you need at least 30% margin (43% markup) just to break even. A common formula: Price = (Cost + Overhead Allocation) / (1 - Desired Profit Margin)." }
+]
+---
+<Layout
+  title="Markup Calculator: Markup Percentage & Selling Price"
+  description="Calculate selling price, markup percentage, gross profit margin, and profit. Free markup and margin calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Markup Calculator", href: "/calculators/markup-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Markup Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Markup Calculator"
+          description="Calculate selling price, markup percentage, and profit margin"
+          formulaId="markup"
+          formulaFn={formulaFn}
+          resultLabel="Selling Price"
+          inputs={[
+            {id:"cost",label:"Cost Price",type:"number",placeholder:"50",min:0,unit:"$",step:0.01,defaultValue:50},
+            {id:"markup",label:"Markup Percentage",type:"number",placeholder:"40",min:0,unit:"%",step:0.5,defaultValue:40}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% markup",
+            zones: [
+              { label: "Low <20%", color: "#ef4444", from: 0, to: 20 },
+              { label: "Fair 20-40%", color: "#f59e0b", from: 20, to: 40 },
+              { label: "Good 40-60%", color: "#3b82f6", from: 40, to: 60 },
+              { label: "High 60%+", color: "#22c55e", from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Break-Even Calculator", href: "/calculators/break-even-calculator" },
+            { name: "ROI Calculator", href: "/calculators/roi-calculator" },
+            { name: "Discount Calculator", href: "/calculators/discount-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Markup vs Margin Quick Reference</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Markup</th><th class="text-right pb-1">Margin</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["10%","9.1%"],["20%","16.7%"],["33%","25%"],["50%","33.3%"],["100%","50%"],["200%","66.7%"]].map(r => (
+                <tr class="border-t border-blue-100"><td>{r[0]}</td><td class="text-right">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Industry Markup Benchmarks</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Industry</th><th class="text-right p-2 text-xs font-semibold">Typical Markup</th><th class="text-right p-2 text-xs font-semibold">Margin</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Grocery","5–25%","5–20%"],["Retail Clothing","50–100%","33–50%"],["Electronics","5–25%","5–20%"],["Jewelry","100–300%","50–75%"],["Restaurant","200–400%","67–80%"],["Software/SaaS","Very high","70–90%"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Pricing Formula</h2>
+        <div class="bg-gray-50 rounded-xl p-4 font-mono text-xs text-gray-700 space-y-2">
+          <div>Selling Price = Cost × (1 + Markup%/100)</div>
+          <div>Profit = Selling Price - Cost</div>
+          <div>Margin = (Profit / Selling Price) × 100</div>
+          <div class="mt-3 font-sans text-gray-600">Example: cost $10, 50% markup</div>
+          <div>Price = $10 × 1.50 = $15</div>
+          <div>Profit = $15 - $10 = $5</div>
+          <div>Margin = ($5 / $15) × 100 = 33.3%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

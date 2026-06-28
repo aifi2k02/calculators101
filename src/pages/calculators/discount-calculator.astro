@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const original = parseFloat(inputs.original) || 0
+  const discount = parseFloat(inputs.discount) || 0
+  const taxRate = parseFloat(inputs.tax) || 0
+  if (original <= 0) throw new Error('Enter original price.')
+  if (discount < 0 || discount > 100) throw new Error('Discount must be 0–100%.')
+  const savings = original * (discount / 100)
+  const afterDiscount = original - savings
+  const tax = afterDiscount * (taxRate / 100)
+  const finalPrice = afterDiscount + tax
+  return {
+    value: '$' + finalPrice.toFixed(2),
+    gaugeValue: discount,
+    breakdown: [
+      'Original price: $' + original.toFixed(2),
+      'Discount (' + discount + '%): -$' + savings.toFixed(2),
+      'Price after discount: $' + afterDiscount.toFixed(2),
+      taxRate > 0 ? 'Tax (' + taxRate + '%): +$' + tax.toFixed(2) : '',
+      'Final price: $' + finalPrice.toFixed(2),
+    ].filter(Boolean),
+    stats: [
+      { label: 'Final Price', value: '$' + finalPrice.toFixed(2) },
+      { label: 'You Save', value: '$' + savings.toFixed(2) },
+      { label: 'Savings %', value: discount + '%' },
+      { label: 'Tax Added', value: taxRate > 0 ? '$' + tax.toFixed(2) : '$0.00' },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How do I calculate a discount?', answer: 'Multiply the original price by the discount percentage, then subtract. Example: $120 with 25% off → $120 × 0.25 = $30 discount → $120 − $30 = $90 final price. Or multiply by (1 − discount%): $120 × 0.75 = $90.' },
+  { question: 'Is tax applied before or after discount?', answer: 'Sales tax is applied after the discount in all US states. You pay tax on the discounted price, not the original price. This is beneficial — a $100 item with 20% off and 8% tax = ($100 × 0.80) × 1.08 = $86.40.' },
+  { question: 'How do I stack multiple discounts?', answer: 'Multiply them consecutively, not together. Two 20% discounts off a $100 item = $100 × 0.80 = $80, then $80 × 0.80 = $64. NOT 40% off ($60). The effective combined discount is 36%, not 40%.' },
+  { question: 'What is BOGO and how does it work?', answer: 'Buy One Get One (BOGO) free is equivalent to 50% off both items. BOGO 50% off means each item is 25% off. When comparing sales, convert to an equivalent single-item discount percentage for fair comparison.' },
+  { question: 'How do I calculate original price from discounted price?', answer: 'Divide the sale price by (1 − discount%). If something costs $75 after a 25% discount, original price = $75 ÷ 0.75 = $100. This is useful when you only see the sale tag.' },
+]
+---
+<Layout
+  title="Discount Calculator: Sale Price & Savings Calculator"
+  description="Calculate sale price, discount amount, and savings percentage instantly. Includes sales tax. Free discount calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Discount Calculator', href: '/calculators/discount-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Discount Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Discount Calculator"
+          description="Find sale price, savings amount, and final cost with tax"
+          formulaId="discount"
+          formulaFn={formulaFn}
+          resultLabel="Final Price"
+          inputs={[
+            { id: 'original', label: 'Original Price', type: 'number', placeholder: '120', min: 0, step: 0.01, unit: '$', defaultValue: 120 },
+            { id: 'discount', label: 'Discount', type: 'number', placeholder: '25', min: 0, max: 100, step: 0.1, unit: '%', defaultValue: 25 },
+            { id: 'tax', label: 'Sales Tax Rate', type: 'number', placeholder: '8', min: 0, max: 20, step: 0.1, unit: '%', defaultValue: 0 },
+          ]}
+          gauge={{
+            min: 0, max: 75, unit: '% discount',
+            zones: [
+              { label: 'Small', color: '#94a3b8', from: 0, to: 15 },
+              { label: 'Good', color: '#3b82f6', from: 15, to: 30 },
+              { label: 'Great', color: '#22c55e', from: 30, to: 50 },
+              { label: 'Huge', color: '#f59e0b', from: 50, to: 75 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Sales Tax Calculator', href: '/calculators/sales-tax-calculator' },
+            { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+            { name: 'Markup Calculator', href: '/calculators/markup-calculator' },
+            { name: 'Tip Calculator', href: '/calculators/tip-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-3">$100 Item — Discount Savings</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-green-700"><th class="text-left pb-1">Discount</th><th class="text-right pb-1">You Pay</th><th class="text-right pb-1">Save</th></tr></thead>
+            <tbody class="text-green-900">
+              {[['10%','$90','$10'],['20%','$80','$20'],['30%','$70','$30'],['50%','$50','$50'],['70%','$30','$70']].map(r => (
+                <tr class="border-t border-green-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right font-medium">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">Stacked Discounts</h3>
+          <p class="text-xs text-amber-800">Two 20% discounts ≠ 40% off. Actual: 36% off. Calculate by multiplying: 0.80 × 0.80 = 0.64 → 36% off.</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How to Calculate Discounts</h2>
+        <div class="space-y-3">
+          {[
+            { step: '1', label: 'Find the discount amount', detail: 'Multiply: $120 × 25% = $30 savings' },
+            { step: '2', label: 'Subtract from original', detail: '$120 − $30 = $90 after discount' },
+            { step: '3', label: 'Add sales tax (if any)', detail: '$90 × 1.08 = $97.20 final price' },
+          ].map(s => (
+            <div class="flex gap-3 bg-gray-50 rounded-lg p-3">
+              <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">{s.step}</div>
+              <div>
+                <div class="font-semibold text-gray-800 text-xs mb-1">{s.label}</div>
+                <div class="text-xs text-gray-600">{s.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Finding Original Price from Sale Price</h2>
+        <p class="text-gray-600 text-sm mb-3">If you only see the sale price and discount, work backwards:</p>
+        <div class="bg-gray-50 rounded-lg p-4 text-sm">
+          <p class="text-gray-700 mb-2"><strong>Formula:</strong> Original = Sale Price ÷ (1 − Discount%)</p>
+          <p class="text-gray-600 text-xs mb-2">Example: $75 sale price, 25% off</p>
+          <p class="text-blue-600 text-xs font-mono">$75 ÷ 0.75 = $100 original price</p>
+        </div>
+        <p class="text-xs text-gray-500 mt-3">Useful when comparing "was $X, now $Y" vs just the sale price tag.</p>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,214 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const principal = parseFloat(inputs.principal)
+  const rate = parseFloat(inputs.rate)
+  const years = parseFloat(inputs.years)
+  if (isNaN(principal) || principal <= 0) throw new Error('Please enter a valid loan amount.')
+  if (isNaN(rate) || rate < 0) throw new Error('Please enter a valid interest rate.')
+  if (isNaN(years) || years <= 0) throw new Error('Please enter a valid loan term.')
+  const r = rate / 100 / 12
+  const n = Math.round(years * 12)
+  const monthly = r === 0 ? principal / n : (principal * r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1)
+  const total = monthly * n
+  const interest = total - principal
+  const interestRatio = (interest / principal * 100).toFixed(1)
+  return {
+    value: '$' + monthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),
+    stats: [
+      { label: 'Monthly Payment', value: '$' + monthly.toFixed(2) },
+      { label: 'Total Repayment', value: '$' + Math.round(total).toLocaleString() },
+      { label: 'Total Interest', value: '$' + Math.round(interest).toLocaleString() },
+      { label: 'Interest / Principal', value: interestRatio + '%' },
+      { label: 'Number of Payments', value: n.toString() },
+    ],
+    breakdown: [
+      'Loan amount: $' + principal.toLocaleString(),
+      'Annual rate: ' + rate + '% → monthly: ' + (rate/12).toFixed(4) + '%',
+      'Term: ' + years + ' years (' + n + ' payments)',
+      '—',
+      'Monthly payment: $' + monthly.toFixed(2),
+      'Total repayment: $' + total.toFixed(2),
+      'Total interest paid: $' + interest.toFixed(2),
+      'Interest as % of principal: ' + interestRatio + '%',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 30, unit: '% interest',
+  zones: [
+    { label: 'Excellent <7%', color: '#22c55e', from: 0, to: 7 },
+    { label: 'Good 7-12%', color: '#3b82f6', from: 7, to: 12 },
+    { label: 'Fair 12-20%', color: '#f59e0b', from: 12, to: 20 },
+    { label: 'High 20%+', color: '#ef4444', from: 20, to: 30 },
+  ]
+}
+---
+<Layout
+  title="Loan Calculator: Monthly Payment & Total Interest"
+  description="Calculate monthly loan payments, total repayment, and interest for any personal loan, auto loan, or debt. Full amortization breakdown included."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Financial",href:"/calculators/financial"},{name:"Loan Calculator",href:"/calculators/loan-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Loan Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Loan Calculator"
+          description="Monthly payment, total interest, and full repayment breakdown"
+          formulaId="loan"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Payment"
+          inputs={[
+            { id: 'principal', label: 'Loan Amount', type: 'number', placeholder: '20000', min: 1, unit: '$', defaultValue: 20000 },
+            { id: 'rate', label: 'Annual Interest Rate', type: 'number', placeholder: '8', min: 0, max: 100, step: 0.01, unit: '%', defaultValue: 8 },
+            { id: 'years', label: 'Loan Term', type: 'select', options: [
+              {value:'1',label:'1 year'},{value:'2',label:'2 years'},{value:'3',label:'3 years'},
+              {value:'4',label:'4 years'},{value:'5',label:'5 years'},{value:'6',label:'6 years'},
+              {value:'7',label:'7 years'},{value:'10',label:'10 years'},{value:'15',label:'15 years'},
+              {value:'20',label:'20 years'},{value:'30',label:'30 years'},
+            ], defaultValue: '5' },
+          ]}
+          gauge={gauge}
+          relatedCalcs={[
+            { name: 'Mortgage Calculator', href: '/calculators/mortgage-calculator' },
+            { name: 'Auto Loan Calculator', href: '/calculators/auto-loan-calculator' },
+            { name: 'Debt Payoff Calculator', href: '/calculators/debt-payoff-calculator' },
+            { name: 'Debt-to-Income Calculator', href: '/calculators/debt-to-income-calculator' },
+            { name: 'Amortization Calculator', href: '/calculators/amortization-calculator' },
+          ]}
+          faqs={[
+            { question: 'How is a loan payment calculated?', answer: 'Monthly payment = P × [r(1+r)ⁿ] / [(1+r)ⁿ−1], where P = principal, r = monthly interest rate (annual ÷ 12), n = number of payments. This is standard amortization math.' },
+            { question: 'Does paying extra principal save money?', answer: 'Yes, significantly. Extra principal payments reduce the balance faster, meaning less interest accrues. Even one extra payment per year on a 5-year loan can save 4–6 months of interest and shorten the term.' },
+            { question: 'What is a good personal loan rate?', answer: 'Rates vary by credit score. Excellent credit (760+): 6–10% APR. Good credit (700–759): 10–15%. Fair credit (640–699): 15–25%. Poor credit may see 25–36%.' },
+            { question: 'How does loan term affect total cost?', answer: 'Longer terms lower monthly payments but cost more in total interest. A $20,000 loan at 8% for 3 years costs ~$1,928 in interest; 7 years costs ~$4,686 — 2.4× more in interest for lower monthly payments.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">$20,000 Loan Payment Reference</h3>
+          </div>
+          <div class="p-4">
+            <p class="text-xs text-gray-500 mb-2">Monthly payment by rate and term</p>
+            <table class="w-full text-xs">
+              <thead><tr class="text-gray-500">
+                <th class="text-left pb-1.5">Term</th>
+                <th class="text-right pb-1.5">6%</th>
+                <th class="text-right pb-1.5">10%</th>
+                <th class="text-right pb-1.5">15%</th>
+              </tr></thead>
+              <tbody class="text-gray-700">
+                {[
+                  ['3 yr','$608','$645','$694'],
+                  ['5 yr','$387','$425','$476'],
+                  ['7 yr','$292','$333','$389'],
+                  ['10 yr','$222','$264','$323'],
+                ].map(([t,r1,r2,r3]) => (
+                  <tr class="border-t border-gray-50">
+                    <td class="py-1.5 font-medium">{t}</td>
+                    <td class="py-1.5 text-right">{r1}</td>
+                    <td class="py-1.5 text-right">{r2}</td>
+                    <td class="py-1.5 text-right">{r3}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h3 class="font-semibold text-blue-900 text-sm mb-2">Tips to Get a Lower Rate</h3>
+          <ul class="text-xs text-blue-800 space-y-1.5">
+            <li>• Improve credit score before applying</li>
+            <li>• Shop 3–5 lenders on the same day</li>
+            <li>• Consider a secured loan (lower risk = lower rate)</li>
+            <li>• Add a creditworthy co-signer</li>
+            <li>• Choose a shorter term</li>
+          </ul>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Typical Loan Rates by Type</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['Personal loan', '6–36%'],
+              ['Auto loan (new)', '5–9%'],
+              ['Auto loan (used)', '7–14%'],
+              ['Student loan', '5–13%'],
+              ['Home equity loan', '7–12%'],
+            ].map(([type, rate]) => (
+              <div class="px-4 py-2 flex justify-between text-xs">
+                <span class="text-gray-600">{type}</span>
+                <span class="font-semibold text-gray-800">{rate}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How Loan Amortization Works</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">When you take out an installment loan, each monthly payment is split between interest and principal. In the early months, most of your payment goes toward interest. As the principal decreases, less interest accrues and more of each payment reduces the balance — this is called amortization.</p>
+        <p class="text-gray-600 leading-relaxed">For example, on a $20,000 loan at 8% for 5 years, your first payment of $406 splits as ~$133 interest + $273 principal. By month 50, it\'s ~$5 interest + $401 principal. The total interest paid over 5 years is ~$4,332.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Loan Term: Short vs Long</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
+            <thead class="bg-gray-50"><tr>
+              <th class="text-left px-4 py-3 font-semibold text-gray-700">$20,000 at 10%</th>
+              <th class="text-center px-4 py-3 font-semibold text-blue-700">3 Years</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-700">5 Years</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-600">7 Years</th>
+            </tr></thead>
+            <tbody>
+              {[
+                ['Monthly payment', '$645', '$425', '$333'],
+                ['Total repayment', '$23,214', '$25,496', '$27,971'],
+                ['Total interest', '$3,214', '$5,496', '$7,971'],
+                ['Interest ratio', '16%', '27%', '40%'],
+              ].map(([f, y3, y5, y7], i) => (
+                <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td class="px-4 py-2.5 font-medium text-gray-700">{f}</td>
+                  <td class="px-4 py-2.5 text-center text-blue-700">{y3}</td>
+                  <td class="px-4 py-2.5 text-center text-gray-600">{y5}</td>
+                  <td class="px-4 py-2.5 text-center text-gray-500">{y7}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How Extra Payments Save Money</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Any payment above your required monthly amount goes directly toward reducing principal — which in turn reduces future interest. This is one of the most powerful ways to cut the total cost of a loan.</p>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {[
+            ['Pay $50 extra/month', 'On a $20k, 5-year loan at 8%: saves ~$380 in interest and pays off ~3 months early.'],
+            ['Pay $100 extra/month', 'Same loan: saves ~$700 in interest and pays off ~6 months early.'],
+            ['Make 1 extra payment/year', 'Equivalent to paying biweekly — cuts a 5-year loan by 4–6 months.'],
+            ['Refinance at lower rate', 'Dropping from 10% to 7% on a $20k 5-year loan saves ~$1,700 total.'],
+          ].map(([title, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="font-semibold text-gray-800 text-sm mb-1">{title}</p>
+              <p class="text-xs text-gray-600 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

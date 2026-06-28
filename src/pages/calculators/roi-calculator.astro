@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const initial = parseFloat(inputs.initial) || 0
+  const final = parseFloat(inputs.final) || 0
+  const years = parseFloat(inputs.years) || 1
+  const costs = parseFloat(inputs.costs) || 0
+  if (initial <= 0) throw new Error("Enter initial investment.")
+  const netGain = final - initial - costs
+  const roi = (netGain / initial) * 100
+  const annualRoi = years > 0 ? ((Math.pow((final - costs) / initial, 1 / years) - 1) * 100) : roi
+  return {
+    value: roi.toFixed(2) + "% ROI",
+    gaugeValue: Math.min(Math.max(roi + 50, 0), 100),
+    breakdown: [
+      "Net gain/loss: $" + netGain.toFixed(2),
+      "Simple ROI: " + roi.toFixed(2) + "%",
+      years > 0 ? "Annualized ROI: " + annualRoi.toFixed(2) + "%" : "",
+    ].filter(Boolean),
+    stats: [
+      { label: "Simple ROI", value: roi.toFixed(2) + "%" },
+      { label: "Net Gain/Loss", value: "$" + netGain.toFixed(2) },
+      { label: "Annualized ROI", value: annualRoi.toFixed(2) + "%" },
+      { label: "Multiplier", value: ((final - costs) / initial).toFixed(2) + "x" },
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is ROI?", answer: "Return on Investment (ROI) measures the gain or loss from an investment relative to its cost. Formula: ROI = (Net Gain / Initial Investment) × 100. A 50% ROI means you gained 50% of what you invested." },
+  { question: "What is a good ROI?", answer: "It depends on the investment type and risk. S&P 500 average: ~10%/year. Real estate: 8–12%/year. High-yield savings: 4–5%. Startup investments: vary wildly. Compare ROI to benchmarks in the same asset class, not across different types." },
+  { question: "What is annualized ROI?", answer: "Annualized ROI (CAGR — Compound Annual Growth Rate) converts total return to an equivalent annual rate, enabling fair comparison across different time periods. A 50% total ROI over 5 years = 8.45% annualized (not 10%, because compounding matters)." },
+  { question: "How is ROI different from profit margin?", answer: "ROI compares return to investment cost. Profit margin compares profit to revenue. A business can have a high profit margin but low ROI (tied up too much capital) or low margins but great ROI (asset-light model, high turnover)." },
+  { question: "How do I calculate ROI for real estate?", answer: "Include all costs: purchase price, closing costs, renovations, annual operating costs. Annual return includes rental income and appreciation. ROI = (Annual Profit × Years + Appreciation − All Costs) / Total Investment. Cap rate is a related metric for rental properties." }
+]
+---
+<Layout
+  title="ROI Calculator: Return on Investment"
+  description="Calculate return on investment (ROI) for any investment. Annualized ROI and simple ROI with break-even analysis. Free ROI calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "ROI Calculator", href: "/calculators/roi-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">ROI Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="ROI Calculator"
+          description="Calculate return on investment with annualized rate and net gain analysis"
+          formulaId="roi"
+          formulaFn={formulaFn}
+          resultLabel="ROI"
+          inputs={[
+            { id: "initial", label: "Initial Investment", type: "number", placeholder: "10000", min: 0, unit: "$", defaultValue: 10000 },
+            { id: "final", label: "Final Value / Return", type: "number", placeholder: "15000", min: 0, unit: "$", defaultValue: 15000 },
+            { id: "costs", label: "Additional Costs / Fees", type: "number", placeholder: "0", min: 0, unit: "$", defaultValue: 0 },
+            { id: "years", label: "Investment Period", type: "number", placeholder: "3", min: 0, step: 0.1, unit: "years", defaultValue: 3 }
+          ]}
+          gauge={{min: 0, max: 100, unit: "% ROI scale",
+            zones: [
+              { label: "Loss", color: "#ef4444", from: 0, to: 40 },
+              { label: "Breakeven", color: "#94a3b8", from: 40, to: 55 },
+              { label: "Positive", color: "#3b82f6", from: 55, to: 75 },
+              { label: "Strong", color: "#22c55e", from: 75, to: 100 },
+            ]}}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "Compound Interest Calculator", href: "/calculators/compound-interest-calculator" },
+            { name: "Break-Even Calculator", href: "/calculators/break-even-calculator" }
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Benchmark ROIs</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["S&P 500 (historical)","~10%/yr"],["Real estate","~8–12%/yr"],["Bonds","~3–5%/yr"],["HYSA (2025)","~4–5%/yr"],["Crypto","Highly variable"],["Angel investing","~27%/yr avg (risky)"]].map(([a,b]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{a}</span><span class="font-medium">{b}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Simple vs Annualized ROI</h2>
+        <p class="text-gray-600 text-sm mb-3">Simple ROI just measures total return. Annualized ROI (CAGR) accounts for time.</p>
+        <div class="bg-gray-50 rounded-lg p-4 text-sm">
+          <p class="font-medium text-gray-800 mb-2">$10,000 → $15,000</p>
+          <div class="text-xs space-y-1">
+            <div>Simple ROI: (15k-10k)/10k × 100 = <strong>50%</strong></div>
+            <div>Over 1 yr: 50% annualized</div>
+            <div>Over 3 yrs: (15/10)^(1/3)-1 = <strong>14.5%/yr</strong></div>
+            <div>Over 5 yrs: (15/10)^(1/5)-1 = <strong>8.45%/yr</strong></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">ROI by Investment Type</h2>
+        <div class="space-y-2">
+          {[
+            { type: "Index Funds", roi: "7–10% annualized", risk: "Low-medium", horizon: "5+ years" },
+            { type: "Real Estate", roi: "8–12% total return", risk: "Medium", horizon: "5–10 years" },
+            { type: "Business Investment", roi: "Variable 20–100%+", risk: "High", horizon: "3–7 years" },
+            { type: "High-yield Savings", roi: "4–5% guaranteed", risk: "None", horizon: "Any" },
+          ].map(i => (
+            <div class="bg-gray-50 rounded-lg p-3 text-xs">
+              <div class="font-semibold text-gray-800">{i.type}</div>
+              <div class="flex gap-4 mt-1 text-gray-600"><span>ROI: {i.roi}</span><span>Risk: {i.risk}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

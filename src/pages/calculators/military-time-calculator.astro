@@ -1,0 +1,134 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const input = (inputs.time||"").trim()
+  const direction = inputs.direction||"to_standard"
+  if(direction==="to_standard"){
+    const h=parseInt(input.slice(0,2))||0
+    const m=parseInt(input.slice(2,4))||0
+    if(h<0||h>23||m<0||m>59) throw new Error("Enter valid military time (0000-2359).")
+    const period=h<12?"AM":"PM"
+    const h12=h===0?12:h>12?h-12:h
+    const result=h12+":"+String(m).padStart(2,"0")+" "+period
+    return {
+      value:input+" → "+result,
+      gaugeValue:((h*60+m)/1440)*100,
+      breakdown:["Military: "+String(h).padStart(2,"0")+String(m).padStart(2,"0"),"Standard: "+result,"Hours (24h): "+h,"Minutes: "+m,"Time of day: "+h+" hours into the day"],
+      stats:[
+        {label:"Standard (12h)",value:result},
+        {label:"Military (24h)",value:String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")},
+        {label:"AM or PM",value:period},
+        {label:"% of day elapsed",value:((h*60+m)/1440*100).toFixed(1)+"%"},
+      ]
+    }
+  } else {
+    const match=input.match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)/i)
+    if(!match) throw new Error("Enter time as H:MM AM or H:MM PM")
+    let h=parseInt(match[1]),m=parseInt(match[2])
+    const period=match[3].toUpperCase()
+    if(period==="AM"&&h===12) h=0
+    else if(period==="PM"&&h!==12) h+=12
+    const military=String(h).padStart(2,"0")+String(m).padStart(2,"0")
+    return {
+      value:input+" → "+military,
+      gaugeValue:((h*60+m)/1440)*100,
+      breakdown:["Standard: "+input,"Military: "+military,"24h time: "+h+":"+String(m).padStart(2,"0"),"Hours into day: "+h],
+      stats:[
+        {label:"Military Time",value:military},
+        {label:"Standard",value:input},
+        {label:"24h Format",value:String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")},
+        {label:"Day elapsed",value:((h*60+m)/1440*100).toFixed(1)+"%"},
+      ]
+    }
+  }
+
+`
+
+const faqs = [
+  { question: "How does military time work?", answer: "Military time uses a 24-hour clock: 0000 to 2359. Hours go from 00 (midnight) to 23 (11 PM). There is no AM/PM. Read as 4 digits: 0830 is eight thirty, 1400 is fourteen hundred, 2230 is twenty-two thirty. To convert to 12-hour: for hours > 12, subtract 12 and add PM." },
+  { question: "How do I convert 1730 to standard time?", answer: "1730 military: 17 - 12 = 5, so 5:30 PM. Any hour 1300-2359: subtract 12 for PM hours. Hours 1200-1259 remain as 12:xx PM. Hours 0000-0059 are 12:xx AM. Hours 0100-1159 are the same number in AM." },
+  { question: "Why does the military use 24-hour time?", answer: "To avoid ambiguity. In military, emergency services, aviation, and healthcare, mistaking 6:00 AM for 6:00 PM could be catastrophic. 24-hour time is unambiguous. Also used internationally: most of the world uses 24-hour time in formal and professional contexts." },
+  { question: "What time zones do the military use?", answer: "Military uses one-letter time zone abbreviations. Z = Zulu = UTC (Greenwich). Alpha through Mike (A-M, skipping J) are east of UTC. November through Yankee (N-Y) are west of UTC. Z (Zulu) is always UTC and is the military standard time for coordination across time zones." },
+  { question: "What does 0000 vs 2400 mean?", answer: "0000 (zero-zero-zero-zero) = midnight (start of day). It is the first moment of a new day. 2400 is technically the last moment of the day (end of day) — equivalent to 0000 of the next day. In practice, most systems use 0000 for midnight and avoid 2400. 1200 = noon exactly." }
+]
+---
+<Layout
+  title="Military Time Converter: 24-Hour to 12-Hour Clock"
+  description="Convert between military time (24-hour clock) and standard 12-hour time (AM/PM). Free military time converter with chart."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Military Time Converter", href: "/calculators/military-time-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Military Time Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Military Time Converter"
+          description="Convert between military time and 12-hour clock"
+          formulaId="military-time"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            {id:"time",label:"Time to convert",type:"text",placeholder:"1430 or 2:30 PM",defaultValue:"1430"},
+            {id:"direction",label:"Direction",type:"select",options:[
+              {value:"to_standard",label:"Military → Standard (e.g. 1430 → 2:30 PM)"},
+              {value:"to_military",label:"Standard → Military (e.g. 2:30 PM → 1430)"},
+            ],defaultValue:"to_standard"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Midnight-6am", color: "#3b82f6", from: 0, to: 25 },
+              { label: "Morning 6am-12pm", color: "#22c55e", from: 25, to: 50 },
+              { label: "Afternoon 12-6pm", color: "#f59e0b", from: 50, to: 75 },
+              { label: "Evening 6pm-midnight", color: "#ef4444", from: 75, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Time Calculator", href: "/calculators/time-calculator" },
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+            { name: "Date Calculator", href: "/calculators/date-calculator" },
+            { name: "Days Until Calculator", href: "/calculators/days-until-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Quick Conversion</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left">Military</th><th class="text-right">Standard</th></tr></thead>
+            <tbody class="font-mono text-blue-900">
+              {[["0000","12:00 AM"],["0600","6:00 AM"],["1200","12:00 PM"],["1300","1:00 PM"],["1800","6:00 PM"],["2000","8:00 PM"],["2359","11:59 PM"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Full Military Time Chart</h2>
+      <div class="overflow-x-auto">
+        <div class="grid grid-cols-4 md:grid-cols-6 gap-2">
+          {Array.from({length:24},(_,h) => (
+            <div class="bg-gray-50 rounded p-2 text-center">
+              <div class="font-mono font-bold text-blue-700 text-xs">{String(h).padStart(2,"0")}00</div>
+              <div class="text-xs text-gray-600">{h===0?"12:00 AM":h<12?h+":00 AM":h===12?"12:00 PM":(h-12)+":00 PM"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

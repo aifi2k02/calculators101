@@ -1,0 +1,209 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const weight = parseFloat(inputs.weight)
+  const height = parseFloat(inputs.height)
+  const age = parseInt(inputs.age)
+  const sex = inputs.sex
+  const unit = inputs.unit
+  if ([weight,height,age].some(v=>isNaN(v)||v<=0)) throw new Error('Enter valid weight, height, and age.')
+  const weightKg = unit==='imperial' ? weight*0.453592 : weight
+  const heightCm = unit==='imperial' ? height*2.54 : height
+  const mifflin = sex==='male'
+    ? 10*weightKg + 6.25*heightCm - 5*age + 5
+    : 10*weightKg + 6.25*heightCm - 5*age - 161
+  const harris = sex==='male'
+    ? 88.362 + 13.397*weightKg + 4.799*heightCm - 5.677*age
+    : 447.593 + 9.247*weightKg + 3.098*heightCm - 4.330*age
+  const avg = (mifflin + harris) / 2
+  return {
+    value: Math.round(mifflin) + ' cal/day',
+    stats: [
+      { label: 'Mifflin-St Jeor', value: Math.round(mifflin) + ' cal' },
+      { label: 'Harris-Benedict', value: Math.round(harris) + ' cal' },
+      { label: 'TDEE (Sedentary)', value: Math.round(mifflin*1.2) + ' cal' },
+      { label: 'TDEE (Moderate)', value: Math.round(mifflin*1.55) + ' cal' },
+      { label: 'TDEE (Very Active)', value: Math.round(mifflin*1.725) + ' cal' },
+    ],
+    breakdown: [
+      'Mifflin-St Jeor BMR: ' + Math.round(mifflin) + ' cal/day (recommended)',
+      'Harris-Benedict BMR: ' + Math.round(harris) + ' cal/day',
+      'Average of both: ' + Math.round(avg) + ' cal/day',
+      '—',
+      'Estimated TDEE by activity level:',
+      'Sedentary (×1.2): ' + Math.round(mifflin*1.2) + ' cal/day',
+      'Light activity (×1.375): ' + Math.round(mifflin*1.375) + ' cal/day',
+      'Moderate (×1.55): ' + Math.round(mifflin*1.55) + ' cal/day',
+      'Very active (×1.725): ' + Math.round(mifflin*1.725) + ' cal/day',
+      'Extra active (×1.9): ' + Math.round(mifflin*1.9) + ' cal/day',
+    ]
+  }
+`
+
+const gauge = {
+  min: 1000, max: 3000, unit: 'cal/day',
+  zones: [
+    { label: 'Low <1300', color: '#3b82f6', from: 1000, to: 1300 },
+    { label: 'Normal 1300-1800', color: '#22c55e', from: 1300, to: 1800 },
+    { label: 'High 1800-2300', color: '#f59e0b', from: 1800, to: 2300 },
+    { label: 'Very High 2300+', color: '#ef4444', from: 2300, to: 3000 },
+  ]
+}
+---
+<Layout
+  title="BMR Calculator: Basal Metabolic Rate (2 Formulas)"
+  description="Calculate your Basal Metabolic Rate using Mifflin-St Jeor and Harris-Benedict formulas. Get calories burned at rest and TDEE for every activity level."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"BMR Calculator",href:"/calculators/bmr-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <span class="text-gray-900">BMR Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="BMR Calculator"
+          description="Basal Metabolic Rate — calories burned at complete rest"
+          formulaId="bmr"
+          formulaFn={formulaFn}
+          resultLabel="BMR (Mifflin-St Jeor)"
+          inputs={[
+            { id: 'sex', label: 'Biological Sex', type: 'select', options: [{value:'male',label:'Male'},{value:'female',label:'Female'}], defaultValue: 'male' },
+            { id: 'unit', label: 'Units', type: 'select', options: [{value:'imperial',label:'Imperial (lbs, inches)'},{value:'metric',label:'Metric (kg, cm)'}], defaultValue: 'imperial' },
+            { id: 'weight', label: 'Weight', type: 'number', placeholder: '170', min: 1, step: 0.5, defaultValue: 170 },
+            { id: 'height', label: 'Height (in or cm)', type: 'number', placeholder: '70', min: 1, step: 0.5, defaultValue: 70 },
+            { id: 'age', label: 'Age', type: 'number', placeholder: '30', min: 15, max: 100, defaultValue: 30 },
+          ]}
+          gauge={gauge}
+          relatedCalcs={[
+            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'Caloric Deficit Calculator', href: '/calculators/caloric-deficit-calculator' },
+            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
+          ]}
+          faqs={[
+            { question: 'What is BMR?', answer: 'BMR (Basal Metabolic Rate) is the number of calories your body needs at complete rest to maintain vital functions — breathing, circulation, organ function, temperature regulation. It accounts for 60–70% of total calorie burn.' },
+            { question: 'Which BMR formula is most accurate?', answer: 'The Mifflin-St Jeor formula (1990) is the most accurate for most adults, validated by the Academy of Nutrition and Dietetics. The Harris-Benedict formula (1919, revised 1984) is slightly less accurate but widely used.' },
+            { question: 'How is BMR different from TDEE?', answer: 'BMR is calories at rest. TDEE (Total Daily Energy Expenditure) multiplies BMR by an activity factor (1.2–1.9) to account for exercise and daily movement. TDEE is what you actually need to eat to maintain your weight.' },
+            { question: 'Does muscle increase BMR?', answer: 'Yes. Muscle tissue burns ~6 calories per pound per day at rest, while fat burns ~2 calories per pound. Building muscle is the most effective long-term strategy for raising BMR — this is why strength training helps with fat loss maintenance.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">BMR vs TDEE at a Glance</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['BMR', '60–70% of TDEE', 'Calories at complete rest'],
+              ['NEAT', '15–30%', 'Daily movement, not exercise'],
+              ['EAT', '5–10%', 'Exercise calories'],
+              ['TEF', '8–10%', 'Digesting food'],
+            ].map(([label, pct, desc]) => (
+              <div class="px-4 py-2.5">
+                <div class="flex justify-between items-baseline">
+                  <span class="text-xs font-semibold text-gray-700">{label}</span>
+                  <span class="text-xs text-blue-600 font-medium">{pct}</span>
+                </div>
+                <p class="text-xs text-gray-500">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
+          <h3 class="font-semibold text-purple-900 text-sm mb-1">Mifflin-St Jeor Formula</h3>
+          <p class="text-xs text-purple-700 mb-2">Most accurate for non-athletes (1990)</p>
+          <p class="font-mono text-xs text-purple-800">Men: 10W + 6.25H − 5A + 5</p>
+          <p class="font-mono text-xs text-purple-800">Women: 10W + 6.25H − 5A − 161</p>
+          <p class="text-xs text-purple-600 mt-1">W = kg, H = cm, A = age</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">Typical BMR by Profile</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['Sedentary woman, 30', '~1,400 cal'],
+              ['Active woman, 30', '~1,550 cal'],
+              ['Sedentary man, 30', '~1,800 cal'],
+              ['Active man, 30', '~2,000 cal'],
+              ['Woman, 50', '~1,300 cal'],
+              ['Man, 50', '~1,650 cal'],
+            ].map(([p, c]) => (
+              <div class="px-4 py-2 flex justify-between text-xs">
+                <span class="text-gray-600">{p}</span>
+                <span class="font-semibold text-gray-800">{c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">What is BMR and Why Does It Matter?</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Your Basal Metabolic Rate (BMR) is the number of calories your body burns every day just to stay alive — even if you did absolutely nothing but lie in bed. It powers your heartbeat, breathing, brain activity, hormone production, and all cellular functions.</p>
+        <p class="text-gray-600 leading-relaxed">BMR is the foundation of all calorie calculations. Once you know your BMR, you can multiply it by your activity level to get your TDEE (Total Daily Energy Expenditure) — the actual number of calories you burn each day. From there, you can set precise targets for weight loss, maintenance, or muscle gain.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Mifflin-St Jeor vs Harris-Benedict: Which Is Better?</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
+            <thead class="bg-gray-50"><tr>
+              <th class="text-left px-4 py-3 font-semibold text-gray-700">Factor</th>
+              <th class="text-center px-4 py-3 font-semibold text-blue-700">Mifflin-St Jeor</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-700">Harris-Benedict</th>
+            </tr></thead>
+            <tbody>
+              {[
+                ['Year developed', '1990', '1919 (revised 1984)'],
+                ['Accuracy (vs indirect calorimetry)', '±10%', '±12–14%'],
+                ['Best for', 'Most non-athletic adults', 'General population'],
+                ['Endorsed by', 'Academy of Nutrition & Dietetics', 'Widely used historically'],
+                ['Recommendation', '✓ Use this one', 'Good secondary reference'],
+              ].map(([f, m, h], i) => (
+                <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td class="px-4 py-2.5 font-medium text-gray-700">{f}</td>
+                  <td class="px-4 py-2.5 text-center text-blue-700">{m}</td>
+                  <td class="px-4 py-2.5 text-center text-gray-600">{h}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">What Factors Affect Your BMR?</h2>
+        <div class="grid sm:grid-cols-2 gap-3">
+          {[
+            ['Age', 'BMR decreases roughly 2% per decade after age 20 as muscle mass naturally declines (sarcopenia).'],
+            ['Sex', 'Men typically have 5–10% higher BMR than women of the same weight and height due to greater muscle mass.'],
+            ['Body composition', 'Muscle burns ~3× more calories at rest than fat. Two people with the same weight but different body fat % have very different BMRs.'],
+            ['Height', 'Taller people have more surface area and more tissue to maintain, so BMR scales with height.'],
+            ['Hormones', 'Thyroid hormones (T3/T4) directly regulate metabolic rate. Hypothyroidism lowers BMR; hyperthyroidism raises it.'],
+            ['Genetics', 'Genetic variation in metabolic rate can account for ±200–400 cal/day between individuals of similar size.'],
+          ].map(([title, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="font-semibold text-gray-800 text-sm mb-1">{title}</p>
+              <p class="text-xs text-gray-600 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How to Use BMR for Weight Loss</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Your BMR sets the floor — you should never eat below your BMR for extended periods, as this can trigger metabolic adaptation (your body lowering its metabolic rate to match your intake). This is why crash diets often backfire.</p>
+        <p class="text-gray-600 leading-relaxed">The correct approach: calculate TDEE from your BMR (use the <a href="/calculators/tdee-calculator" class="text-blue-600 hover:underline">TDEE Calculator</a>), then create a moderate deficit of 15–25% below TDEE. This preserves muscle, keeps energy levels up, and produces sustainable fat loss of 0.5–1 lb per week.</p>
+      </section>
+    </div>
+  </div>
+</Layout>

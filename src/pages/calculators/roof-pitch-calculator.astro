@@ -1,0 +1,121 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const rise = parseFloat(inputs.rise)||0
+  const run = parseFloat(inputs.run)||12
+  if(rise<0) throw new Error("Rise must be non-negative.")
+  if(run<=0) throw new Error("Run must be positive.")
+  const pitch = rise/run
+  const angleDeg = Math.atan(pitch)*180/Math.PI
+  const rafterFactor = Math.sqrt(rise*rise+run*run)/run
+  const exampleRoofRun = parseFloat(inputs.roofRun)||20
+  const rafterLength = exampleRoofRun*rafterFactor
+  const areaMultiplier = rafterFactor
+  const commonPitches=[[3,12],[4,12],[6,12],[8,12],[12,12]]
+  return {
+    value:rise+"/12 pitch | "+angleDeg.toFixed(2)+"° angle",
+    gaugeValue:Math.min(angleDeg/45*100,100),
+    breakdown:["Pitch: "+rise+"/"+run+" ("+rise+"-in-12 notation: "+rise*(12/run).toFixed(2)+"/12)","Angle: "+angleDeg.toFixed(4)+" degrees","Slope %: "+(pitch*100).toFixed(2)+"%","Rafter factor: "+rafterFactor.toFixed(4)+" (multiply horizontal run by this)","Rafter for "+exampleRoofRun+"ft run: "+rafterLength.toFixed(2)+" ft","Area multiplier: "+areaMultiplier.toFixed(4)+"× flat area"],
+    stats:[
+      {label:"Pitch",value:rise*(12/run).toFixed(1)+"/12"},
+      {label:"Angle",value:angleDeg.toFixed(2)+"°"},
+      {label:"Rafter Factor",value:rafterFactor.toFixed(4)},
+      {label:"Rafter Length",value:rafterLength.toFixed(2)+" ft"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is roof pitch and how is it expressed?", answer: "Roof pitch is the slope of a roof expressed as rise over run. Standard notation: X/12 where X is how many inches the roof rises for every 12 inches of horizontal run. A 6/12 pitch rises 6 inches for every foot of run. It is equivalent to 26.6 degrees and is one of the most common residential pitches." },
+  { question: "What is the minimum and maximum roof pitch?", answer: "Minimum for asphalt shingles: 2/12 (with underlayment). Flat roofs: 1/4:12 to 1/2:12 (uses membrane, not shingles). Common residential: 4/12 to 9/12. Steep: 9/12 to 12/12. Extra steep or mansard: above 12/12. Low-pitch roofs need more waterproofing attention; steep roofs shed water better but cost more to build." },
+  { question: "How do I calculate rafter length?", answer: "Rafter length = horizontal run × rafter factor. Rafter factor = sqrt(rise² + run²) / run. For 6/12 pitch: factor = sqrt(36+144)/12 = sqrt(180)/12 = 1.118. If roof run is 20 feet: rafter length = 20 × 1.118 = 22.36 feet. Add overhang/eave length and ridge board deduction for actual cut length." },
+  { question: "How does roof pitch affect material quantities?", answer: "Higher pitch = more surface area = more materials. Multiply the flat footprint area by the rafter factor to get actual roof area. For a 6/12 pitch, factor = 1.118: a 2,000 sq ft footprint needs 2,000 × 1.118 = 2,236 sq ft of roofing. Steeper roofs also require more care and labor, increasing cost." },
+  { question: "What roof pitch is best for my climate?", answer: "Steep pitch (8/12+): heavy snow loads (steep sheds snow faster). High rainfall areas: 4/12+ for good runoff. Hot dry climates: lower pitch acceptable since rainfall is rare. Hurricane/wind: lower pitch with proper fasteners — steep roofs catch more wind. Architectural preference and HOA rules also affect pitch choice." }
+]
+---
+<Layout
+  title="Roof Pitch Calculator: Angle, Rise, Run & Rafter Length"
+  description="Calculate roof pitch (slope), angle in degrees, rafter length, and roof area multiplier from rise and run. Free roof pitch calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Roof Pitch Calculator", href: "/calculators/roof-pitch-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Roof Pitch Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Roof Pitch Calculator"
+          description="Calculate roof pitch angle, rafter length, and area multiplier"
+          formulaId="roof-pitch"
+          formulaFn={formulaFn}
+          resultLabel="Pitch"
+          inputs={[
+            {id:"rise",label:"Rise (inches, for 12 inches of run)",type:"number",placeholder:"6",min:0,step:0.5,defaultValue:6},
+            {id:"run",label:"Run (usually 12 for standard notation)",type:"number",placeholder:"12",min:1,step:1,defaultValue:12},
+            {id:"roofRun",label:"Horizontal roof run (ft, for rafter length calculation)",type:"number",placeholder:"20",min:0,step:0.5,defaultValue:20}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Low pitch (0-3/12)", color: "#22c55e", from: 0, to: 25 },
+              { label: "Common (4-6/12)", color: "#3b82f6", from: 25, to: 50 },
+              { label: "Steep (7-12/12)", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Concrete Calculator", href: "/calculators/concrete-calculator" },
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Paint Calculator", href: "/calculators/paint-calculator" },
+            { name: "Angle Converter", href: "/calculators/angle-converter-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common Pitches</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left">Pitch</th><th class="text-right">Angle</th><th class="text-right">Factor</th></tr></thead>
+            <tbody class="text-blue-900 font-mono">
+              {[["2/12","9.5°","1.014"],["4/12","18.4°","1.054"],["6/12","26.6°","1.118"],["8/12","33.7°","1.202"],["12/12","45.0°","1.414"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Minimum Slope by Material</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Roofing Material</th><th class="p-2 text-xs font-semibold text-right">Min Pitch</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Built-up (flat roof)","1/4:12"],["Modified bitumen","1/2:12 to 1:12"],["Metal standing seam","1/4:12"],["Clay/concrete tile","2.5:12"],["Asphalt shingles","2:12 (w/ice barrier)"],["Wood shingles","3:12"],["Slate","4:12"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Roof Pitch Tips</h2>
+        <div class="space-y-2">
+          {["Standard notation: rise/12 (e.g., 6/12 means 6 inches per foot)","Use a level and tape measure: hold 12in level horizontally at roof, measure rise","Rafter factor × horizontal run = rafter length (before overhang)","Area multiplier × flat footprint = actual shingle area needed","Add 10-15% waste to material estimates for cutting","Steep pitches need extra safety equipment for installation"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

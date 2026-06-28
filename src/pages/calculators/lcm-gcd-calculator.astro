@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const a = parseInt(inputs.a)||0
+  const b = parseInt(inputs.b)||0
+  const c = parseInt(inputs.c)||0
+  if(a<=0||b<=0) throw new Error("Enter at least two positive integers.")
+  const gcd = (x,y) => y===0?x:gcd(y,x%y)
+  const lcm = (x,y) => x/gcd(x,y)*y
+  const primeFactors = n => {
+    const factors=[]
+    let d=2
+    while(d*d<=n){while(n%d===0){factors.push(d);n=Math.floor(n/d)}d++}
+    if(n>1) factors.push(n)
+    return factors
+  }
+  const numbers = c>0?[a,b,c]:[a,b]
+  const overallGcd = numbers.reduce(gcd)
+  const overallLcm = numbers.reduce(lcm)
+  const factA = primeFactors(a).join(" × ")||String(a)
+  const factB = primeFactors(b).join(" × ")||String(b)
+  return {
+    value:"GCD="+overallGcd+" | LCM="+overallLcm,
+    gaugeValue:Math.min(overallGcd/Math.min(a,b)*100,100),
+    breakdown:["Numbers: "+numbers.join(", "),"GCD (HCF): "+overallGcd,"LCM: "+overallLcm,"GCD × LCM = "+overallGcd*overallLcm+" = a×b = "+a*b,a+": "+factA,b+": "+factB],
+    stats:[
+      {label:"GCD / HCF",value:String(overallGcd)},
+      {label:"LCM",value:String(overallLcm)},
+      {label:"GCD × LCM",value:String(overallGcd*overallLcm)},
+      {label:"a × b",value:String(a*b)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is GCD (Greatest Common Divisor)?", answer: "The GCD (also called HCF — Highest Common Factor) is the largest number that divides all given numbers evenly. GCD(12, 18) = 6 because 6 is the largest number that divides both 12 and 18. Use the Euclidean algorithm: GCD(18,12) = GCD(12,6) = GCD(6,0) = 6." },
+  { question: "What is LCM (Least Common Multiple)?", answer: "The LCM is the smallest positive integer that is divisible by all given numbers. LCM(4, 6) = 12 because 12 is the smallest number that both 4 and 6 divide into evenly. Key relationship: LCM(a,b) = a × b / GCD(a,b)." },
+  { question: "How do I find LCM using prime factorization?", answer: "Example: LCM(12, 18). 12 = 2^2 × 3. 18 = 2 × 3^2. LCM = take highest power of each prime: 2^2 × 3^2 = 4 × 9 = 36. GCD = take lowest power of each prime: 2^1 × 3^1 = 6. This method works for any number of inputs." },
+  { question: "What are GCD and LCM used for?", answer: "GCD: simplifying fractions (divide numerator and denominator by GCD), finding common units, RSA cryptography. LCM: finding common denominators when adding fractions (1/4 + 1/6: LCD = LCM(4,6) = 12), scheduling repeating events, gear ratios." },
+  { question: "What does it mean for two numbers to be coprime?", answer: "Two numbers are coprime (relatively prime) if their GCD = 1. Examples: 8 and 9 (GCD=1), 14 and 15 (GCD=1). Coprime numbers have no common prime factors. Consecutive integers are always coprime. Coprimality is important in fractions, modular arithmetic, and cryptography." }
+]
+---
+<Layout
+  title="LCM and GCD Calculator: Least Common Multiple & Greatest Common Divisor"
+  description="Find the LCM (least common multiple) and GCD (greatest common divisor/HCF) of two or more numbers. Shows prime factorization. Free LCM GCD calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "LCM & GCD Calculator", href: "/calculators/lcm-gcd-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">LCM & GCD Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="LCM & GCD Calculator"
+          description="Find GCD and LCM with prime factorization"
+          formulaId="lcm-gcd"
+          formulaFn={formulaFn}
+          resultLabel="GCD & LCM"
+          inputs={[
+            {id:"a",label:"First number",type:"number",placeholder:"12",min:1,step:1,defaultValue:12},
+            {id:"b",label:"Second number",type:"number",placeholder:"18",min:1,step:1,defaultValue:18},
+            {id:"c",label:"Third number (optional)",type:"number",placeholder:"0",min:0,step:1,defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Coprime (GCD=1)", color: "#ef4444", from: 0, to: 5 },
+              { label: "Partial factor", color: "#f59e0b", from: 5, to: 50 },
+              { label: "Strong factor", color: "#22c55e", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Modulo Calculator", href: "/calculators/modulo-calculator" },
+            { name: "Prime Number Calculator", href: "/calculators/prime-calculator" },
+            { name: "Fraction Calculator", href: "/calculators/fraction-calculator" },
+            { name: "Combination Calculator", href: "/calculators/combination-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Key Formulas</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-2">
+            <div>LCM(a,b) = a × b / GCD(a,b)</div>
+            <div>GCD via Euclidean Algorithm:</div>
+            <div>GCD(a,b) = GCD(b, a mod b)</div>
+            <div>Until b=0, then GCD = a</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Euclidean Algorithm Example</h2>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <div class="text-xs font-semibold text-gray-700 mb-2">GCD(48, 18) step by step:</div>
+          <div class="text-xs text-gray-600 font-mono space-y-1">
+            <div>GCD(48, 18): 48 = 2×18 + 12 → GCD(18, 12)</div>
+            <div>GCD(18, 12): 18 = 1×12 + 6 → GCD(12, 6)</div>
+            <div>GCD(12, 6): 12 = 2×6 + 0 → GCD = 6</div>
+            <div class="mt-2 font-semibold text-blue-700">GCD(48,18) = 6</div>
+            <div class="font-semibold text-blue-700">LCM(48,18) = 48×18/6 = 144</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Examples</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">a, b</th><th class="p-2 text-xs font-semibold text-right">GCD</th><th class="p-2 text-xs font-semibold text-right">LCM</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["6, 9",3,18],["8, 12",4,24],["14, 21",7,42],["15, 25",5,75],["17, 13",1,221]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td><td class="p-2 text-xs text-right font-medium">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

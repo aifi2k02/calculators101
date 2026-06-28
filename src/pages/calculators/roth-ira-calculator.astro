@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const annual = parseFloat(inputs.annual)||7000
+  const currentBalance = parseFloat(inputs.currentBalance)||0
+  const rate = parseFloat(inputs.rate)||7
+  const years = parseInt(inputs.years)||30
+  const taxRate = parseFloat(inputs.taxRate)||22
+  if(years<=0) throw new Error("Enter years.")
+  const r=rate/100/12, n=years*12
+  const fvContrib = annual*(Math.pow(1+r,n)-1)/r/12
+  const fvBalance = currentBalance*Math.pow(1+r,n)
+  const totalFV = fvContrib+fvBalance
+  const totalContrib = annual*years+currentBalance
+  const gains = totalFV-totalContrib
+  const taxSaved = gains*(taxRate/100)
+  const traditionalAfterTax = totalFV*(1-taxRate/100)
+  return {
+    value:"$"+totalFV.toLocaleString("en-US",{maximumFractionDigits:0})+" tax-free",
+    gaugeValue:Math.min(totalFV/1000000*100,100),
+    breakdown:["Annual contribution: $"+annual,"Years: "+years,"Rate: "+rate+"%","Total contributed: $"+totalContrib.toLocaleString("en-US",{maximumFractionDigits:0}),"Tax-free gains: $"+gains.toLocaleString("en-US",{maximumFractionDigits:0}),"Tax savings vs taxable: $"+taxSaved.toLocaleString("en-US",{maximumFractionDigits:0}),"Final tax-free balance: $"+totalFV.toLocaleString("en-US",{maximumFractionDigits:0})],
+    stats:[
+      {label:"Final Balance (Tax-Free)",value:"$"+totalFV.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Total Contributed",value:"$"+totalContrib.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Tax-Free Gains",value:"$"+gains.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Tax Savings",value:"$"+taxSaved.toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What makes the Roth IRA special?", answer: "Contributions are made with after-tax dollars, but all growth and qualified withdrawals are completely tax-free. No required minimum distributions (RMDs) in retirement. This makes Roth IRAs ideal if you expect to be in a higher tax bracket in retirement, or if you want tax flexibility." },
+  { question: "What are the 2025 Roth IRA contribution limits?", answer: "$7,000 per person ($8,000 if age 50+). However, income limits apply. Single: full contribution under $150,000 MAGI, phases out to $165,000. Married jointly: full under $236,000, phases out to $246,000. Over these limits: consider the backdoor Roth strategy." },
+  { question: "Roth IRA vs Traditional IRA: which is better?", answer: "Roth: pay taxes now, withdraw tax-free later. Best if you expect higher taxes in retirement or are in a low bracket now. Traditional: deduct now, pay taxes later. Best if you expect lower taxes in retirement or need the deduction now. Both are valuable — many financial advisors recommend contributing to both for tax diversification." },
+  { question: "What is the backdoor Roth IRA?", answer: "If your income exceeds Roth IRA limits, you can contribute to a non-deductible traditional IRA (no income limits) and immediately convert it to a Roth IRA. This is legal and widely used. Beware the pro-rata rule if you have other traditional IRA balances — consult a tax advisor." },
+  { question: "When can I withdraw from a Roth IRA?", answer: "Contributions (not earnings) can be withdrawn any time, tax-free and penalty-free — they were already taxed. Earnings can be withdrawn tax-free and penalty-free after age 59.5 AND the account is 5+ years old. The flexibility to access contributions without penalty is an advantage over 401(k)s." }
+]
+---
+<Layout
+  title="Roth IRA Calculator: Tax-Free Retirement Growth"
+  description="Calculate how much your Roth IRA will grow tax-free by retirement. Compare Roth vs traditional IRA. Free Roth IRA calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Roth IRA Calculator", href: "/calculators/roth-ira-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Roth IRA Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Roth IRA Calculator"
+          description="Calculate your Roth IRA tax-free growth and compare Roth vs traditional"
+          formulaId="roth-ira"
+          formulaFn={formulaFn}
+          resultLabel="Tax-Free Balance at Retirement"
+          inputs={[
+            {id:"annual",label:"Annual Roth IRA Contribution",type:"number",placeholder:"7000",min:0,max:8000,unit:"$",defaultValue:7000},
+            {id:"currentBalance",label:"Current Roth IRA Balance",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"rate",label:"Expected Annual Return",type:"number",placeholder:"7",min:0,max:20,step:0.5,unit:"%",defaultValue:7},
+            {id:"years",label:"Years Until Retirement",type:"number",placeholder:"30",min:1,max:50,unit:"years",defaultValue:30},
+            {id:"taxRate",label:"Expected Tax Rate in Retirement",type:"number",placeholder:"22",min:0,max:50,step:1,unit:"%",defaultValue:22}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% to $1M",
+            zones: [
+              { label: "Under $250k", color: "#f59e0b", from: 0, to: 25 },
+              { label: "$250k–$500k", color: "#3b82f6", from: 25, to: 50 },
+              { label: "$500k–$1M", color: "#22c55e", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "401k Calculator", href: "/calculators/401k-calculator" },
+            { name: "Retirement Calculator", href: "/calculators/retirement-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "FIRE Calculator", href: "/calculators/fire-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-3">2025 Roth IRA Limits</h3>
+          <div class="space-y-1 text-xs text-green-800">
+            {[["Contribution (under 50)","$7,000"],["Contribution (50+)","$8,000"],["Phase-out starts (single)","$150,000 MAGI"],["Phase-out ends (single)","$165,000 MAGI"],["Phase-out starts (MFJ)","$236,000 MAGI"],["Phase-out ends (MFJ)","$246,000 MAGI"]].map(([k,v]) => (
+              <div class="flex justify-between border-b border-green-100 pb-1"><span>{k}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Roth IRA Growth — Max Contribution</h2>
+        <p class="text-xs text-gray-600 mb-3">$7,000/year, 7% return, starting from $0:</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Years</th><th class="text-right p-2 text-xs font-semibold">Contributed</th><th class="text-right p-2 text-xs font-semibold">Balance (Tax-Free)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["10","$70k","$97k"],["20","$140k","$288k"],["30","$210k","$661k"],["40","$280k","$1.48M"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-green-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Roth vs Traditional IRA Comparison</h2>
+        <div class="space-y-2">
+          {[
+            {factor:"Tax on contributions",roth:"After-tax (no deduction)",trad:"Pre-tax (deductible if eligible)"},
+            {factor:"Tax on withdrawals",roth:"Tax-free",trad:"Taxed as ordinary income"},
+            {factor:"Required withdrawals (RMDs)",roth:"None",trad:"Required at age 73"},
+            {factor:"Early withdrawal",roth:"Contributions anytime (free)",trad:"10% penalty + taxes before 59.5"},
+            {factor:"Best for",roth:"Lower bracket now, higher later",trad:"Higher bracket now, lower later"},
+          ].map(f => (
+            <div class="bg-gray-50 rounded-lg p-2.5 text-xs">
+              <div class="font-semibold text-gray-800 mb-1">{f.factor}</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="text-green-700"><span class="font-medium">Roth:</span> {f.roth}</div>
+                <div class="text-blue-700"><span class="font-medium">Trad:</span> {f.trad}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

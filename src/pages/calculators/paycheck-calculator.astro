@@ -1,0 +1,146 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const gross = parseFloat(inputs.gross)||0
+  const freq = inputs.freq||"biweekly"
+  const filing = inputs.filing||"single"
+  const allowances = parseInt(inputs.allowances)||1
+  const stateRate = parseFloat(inputs.stateRate)||5
+  const k401 = parseFloat(inputs.k401)||0
+  if(gross<=0) throw new Error("Enter gross pay.")
+  const perPaycheck = gross
+  const annual = freq==="weekly"?gross*52:freq==="biweekly"?gross*26:freq==="semimonthly"?gross*24:gross*12
+  const pre401k = perPaycheck*(k401/100)
+  const taxableGross = perPaycheck-pre401k
+  const annualTaxable = annual-annual*(k401/100)
+  const stdDed = filing==="married"?30000:15000
+  const federalTaxable = Math.max(0,annualTaxable-stdDed)
+  const brackets = filing==="married"
+    ?[[0,23200,0.10],[23200,94300,0.12],[94300,201050,0.22],[201050,383900,0.24],[383900,487450,0.32],[487450,731200,0.35],[731200,Infinity,0.37]]
+    :[[0,11600,0.10],[11600,47150,0.12],[47150,100525,0.22],[100525,191950,0.24],[191950,243725,0.32],[243725,609350,0.35],[609350,Infinity,0.37]]
+  let annualFed=0, rem=federalTaxable
+  for(const [lo,hi,r] of brackets){
+    if(rem<=0) break
+    const t=Math.min(rem,(hi===Infinity?rem:hi)-lo)
+    annualFed+=t*r; rem-=t
+  }
+  const periods = freq==="weekly"?52:freq==="biweekly"?26:freq==="semimonthly"?24:12
+  const federalWithholding = annualFed/periods
+  const fica = taxableGross*0.0765
+  const medicare = taxableGross*0.0145
+  const socialSecurity = taxableGross*0.062
+  const state = taxableGross*(stateRate/100)
+  const totalDeductions = pre401k+federalWithholding+fica+state
+  const netPay = perPaycheck-totalDeductions
+  return {
+    value:"$"+netPay.toFixed(2)+"/paycheck",
+    gaugeValue:(netPay/perPaycheck)*100,
+    breakdown:["Gross pay: $"+perPaycheck.toFixed(2),"Federal tax: $"+federalWithholding.toFixed(2),"Social Security: $"+socialSecurity.toFixed(2),"Medicare: $"+medicare.toFixed(2),"State tax: $"+state.toFixed(2),"401k contrib: $"+pre401k.toFixed(2),"Take-home: $"+netPay.toFixed(2)],
+    stats:[
+      {label:"Take-Home Pay",value:"$"+netPay.toFixed(2)},
+      {label:"Federal Tax",value:"$"+federalWithholding.toFixed(2)},
+      {label:"FICA (SS+Medicare)",value:"$"+fica.toFixed(2)},
+      {label:"State Tax",value:"$"+state.toFixed(2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What deductions come out of a paycheck?", answer: "Federal income tax (based on brackets and W-4), Social Security tax (6.2% up to $176,100 wage base in 2025), Medicare tax (1.45%), state income tax (0-13% depending on state), local taxes (in some cities), and voluntary deductions like 401k, health insurance, FSA/HSA contributions." },
+  { question: "How much should I expect in federal withholding?", answer: "It depends on your income and W-4 allowances. At $78k/year (single): ~$7,000 federal tax annually ($269/biweekly paycheck). At $100k/year: ~$13,000 annually ($500/biweekly). Submit a new W-4 if your life circumstances change — marriage, children, second job — to avoid under- or over-withholding." },
+  { question: "What is FICA and how much is it?", answer: "FICA = Federal Insurance Contributions Act. It covers Social Security (6.2%) + Medicare (1.45%) = 7.65% of your gross pay. Your employer pays a matching 7.65%. For self-employed, you pay both halves (15.3%) as self-employment tax. Social Security only applies up to $176,100 in wages (2025)." },
+  { question: "Why is my take-home pay different from what I calculated?", answer: "Possible reasons: employer-paid health, dental, vision premiums deducted pre-tax. HSA or FSA contributions. Union dues. Garnishments. Local/city taxes. Life insurance. Rounding in withholding tables. Your employer may also be withholding extra if you requested it on your W-4 to avoid underpayment." },
+  { question: "How do I get a bigger paycheck?", answer: "Increase 401k contributions (reduces taxable income now). Contribute to FSA/HSA (pre-tax). Ensure W-4 reflects correct filing status and dependents. If you consistently get a large tax refund, you are over-withholding — adjust W-4 to increase take-home pay throughout the year instead." }
+]
+---
+<Layout
+  title="Paycheck Calculator: Take-Home Pay After Taxes"
+  description="Calculate your take-home pay after federal taxes, Social Security, Medicare, and state taxes. Free paycheck calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Paycheck Calculator", href: "/calculators/paycheck-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Paycheck Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Paycheck Calculator"
+          description="Calculate your net paycheck after all taxes and deductions"
+          formulaId="paycheck"
+          formulaFn={formulaFn}
+          resultLabel="Take-Home Pay"
+          inputs={[
+            {id:"gross",label:"Gross Pay Per Paycheck",type:"number",placeholder:"3000",min:0,unit:"$",defaultValue:3000},
+            {id:"freq",label:"Pay Frequency",type:"select",options:[{value:"weekly",label:"Weekly (52x)"},{value:"biweekly",label:"Bi-weekly (26x)"},{value:"semimonthly",label:"Semi-monthly (24x)"},{value:"monthly",label:"Monthly (12x)"}],defaultValue:"biweekly"},
+            {id:"filing",label:"Federal Filing Status",type:"select",options:[{value:"single",label:"Single"},{value:"married",label:"Married Filing Jointly"}],defaultValue:"single"},
+            {id:"k401",label:"401(k) Contribution %",type:"number",placeholder:"5",min:0,max:50,step:0.5,unit:"%",defaultValue:5},
+            {id:"stateRate",label:"State Income Tax Rate",type:"number",placeholder:"5",min:0,max:15,step:0.1,unit:"%",defaultValue:5}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% take-home",
+            zones: [
+              { label: "Under 60% take-home", color: "#ef4444", from: 0, to: 60 },
+              { label: "60-70% take-home", color: "#f59e0b", from: 60, to: 70 },
+              { label: "70-80% take-home", color: "#3b82f6", from: 70, to: 80 },
+              { label: "80%+ take-home", color: "#22c55e", from: 80, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Income Tax Calculator", href: "/calculators/income-tax-calculator" },
+            { name: "Salary Calculator", href: "/calculators/salary-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+            { name: "401k Calculator", href: "/calculators/401k-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Paycheck Deduction Summary</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Federal income tax","Based on brackets"],["Social Security","6.2% (up to $176,100)"],["Medicare","1.45% (no limit)"],["State income tax","0–13%"],["401(k) contribution","Your elected %"]].map(([item,rate]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{item}</span><span class="font-medium">{rate}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Take-Home Pay by Salary (Single, Biweekly)</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Annual Salary</th><th class="text-right p-2 text-xs font-semibold">Gross/Check</th><th class="text-right p-2 text-xs font-semibold">Take-Home</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["$50,000","$1,923","~$1,450"],["$75,000","$2,885","~$2,100"],["$100,000","$3,846","~$2,700"],["$150,000","$5,769","~$3,800"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-green-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Approximate. Assumes 5% state tax, no 401k, standard deduction.</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">States With No Income Tax</h2>
+        <div class="bg-green-50 rounded-xl p-4 text-xs text-green-800">
+          <p class="font-semibold mb-2">No state income tax (as of 2025):</p>
+          <div class="grid grid-cols-2 gap-1">
+            {["Alaska","Florida","Nevada","New Hampshire","South Dakota","Tennessee","Texas","Washington","Wyoming"].map(s => (
+              <div class="flex items-center gap-1"><span class="text-green-500">✓</span>{s}</div>
+            ))}
+          </div>
+          <p class="mt-2 text-green-700">Moving to a no-tax state on $100k salary saves ~$3,000-6,000/year vs. high-tax states.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

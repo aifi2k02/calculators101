@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const targetDate = inputs.targetDate||""
+  const mode = inputs.mode||"calendar"
+  if(!targetDate) throw new Error("Enter a target date.")
+  const target = new Date(targetDate+"T00:00:00")
+  const today = new Date(); today.setHours(0,0,0,0)
+  if(isNaN(target.getTime())) throw new Error("Invalid date format.")
+  const diffMs = target-today
+  const diffDays = Math.ceil(diffMs/(1000*60*60*24))
+  const absDays = Math.abs(diffDays)
+  const weeks = Math.floor(absDays/7)
+  const remDays = absDays%7
+  const months = Math.floor(absDays/30.44)
+  const isPast = diffDays<0
+  const label = isPast?"days since (past)":"days until"
+  let businessDays=0
+  const step=isPast?-1:1
+  let d=new Date(today)
+  for(let i=0;i<absDays;i++){
+    d.setDate(d.getDate()+step)
+    const dow=d.getDay()
+    if(dow!==0&&dow!==6) businessDays++
+  }
+  return {
+    value:absDays+" "+label+" "+targetDate,
+    gaugeValue:Math.min(absDays/365*100,100),
+    breakdown:[(isPast?"Past: "+absDays+" days ago":"Future: "+absDays+" days away"),"Business days: "+businessDays,"Weeks: "+weeks+" weeks + "+remDays+" days","Months (approx): "+months,"Date: "+target.toDateString()],
+    stats:[
+      {label:"Calendar Days",value:absDays+(isPast?" (past)":" (future)")},
+      {label:"Business Days",value:String(businessDays)},
+      {label:"Weeks + Days",value:weeks+"w "+remDays+"d"},
+      {label:"Months (approx)",value:String(months)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I count days between two dates?", answer: "Subtract the earlier date from the later date in milliseconds, then divide by 86,400,000 (ms per day). In most spreadsheets (Excel, Google Sheets), simply subtract two date cells: =B1-A1 and format as a number. This calculator does that automatically, including business day calculation." },
+  { question: "How many business days are there per month?", answer: "On average, 21-22 business days per month (Monday-Friday, excluding weekends). A standard work year has 260-261 business days (before holidays). A month with exactly 4 weeks has 20 business days. Many months have 22, and some 23. This calculator counts exact business days to your target date." },
+  { question: "What are the biggest upcoming holidays?", answer: "Major US holidays: New Year (Jan 1), Martin Luther King Jr Day (3rd Mon in Jan), Presidents Day (3rd Mon in Feb), Memorial Day (last Mon in May), Independence Day (Jul 4), Labor Day (1st Mon in Sep), Thanksgiving (4th Thu in Nov), Christmas (Dec 25). This calculator counts all calendar days — subtract your holidays for net business days." },
+  { question: "How do I calculate a project deadline?", answer: "Add business days to the start date. For agile sprints: count 10 business days (2 weeks) forward. For legal deadlines: use calendar days unless the rule specifies business days. For contracts: watch for terms like working days, business days, or calendar days as they lead to very different dates." },
+  { question: "What is a Julian Day Number?", answer: "The Julian Day Number (JDN) is a continuous count of days from January 1, 4713 BC (Julian calendar). Jan 1, 2000 = JDN 2,451,545. Astronomers use it for date arithmetic across calendar systems. Modern Modified Julian Date (MJD) = JDN - 2,400,000.5, starting Nov 17, 1858." }
+]
+---
+<Layout
+  title="Days Until Calculator: Countdown Days to Any Date"
+  description="Calculate days until any event or date. Count business days, weeks, and months to deadlines, holidays, or special events. Free days until calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Days Until Calculator", href: "/calculators/days-until-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Days Until Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Days Until Calculator"
+          description="Calculate how many days until or since any date"
+          formulaId="days-until"
+          formulaFn={formulaFn}
+          resultLabel="Days"
+          inputs={[
+            {id:"targetDate",label:"Target date",type:"date",defaultValue:"2025-12-25"},
+            {id:"mode",label:"Count type",type:"select",options:[
+              {value:"calendar",label:"Calendar days"},
+              {value:"business",label:"Business days only"},
+            ],defaultValue:"calendar"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "days",
+            zones: [
+              { label: "< 1 week", color: "#22c55e", from: 0, to: 2 },
+              { label: "1-4 weeks", color: "#3b82f6", from: 2, to: 11 },
+              { label: "1-3 months", color: "#f59e0b", from: 11, to: 25 },
+              { label: "3+ months", color: "#ef4444", from: 25, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+            { name: "Date Calculator", href: "/calculators/date-calculator" },
+            { name: "Retirement Calculator", href: "/calculators/retirement-calculator" },
+            { name: "Days Until Calculator", href: "/calculators/days-until-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common Countdowns</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>New Year Jan 1</div>
+            <div>Valentine Feb 14</div>
+            <div>Easter (varies)</div>
+            <div>Independence Day Jul 4</div>
+            <div>Halloween Oct 31</div>
+            <div>Thanksgiving 4th Thu Nov</div>
+            <div>Christmas Dec 25</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Time Units Reference</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Unit</th><th class="p-2 text-xs font-semibold text-right">Days</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["1 week","7"],["2 weeks","14"],["1 month (avg)","30.44"],["1 quarter","91"],["1 year","365"],["1 leap year","366"],["Business days/year","~261"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Project Planning Tips</h2>
+        <div class="space-y-2">
+          {["Always add buffer — projects take ~1.5x longer than estimated","Convert deadline to calendar days, then subtract weekends and holidays","Agile sprints: 2 weeks = 10 business days","Legal deadlines: check if days means calendar or business days","Month-end deadlines: watch Feb 28/29 — not all months have 30 or 31 days","Daylight Saving Time changes can affect 24-hour countdowns"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

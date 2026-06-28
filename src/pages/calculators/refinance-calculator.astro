@@ -1,0 +1,118 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const currentBalance = parseFloat(inputs.currentBalance)||0
+  const currentRate = parseFloat(inputs.currentRate)||7
+  const currentPayment = parseFloat(inputs.currentPayment)||0
+  const newRate = parseFloat(inputs.newRate)||6
+  const term = parseInt(inputs.term)||30
+  const closingCosts = parseFloat(inputs.closingCosts)||5000
+  if(currentBalance<=0) throw new Error("Enter remaining loan balance.")
+  const r=newRate/100/12, n=term*12
+  const newPayment = currentBalance*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1)
+  const cp = currentPayment||currentBalance*(currentRate/100/12)
+  const monthlySavings = cp-newPayment
+  const breakEvenMonths = monthlySavings>0?Math.ceil(closingCosts/monthlySavings):Infinity
+  const beYears=Math.floor(breakEvenMonths/12), beMo=breakEvenMonths%12
+  const lifetimeSavings = monthlySavings*n-closingCosts
+  return {
+    value:"$"+monthlySavings.toFixed(2)+"/mo savings",
+    gaugeValue:Math.min(monthlySavings/500*100,100),
+    breakdown:["New monthly payment: $"+newPayment.toFixed(2),"Monthly savings: $"+monthlySavings.toFixed(2),"Closing costs: $"+closingCosts,"Break-even: "+beYears+"y "+beMo+"mo","Lifetime savings: $"+lifetimeSavings.toLocaleString("en-US",{maximumFractionDigits:0})],
+    stats:[
+      {label:"Monthly Savings",value:"$"+monthlySavings.toFixed(2)},
+      {label:"New Payment",value:"$"+newPayment.toFixed(2)},
+      {label:"Break-Even",value:beYears+"y "+beMo+"mo"},
+      {label:"Lifetime Net Savings",value:"$"+lifetimeSavings.toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "When does it make sense to refinance?", answer: "Key factors: 1) Rate reduction: at least 0.5-1% lower rate typically needed. 2) Break-even period: under 3-5 years ideally — if you sell or move before break-even, you lose money on closing costs. 3) Time remaining: refinancing deep into a loan may not make sense (most interest already paid in early years)." },
+  { question: "What are typical refinancing closing costs?", answer: "Usually 2-5% of the loan amount: $4,000-$14,000 on a $280k loan. Includes: origination fee (0.5-1%), appraisal ($300-500), title insurance ($700-2,000), attorney fees, recording fees, and prepaid items (insurance, taxes). Some lenders offer no-closing-cost refis with slightly higher rates." },
+  { question: "What is a no-closing-cost refinance?", answer: "The lender pays closing costs in exchange for a higher interest rate (usually 0.125-0.25% higher). This makes sense if: you plan to sell/refinance again within a few years, you lack cash for closing costs, or the rate is still significantly lower than your current rate. Calculate both options." },
+  { question: "Should I reset to a 30-year mortgage when refinancing?", answer: "Resetting extends your payoff date. Example: 20 years left on original, refinancing into another 30-year means 30 more years instead of 20. Consider a 15 or 20-year term to maintain payoff timeline while getting a lower rate. Or keep making the same payment on the new loan to pay it off faster." },
+  { question: "How often can you refinance?", answer: "Technically, you can refinance as soon as the math makes sense. Most lenders require 6 months of seasoning (payments) before refinancing. Repeat refinancing can cost you long-term if closing costs eat the savings. Focus on lifetime savings, not just monthly payment reduction." }
+]
+---
+<Layout
+  title="Refinance Calculator: Should I Refinance My Mortgage?"
+  description="Calculate your monthly savings, break-even period, and lifetime savings from refinancing your mortgage. Free refinance calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Refinance Calculator", href: "/calculators/refinance-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Refinance Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Refinance Calculator"
+          description="Calculate monthly savings and break-even for mortgage refinancing"
+          formulaId="refinance"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Savings"
+          inputs={[
+            {id:"currentBalance",label:"Remaining Loan Balance",type:"number",placeholder:"280000",min:0,unit:"$",defaultValue:280000},
+            {id:"currentRate",label:"Current Interest Rate",type:"number",placeholder:"7.5",min:0,max:20,step:0.1,unit:"%",defaultValue:7.5},
+            {id:"currentPayment",label:"Current Monthly Payment (P+I)",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"newRate",label:"New Interest Rate",type:"number",placeholder:"6.5",min:0,max:20,step:0.1,unit:"%",defaultValue:6.5},
+            {id:"term",label:"New Loan Term",type:"select",options:[{value:"10",label:"10 years"},{value:"15",label:"15 years"},{value:"20",label:"20 years"},{value:"30",label:"30 years"}],defaultValue:"30"},
+            {id:"closingCosts",label:"Estimated Closing Costs",type:"number",placeholder:"5000",min:0,unit:"$",defaultValue:5000}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% savings",
+            zones: [
+              { label: "Great savings (>$400/mo)", color: "#22c55e", from: 75, to: 100 },
+              { label: "Good ($200-400/mo)", color: "#3b82f6", from: 40, to: 75 },
+              { label: "Modest ($100-200/mo)", color: "#f59e0b", from: 20, to: 40 },
+              { label: "Minimal (<$100/mo)", color: "#ef4444", from: 0, to: 20 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "Mortgage Points Calculator", href: "/calculators/mortgage-points-calculator" },
+            { name: "House Affordability Calculator", href: "/calculators/house-affordability-calculator" },
+            { name: "APR Calculator", href: "/calculators/apr-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Refinance Decision Checklist</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            <div>✓ Rate reduction of 0.5%+ from current</div>
+            <div>✓ Break-even under 3-5 years</div>
+            <div>✓ Plan to stay past break-even</div>
+            <div>✓ Good credit score (740+ for best rates)</div>
+            <div>✓ Sufficient home equity (20%+ avoids PMI)</div>
+            <div>✗ Skip if moving within 2 years</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Rate Reduction vs Monthly Savings ($280k balance)</h2>
+      <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-50"><tr><th class="text-left p-3 text-xs font-semibold">Rate Drop</th><th class="text-right p-3 text-xs font-semibold">Monthly Savings</th><th class="text-right p-3 text-xs font-semibold">Annual Savings</th><th class="text-right p-3 text-xs font-semibold">Break-Even ($5k costs)</th></tr></thead>
+        <tbody class="divide-y divide-gray-100">
+          {[["0.25%","~$44","-$533","~9.4 years"],["0.5%","~$88","$1,059","~4.7 years"],["0.75%","~$132","$1,584","~3.2 years"],["1.0%","~$175","$2,104","~2.4 years"],["1.5%","~$262","$3,144","~1.6 years"]].map(r => (
+            <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right text-green-600 font-medium">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right">{r[3]}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Layout>

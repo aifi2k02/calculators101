@@ -1,0 +1,150 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const grossIncome = parseFloat(inputs.grossIncome)||0
+  const mortgage = parseFloat(inputs.mortgage)||0
+  const carLoan = parseFloat(inputs.carLoan)||0
+  const studentLoan = parseFloat(inputs.studentLoan)||0
+  const creditCards = parseFloat(inputs.creditCards)||0
+  const otherDebt = parseFloat(inputs.otherDebt)||0
+  if(grossIncome<=0) throw new Error("Enter gross monthly income.")
+  const housingDebt = mortgage
+  const totalDebt = mortgage+carLoan+studentLoan+creditCards+otherDebt
+  const frontEnd = (housingDebt/grossIncome)*100
+  const backEnd = (totalDebt/grossIncome)*100
+  let status = backEnd<=36?"Excellent":backEnd<=43?"Good — mortgage likely":backEnd<=50?"Borderline":"Too High for mortgage"
+  return {
+    value:"DTI: "+backEnd.toFixed(1)+"%",
+    gaugeValue:Math.min(backEnd,60)/60*100,
+    breakdown:["Gross monthly income: $"+grossIncome,"Housing debt: $"+housingDebt+" (front-end DTI: "+frontEnd.toFixed(1)+"%)","Total monthly debt: $"+totalDebt,"Back-end DTI: "+backEnd.toFixed(1)+"%","Status: "+status],
+    stats:[
+      {label:"Back-End DTI",value:backEnd.toFixed(1)+"%"},
+      {label:"Front-End DTI",value:frontEnd.toFixed(1)+"%"},
+      {label:"Total Monthly Debt",value:"$"+totalDebt},
+      {label:"Mortgage Status",value:status.split(" ")[0]},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is debt-to-income ratio?", answer: "DTI = Total monthly debt payments / Gross monthly income. Lenders use it to assess your ability to manage monthly payments. Front-end DTI includes only housing costs. Back-end DTI includes all debt. For mortgage approval, most lenders focus on back-end DTI." },
+  { question: "What DTI do I need for a mortgage?", answer: "Conventional loans: ideally under 36%, maximum 45% (some up to 50% with strong compensating factors). FHA loans: maximum 43% (sometimes up to 57% with strong credit and reserves). VA loans: no official limit, but 41% is a benchmark. Lower is always better for getting approved and getting good rates." },
+  { question: "What is front-end vs back-end DTI?", answer: "Front-end (housing ratio): just your PITI (Principal, Interest, Taxes, Insurance) divided by gross income. Most lenders want this under 28%. Back-end (total DTI): all monthly debt including housing, car loans, student loans, minimum credit card payments. Keep under 36-43%." },
+  { question: "How can I lower my DTI?", answer: "Two approaches: reduce debt or increase income. Pay off small debts first to eliminate minimum payments. Pay down credit cards to lower minimums. Refinance student loans for lower payments. Consider a co-borrower with income. Increase income through raises, second job, or side income. Avoid taking on new debt before applying." },
+  { question: "Does DTI affect my mortgage interest rate?", answer: "DTI does not directly set rates, but indirectly affects them. High DTI may push you toward FHA loans vs. conventional (which may have higher costs). Very high DTI can result in denial regardless of credit score. Lenders price risk holistically: DTI + credit score + down payment + reserves all factor in." }
+]
+---
+<Layout
+  title="Debt-to-Income Ratio Calculator: DTI for Mortgage Approval"
+  description="Calculate your debt-to-income ratio for mortgage qualification. Know your front-end and back-end DTI. Free DTI calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Debt-to-Income Ratio Calculator", href: "/calculators/debt-to-income-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Debt-to-Income Ratio Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Debt-to-Income Ratio Calculator"
+          description="Calculate your DTI for mortgage qualification"
+          formulaId="debt-to-income"
+          formulaFn={formulaFn}
+          resultLabel="Debt-to-Income Ratio"
+          inputs={[
+            {id:"grossIncome",label:"Gross Monthly Income",type:"number",placeholder:"6000",min:0,unit:"$",defaultValue:6000},
+            {id:"mortgage",label:"Housing Payment (PITI)",type:"number",placeholder:"1800",min:0,unit:"$",defaultValue:1800},
+            {id:"carLoan",label:"Car Loan Payment",type:"number",placeholder:"400",min:0,unit:"$",defaultValue:400},
+            {id:"studentLoan",label:"Student Loan Payment",type:"number",placeholder:"300",min:0,unit:"$",defaultValue:300},
+            {id:"creditCards",label:"Minimum Credit Card Payments",type:"number",placeholder:"100",min:0,unit:"$",defaultValue:100},
+            {id:"otherDebt",label:"Other Monthly Debt",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Excellent <36%", color: "#22c55e", from: 0, to: 60 },
+              { label: "Good 36-43%", color: "#3b82f6", from: 60, to: 72 },
+              { label: "Borderline 43-50%", color: "#f59e0b", from: 72, to: 83 },
+              { label: "Too High 50%+", color: "#ef4444", from: 83, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Mortgage Calculator", href: "/calculators/mortgage-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+            { name: "Debt Payoff Calculator", href: "/calculators/debt-payoff-calculator" },
+            { name: "Net Worth Calculator", href: "/calculators/net-worth-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">DTI Guidelines by Loan Type</h3>
+          <div class="space-y-1 text-xs text-blue-800">
+            {[["Conventional","36% ideal / 45% max"],["FHA","43% / 57% with factors"],["VA Loan","41% benchmark"],["USDA","41% benchmark"],["Jumbo","36-43% typical"]].map(([t,d]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span class="font-medium">{t}</span><span>{d}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">DTI Benchmarks</h2>
+        <div class="space-y-2">
+          {[{range:"Under 20%",status:"Excellent",desc:"Very low debt load, strong financial position"},
+            {range:"20–35%",status:"Good",desc:"Manageable debt, easy mortgage qualification"},
+            {range:"36–43%",status:"Acceptable",desc:"May need to shop lenders for best rates"},
+            {range:"44–50%",status:"High",desc:"Borderline — may need FHA or compensating factors"},
+            {range:"Over 50%",status:"Too High",desc:"Most lenders will decline — reduce debt first"},
+          ].map(d => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="flex justify-between items-start">
+                <span class="font-semibold text-xs text-gray-800">{d.range}</span>
+                <span class="text-xs font-medium text-blue-600">{d.status}</span>
+              </div>
+              <div class="text-xs text-gray-600 mt-0.5">{d.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">What Counts as Debt for DTI?</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-red-50 rounded-xl p-3">
+            <div class="font-bold text-red-800 text-xs mb-2">INCLUDED in DTI</div>
+            <ul class="text-xs text-red-700 space-y-1">
+              <li>Mortgage / rent</li>
+              <li>Car loans</li>
+              <li>Student loans</li>
+              <li>Credit card minimums</li>
+              <li>Personal loans</li>
+              <li>Child support / alimony</li>
+            </ul>
+          </div>
+          <div class="bg-green-50 rounded-xl p-3">
+            <div class="font-bold text-green-800 text-xs mb-2">NOT in DTI</div>
+            <ul class="text-xs text-green-700 space-y-1">
+              <li>Utilities</li>
+              <li>Groceries</li>
+              <li>Insurance</li>
+              <li>Cell phone bill</li>
+              <li>Subscriptions</li>
+              <li>Variable expenses</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

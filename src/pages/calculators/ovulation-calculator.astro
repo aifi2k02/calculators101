@@ -1,0 +1,117 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const lastPeriod = inputs.lastPeriod||"2025-01-01"
+  const cycleLength = parseInt(inputs.cycleLength)||28
+  const lutealPhase = parseInt(inputs.lutealPhase)||14
+  if(cycleLength<21||cycleLength>45) throw new Error("Cycle length should be between 21 and 45 days.")
+  const lp = new Date(lastPeriod)
+  const ovulationDay = cycleLength-lutealPhase
+  const ovulationDate = new Date(lp)
+  ovulationDate.setDate(ovulationDate.getDate()+ovulationDay-1)
+  const fertileStart = new Date(ovulationDate)
+  fertileStart.setDate(fertileStart.getDate()-5)
+  const nextPeriod = new Date(lp)
+  nextPeriod.setDate(nextPeriod.getDate()+cycleLength)
+  const fmt = d => d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})
+  return {
+    value:"Ovulation: "+fmt(ovulationDate),
+    gaugeValue:50,
+    breakdown:["Last period: "+fmt(lp),"Cycle length: "+cycleLength+" days","Ovulation day "+ovulationDay+" of cycle","Ovulation date: "+fmt(ovulationDate),"Fertile window: "+fmt(fertileStart)+" — "+fmt(ovulationDate),"Next period: "+fmt(nextPeriod)],
+    stats:[
+      {label:"Ovulation Date",value:fmt(ovulationDate)},
+      {label:"Fertile Window Starts",value:fmt(fertileStart)},
+      {label:"Next Period",value:fmt(nextPeriod)},
+      {label:"Cycle Day",value:"Day "+ovulationDay+" of "+cycleLength},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "When do I ovulate?", answer: "In a standard 28-day cycle, ovulation typically occurs on day 14 (counting from the first day of your period). However, the exact day varies by cycle length: ovulation usually happens 14 days BEFORE your next period, not 14 days after your last period. If your cycle is 30 days, you likely ovulate around day 16." },
+  { question: "What is the fertile window?", answer: "Sperm can survive in the reproductive tract for up to 5 days. An egg lives 12-24 hours after ovulation. Therefore, the fertile window is about 5-6 days: the 5 days before ovulation and the day of ovulation. Having sex during this window maximizes chances of conception." },
+  { question: "How do I know if I am ovulating?", answer: "Signs of ovulation: cervical mucus becomes clear and stretchy (like egg whites); mild one-sided pelvic pain (mittelschmerz); slight increase in basal body temperature (BBT) of 0.2-0.5°F; ovulation predictor kits (OPKs) detect the LH surge 24-36 hours before ovulation; breast tenderness; increased libido." },
+  { question: "How accurate is cycle tracking for preventing pregnancy?", answer: "With perfect use, calendar/cycle tracking methods (NFP/FAM) are about 99% effective. Typical use is closer to 76-88% effective. These methods work best for women with very regular cycles. They are not recommended as sole contraception for those with irregular cycles. Combine with BBT charting and cervical mucus monitoring for better accuracy." },
+  { question: "What if my cycles are irregular?", answer: "Irregular cycles make prediction difficult. Track your BBT (basal body temperature) daily to detect the temperature rise that confirms ovulation occurred. Use OPKs starting from your earliest possible ovulation day. Apps like Natural Cycles use BBT data with algorithms for more accurate predictions. Consider consulting a gynecologist for persistent irregularity." }
+]
+---
+<Layout
+  title="Ovulation Calculator: Fertile Window & Ovulation Date"
+  description="Calculate your ovulation date, fertile window, and next period date. Plan or prevent pregnancy naturally. Free ovulation calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Fitness", href: "/calculators/fitness" },
+    { name: "Ovulation Calculator", href: "/calculators/ovulation-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <span class="text-gray-900">Ovulation Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Ovulation Calculator"
+          description="Calculate ovulation date and fertile window based on cycle length"
+          formulaId="ovulation"
+          formulaFn={formulaFn}
+          resultLabel="Ovulation Date"
+          inputs={[
+            {id:"lastPeriod",label:"First Day of Last Period",type:"date",defaultValue:"2025-01-01"},
+            {id:"cycleLength",label:"Average Cycle Length",type:"number",placeholder:"28",min:21,max:45,unit:"days",defaultValue:28},
+            {id:"lutealPhase",label:"Luteal Phase Length",type:"number",placeholder:"14",min:10,max:16,unit:"days",defaultValue:14}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "cycle position",
+            zones: [
+              { label: "Fertile Window", color: "#22c55e", from: 45, to: 55 },
+              { label: "Non-fertile", color: "#3b82f6", from: 0, to: 45 },
+              { label: "Non-fertile", color: "#3b82f6", from: 55, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Due Date Calculator", href: "/calculators/due-date-calculator" },
+            { name: "Pregnancy Weight Calculator", href: "/calculators/pregnancy-weight-calculator" },
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-pink-50 border border-pink-200 rounded-xl p-5">
+          <h3 class="font-bold text-pink-900 mb-3">Ovulation Signs</h3>
+          <div class="space-y-1 text-xs text-pink-800">
+            <div>🌡 BBT rise 0.2-0.5°F after ovulation</div>
+            <div>💧 Cervical mucus — clear, stretchy (egg white)</div>
+            <div>📊 LH surge on OPK 24-36hr before ovulation</div>
+            <div>⚡ Possible mild one-sided pain (mittelschmerz)</div>
+            <div>📅 Typically day 14 of a 28-day cycle</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Understanding Your Cycle</h2>
+      <div class="grid md:grid-cols-4 gap-4">
+        {[
+          {phase:"Menstruation",days:"Days 1-5",desc:"Uterine lining sheds. FSH begins rising to stimulate follicle development."},
+          {phase:"Follicular Phase",days:"Days 6-13",desc:"Follicle matures. Estrogen rises. Cervical mucus becomes more fertile."},
+          {phase:"Ovulation",days:"Day 14 (avg)",desc:"LH surge triggers egg release. Fertile window: 5 days before + ovulation day."},
+          {phase:"Luteal Phase",days:"Days 15-28",desc:"Progesterone rises. If no conception, it drops — triggering next period."},
+        ].map(p => (
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="font-bold text-sm text-blue-700 mb-1">{p.phase}</div>
+            <div class="text-xs text-blue-500 mb-2">{p.days}</div>
+            <div class="text-xs text-gray-600">{p.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

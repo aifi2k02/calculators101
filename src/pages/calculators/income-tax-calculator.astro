@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const income = parseFloat(inputs.income)||0
+  const deductions = parseFloat(inputs.deductions)||0
+  const filing = inputs.filing||"single"
+  const credits = parseFloat(inputs.credits)||0
+  if(income<=0) throw new Error("Enter annual income.")
+  const standardDeduction = filing==="married"?30000:15000
+  const deductionUsed = Math.max(deductions||0,standardDeduction)
+  const taxableIncome = Math.max(0,income-deductionUsed)
+  const brackets = filing==="married"
+    ?[[0,23200,0.10],[23200,94300,0.12],[94300,201050,0.22],[201050,383900,0.24],[383900,487450,0.32],[487450,731200,0.35],[731200,Infinity,0.37]]
+    :[[0,11600,0.10],[11600,47150,0.12],[47150,100525,0.22],[100525,191950,0.24],[191950,243725,0.32],[243725,609350,0.35],[609350,Infinity,0.37]]
+  let tax=0, remaining=taxableIncome
+  for(const [low,high,rate] of brackets){
+    if(remaining<=0) break
+    const taxable=Math.min(remaining,(high===Infinity?remaining:high)-low)
+    tax+=taxable*rate; remaining-=taxable
+  }
+  tax=Math.max(0,tax-credits)
+  const effectiveRate = income>0?(tax/income)*100:0
+  const marginalRate = brackets.find(([l,h])=>taxableIncome>=l&&taxableIncome<h)?.[2]*100||37
+  const afterTaxIncome = income-tax
+  return {
+    value:"$"+tax.toLocaleString("en-US",{maximumFractionDigits:0})+" tax",
+    gaugeValue:Math.min(effectiveRate*2,100),
+    breakdown:["Gross income: $"+income.toLocaleString("en-US",{maximumFractionDigits:0}),"Deductions: $"+deductionUsed,"Taxable income: $"+taxableIncome.toLocaleString("en-US",{maximumFractionDigits:0}),"Federal tax: $"+tax.toLocaleString("en-US",{maximumFractionDigits:0}),"Effective rate: "+effectiveRate.toFixed(2)+"%","Marginal rate: "+marginalRate+"%"],
+    stats:[
+      {label:"Federal Tax",value:"$"+tax.toLocaleString("en-US",{maximumFractionDigits:0})},
+      {label:"Effective Rate",value:effectiveRate.toFixed(2)+"%"},
+      {label:"Marginal Rate",value:marginalRate+"%"},
+      {label:"After-Tax Income",value:"$"+afterTaxIncome.toLocaleString("en-US",{maximumFractionDigits:0})},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is the difference between marginal and effective tax rate?", answer: "Marginal rate is the rate on your last dollar of income (your tax bracket). Effective rate is total taxes paid divided by total income. Example: $75k income (single) pays ~$10,000 in taxes. Marginal rate = 22%, but effective rate = ~13.3%. The US uses a progressive system — lower income is taxed at lower rates first." },
+  { question: "What is the 2025 standard deduction?", answer: "$15,000 for single filers, $30,000 for married filing jointly, $22,500 for head of household. If your itemized deductions (mortgage interest, state taxes, charity, medical) exceed these amounts, itemize. Otherwise, take the standard deduction — about 90% of taxpayers do." },
+  { question: "What are the 2025 tax brackets for single filers?", answer: "10% on income up to $11,600; 12% on $11,600-$47,150; 22% on $47,150-$100,525; 24% on $100,525-$191,950; 32% on $191,950-$243,725; 35% on $243,725-$609,350; 37% above $609,350. Note: these brackets are indexed for inflation annually." },
+  { question: "How can I legally reduce my tax bill?", answer: "Maximize 401(k) contributions (up to $23,500 in 2025, pre-tax reduces taxable income). Contribute to HSA ($4,300 single, $8,550 family). Harvest tax losses in investment accounts. Bunch charitable deductions into alternating years to itemize. Use FSA for healthcare and dependent care. Business owners have additional options." },
+  { question: "Does this calculator include state income tax?", answer: "No — this calculator estimates federal income tax only. State income taxes vary: from 0% (TX, FL, WA, NV, WY, SD, AK) to over 13% (CA). Add your state income tax to get your total tax burden. Most people also pay 7.65% in FICA taxes (Social Security + Medicare) on earned income." }
+]
+---
+<Layout
+  title="Income Tax Calculator 2025: Federal Tax Estimate"
+  description="Estimate your 2025 federal income tax liability based on taxable income and filing status. Includes brackets and effective rate. Free income tax calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Income Tax Calculator", href: "/calculators/income-tax-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Income Tax Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Income Tax Calculator"
+          description="Estimate your 2025 federal income tax and effective tax rate"
+          formulaId="income-tax"
+          formulaFn={formulaFn}
+          resultLabel="Federal Tax Owed"
+          inputs={[
+            {id:"income",label:"Annual Gross Income",type:"number",placeholder:"75000",min:0,unit:"$",defaultValue:75000},
+            {id:"filing",label:"Filing Status",type:"select",options:[{value:"single",label:"Single"},{value:"married",label:"Married Filing Jointly"}],defaultValue:"single"},
+            {id:"deductions",label:"Itemized Deductions (leave 0 for standard)",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"credits",label:"Tax Credits",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% effective rate (×2)",
+            zones: [
+              { label: "10-12% effective", color: "#22c55e", from: 0, to: 25 },
+              { label: "22-24% effective", color: "#3b82f6", from: 25, to: 50 },
+              { label: "32-35% effective", color: "#f59e0b", from: 50, to: 70 },
+              { label: "37%+ effective", color: "#ef4444", from: 70, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Capital Gains Calculator", href: "/calculators/capital-gains-calculator" },
+            { name: "Paycheck Calculator", href: "/calculators/paycheck-calculator" },
+            { name: "Salary Calculator", href: "/calculators/salary-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">2025 Federal Brackets (Single)</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Taxable Income</th><th class="text-right pb-1">Rate</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["$0–$11,600","10%"],["$11,601–$47,150","12%"],["$47,151–$100,525","22%"],["$100,526–$191,950","24%"],["$191,951–$243,725","32%"],["$243,726–$609,350","35%"],["Over $609,350","37%"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Effective Tax Rate by Income (Single, 2025)</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Income</th><th class="text-right p-2 text-xs font-semibold">Federal Tax</th><th class="text-right p-2 text-xs font-semibold">Effective Rate</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["$40,000","$3,524","8.8%"],["$75,000","$9,900","13.2%"],["$100,000","$15,432","15.4%"],["$150,000","$27,432","18.3%"],["$250,000","$56,124","22.4%"],["$500,000","$148,574","29.7%"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-red-600">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Standard deduction applied. Federal only — excludes state and FICA.</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Top Tax Reduction Strategies</h2>
+        <div class="space-y-2">
+          {[["401(k) / 403(b)","Up to $23,500 pre-tax reduces AGI"],["Traditional IRA","Up to $7,000 if eligible"],["HSA","$4,300 individual — triple tax advantage"],["Itemize deductions","If mortgage interest + SALT + charity > $15k"],["Business deductions","Home office, vehicle, equipment if self-employed"],["Tax-loss harvesting","Sell losing investments to offset gains"]].map(([s,d]) => (
+            <div class="bg-gray-50 rounded-lg p-2.5">
+              <div class="font-semibold text-xs text-gray-800">{s}</div>
+              <div class="text-xs text-gray-600">{d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

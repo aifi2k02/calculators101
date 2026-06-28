@@ -1,0 +1,115 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const text = inputs.text||""
+  if(!text.trim()) throw new Error("Enter some text to analyze.")
+  const words = text.trim().split(/\s+/).filter(w=>w.length>0)
+  const wordCount = words.length
+  const charCount = text.length
+  const charNoSpaces = text.replace(/\s/g,"").length
+  const sentences = (text.match(/[^.!?]+[.!?]+/g)||[]).length || (text.trim()? 1 : 0)
+  const paragraphs = text.split(/\n\s*\n/).filter(p=>p.trim()).length||1
+  const readingTimeMin = wordCount/238
+  const avgWordLen = charNoSpaces/Math.max(wordCount,1)
+  return {
+    value:wordCount+" words | "+charCount+" characters",
+    gaugeValue:Math.min(wordCount/1000*100,100),
+    breakdown:["Words: "+wordCount,"Characters (with spaces): "+charCount,"Characters (no spaces): "+charNoSpaces,"Sentences: "+sentences,"Paragraphs: "+paragraphs,"Reading time: "+readingTimeMin.toFixed(2)+" min (avg 238 wpm)","Average word length: "+avgWordLen.toFixed(1)+" chars"],
+    stats:[
+      {label:"Word Count",value:wordCount.toLocaleString()},
+      {label:"Characters",value:charCount.toLocaleString()},
+      {label:"Sentences",value:String(sentences)},
+      {label:"Reading Time",value:readingTimeMin<1?Math.round(readingTimeMin*60)+" sec":readingTimeMin.toFixed(1)+" min"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How many words is a typical essay, article, or book?", answer: "Tweet: 280 characters (~50 words). Blog post: 300-2,500 words. Short story: 1,000-7,500 words. Novella: 20,000-50,000 words. Novel: 50,000-100,000+ words. Academic essay: 500-5,000 words. Research paper: 3,000-8,000 words. PhD dissertation: 80,000-100,000 words." },
+  { question: "How fast does the average person read?", answer: "Average adult: 238-250 words per minute (wpm) for comprehension. Faster readers with training: 300-400 wpm. Speed readers: 500-1,500 wpm (with reduced comprehension). Children: 100-200 wpm. Audio books typical speed: 150-160 wpm. This calculator uses 238 wpm for reading time estimates." },
+  { question: "What is the ideal word count for SEO blog posts?", answer: "Studies suggest: long-form content (1,500-2,500 words) often ranks better for competitive keywords. Short posts (300-500 words) can rank for specific low-competition queries. Quality and relevance matter more than word count. Google prefers content that fully answers user intent, regardless of length." },
+  { question: "How do I count words in Microsoft Word or Google Docs?", answer: "Microsoft Word: Review tab → Word Count (or Ctrl+Shift+G). Google Docs: Tools → Word Count (or Ctrl+Shift+C). Both show words, characters with/without spaces, and pages. Select text first to count only a portion. Many writing apps display word count in the bottom status bar." },
+  { question: "What is a character limit and why does it matter?", answer: "Twitter: 280 characters. Instagram captions: 2,200. Meta descriptions (SEO): 150-160 characters. SMS: 160 characters (GSM) or 70 (Unicode). Database fields often have varchar limits. Email subject lines: ~50-60 characters to avoid truncation in email clients. Knowing character limits helps craft concise, effective content." }
+]
+---
+<Layout
+  title="Word Count Calculator: Count Words, Characters, Sentences"
+  description="Count words, characters, sentences, paragraphs, and estimate reading time for any text. Free word count tool."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Word Count Calculator", href: "/calculators/word-count-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Word Count Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Word Count Calculator"
+          description="Count words, characters, sentences, and reading time"
+          formulaId="word-count"
+          formulaFn={formulaFn}
+          resultLabel="Words"
+          inputs={[
+            {id:"text",label:"Paste or type your text here",type:"textarea",placeholder:"Enter your text here...",rows:8,defaultValue:"The quick brown fox jumps over the lazy dog. This sentence is a classic pangram used to test typefaces and keyboards."}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "words",
+            zones: [
+              { label: "Short (<100 words)", color: "#22c55e", from: 0, to: 10 },
+              { label: "Medium (100-500)", color: "#3b82f6", from: 10, to: 50 },
+              { label: "Long (500-1000)", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+            { name: "Grade Calculator", href: "/calculators/grade-calculator" },
+            { name: "GPA Calculator", href: "/calculators/gpa-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common Word Counts</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            {[["Tweet","~50 words"],["Blog post","300-2,500"],["Short story","1,000-7,500"],["Novella","20,000-50,000"],["Novel","50,000-100,000"],["PhD thesis","80,000-100,000"]].map(([t,c]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-0.5"><span>{t}</span><span class="font-mono">{c}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Reading Time Estimates</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Words</th><th class="p-2 text-xs font-semibold text-right">Reading Time (238 wpm)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[100,"~25 sec"],[300,"~1.3 min"],[500,"~2.1 min"],[1000,"~4.2 min"],[2500,"~10.5 min"],[5000,"~21 min"],[10000,"~42 min"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Character Limits</h2>
+        <div class="space-y-2">
+          {["Twitter/X: 280 characters per tweet","Instagram caption: 2,200 characters","Meta description (SEO): 150-160 chars","SMS: 160 chars (English), 70 (emoji/Unicode)","Email subject: ~60 chars before truncation","YouTube title: 100 chars (70 recommended)"].map(l => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{l}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

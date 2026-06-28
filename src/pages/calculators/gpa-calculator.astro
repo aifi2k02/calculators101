@@ -1,0 +1,164 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const grades = []
+  const letters = ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F']
+  const points = [4.0,4.0,3.7,3.3,3.0,2.7,2.3,2.0,1.7,1.3,1.0,0.7,0.0]
+  const letter = inputs.grade1 || 'A'
+  const credits1 = parseFloat(inputs.credits1) || 3
+  const letter2 = inputs.grade2 || 'B+'
+  const credits2 = parseFloat(inputs.credits2) || 3
+  const letter3 = inputs.grade3 || 'A-'
+  const credits3 = parseFloat(inputs.credits3) || 3
+  const letter4 = inputs.grade4 || 'B'
+  const credits4 = parseFloat(inputs.credits4) || 3
+  const letter5 = inputs.grade5 || ''
+  const credits5 = parseFloat(inputs.credits5) || 0
+  const parseGPA = (g) => { const i = letters.indexOf(g); return i >= 0 ? points[i] : 0 }
+  const courses = [
+    [parseGPA(letter), credits1], [parseGPA(letter2), credits2],
+    [parseGPA(letter3), credits3], [parseGPA(letter4), credits4],
+  ]
+  if (letter5 && credits5 > 0) courses.push([parseGPA(letter5), credits5])
+  const totalCredits = courses.reduce((s, c) => s + c[1], 0)
+  const weightedPoints = courses.reduce((s, c) => s + c[0] * c[1], 0)
+  if (totalCredits === 0) throw new Error('Enter at least one course with credits.')
+  const gpa = weightedPoints / totalCredits
+  const honor = gpa >= 3.9 ? 'Summa Cum Laude' : gpa >= 3.7 ? 'Magna Cum Laude' : gpa >= 3.5 ? 'Cum Laude' : gpa >= 3.0 ? 'Good Standing' : gpa >= 2.0 ? 'Satisfactory' : 'Academic Probation Risk'
+  return {
+    value: gpa.toFixed(2) + ' GPA',
+    gaugeValue: (gpa / 4.0) * 100,
+    breakdown: [
+      'Total credits: ' + totalCredits,
+      'Weighted points: ' + weightedPoints.toFixed(1),
+      'GPA: ' + gpa.toFixed(3),
+      'Standing: ' + honor,
+    ],
+    stats: [
+      { label: 'GPA', value: gpa.toFixed(2) },
+      { label: 'Total Credits', value: String(totalCredits) },
+      { label: 'Academic Standing', value: honor },
+      { label: 'Out of 4.0', value: (gpa / 4.0 * 100).toFixed(1) + '%' },
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How is GPA calculated?', answer: 'GPA = (Sum of grade points × credit hours) ÷ Total credit hours. Each letter grade converts to grade points (A=4.0, B=3.0, C=2.0, D=1.0, F=0). Weight each by the course\'s credit hours, sum them, divide by total credits.' },
+  { question: 'What is a good GPA?', answer: '3.5+ is considered excellent and qualifies for most academic honors. 3.0–3.5 is good and competitive for grad school. 2.5–3.0 is average. Below 2.0 may put you on academic probation at many schools.' },
+  { question: 'What are the Latin honors thresholds?', answer: 'Thresholds vary by institution: Cum Laude typically 3.5–3.7, Magna Cum Laude 3.7–3.9, Summa Cum Laude 3.9–4.0. Some schools use class rank instead of GPA for honors designation.' },
+  { question: 'Does GPA matter after graduation?', answer: 'It matters most for grad school (most programs require 3.0+) and first jobs in competitive fields. After 2–3 years of work experience, employers care far more about your work history than GPA. Many employers stop asking after your first job.' },
+  { question: 'Can I raise my GPA significantly?', answer: 'It becomes harder as you accumulate credits. Early in college, each grade has more weight. A sophomore with 60 credits raising a 2.5 GPA to 3.0 would need roughly a 3.5 average for the remaining 60 credits. Use our grade calculator for precise projections.' },
+]
+---
+<Layout
+  title="GPA Calculator: Weighted Grade Point Average"
+  description="Calculate your GPA with weighted credits. Find your academic standing and see Latin honors thresholds. Free GPA calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'GPA Calculator', href: '/calculators/gpa-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">GPA Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="GPA Calculator"
+          description="Calculate your weighted GPA for up to 5 courses"
+          formulaId="gpa"
+          formulaFn={formulaFn}
+          resultLabel="GPA"
+          inputs={[
+            { id: 'grade1', label: 'Course 1 Grade', type: 'select', options: ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F'].map(g => ({ value: g, label: g })), defaultValue: 'A' },
+            { id: 'credits1', label: 'Course 1 Credits', type: 'number', placeholder: '3', min: 1, max: 6, defaultValue: 3 },
+            { id: 'grade2', label: 'Course 2 Grade', type: 'select', options: ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F'].map(g => ({ value: g, label: g })), defaultValue: 'B+' },
+            { id: 'credits2', label: 'Course 2 Credits', type: 'number', placeholder: '3', min: 1, max: 6, defaultValue: 3 },
+            { id: 'grade3', label: 'Course 3 Grade', type: 'select', options: ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F'].map(g => ({ value: g, label: g })), defaultValue: 'A-' },
+            { id: 'credits3', label: 'Course 3 Credits', type: 'number', placeholder: '3', min: 1, max: 6, defaultValue: 3 },
+            { id: 'grade4', label: 'Course 4 Grade', type: 'select', options: ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F'].map(g => ({ value: g, label: g })), defaultValue: 'B' },
+            { id: 'credits4', label: 'Course 4 Credits', type: 'number', placeholder: '3', min: 1, max: 6, defaultValue: 3 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% of 4.0',
+            zones: [
+              { label: 'Probation Risk', color: '#ef4444', from: 0, to: 50 },
+              { label: 'Satisfactory', color: '#f59e0b', from: 50, to: 75 },
+              { label: 'Good', color: '#3b82f6', from: 75, to: 87.5 },
+              { label: 'Honors', color: '#22c55e', from: 87.5, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Grade Calculator', href: '/calculators/grade-calculator' },
+            { name: 'Final Grade Calculator', href: '/calculators/final-grade-calculator' },
+            { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Grade Point Scale</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left pb-1">Grade</th><th class="text-right pb-1">Points</th><th class="text-right pb-1">%</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[['A / A+','4.0','93–100'],['A-','3.7','90–92'],['B+','3.3','87–89'],['B','3.0','83–86'],['B-','2.7','80–82'],['C+','2.3','77–79'],['C','2.0','73–76'],['D','1.0','60–69'],['F','0.0','<60']].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right">{r[1]}</td><td class="text-right">{r[2]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-5">
+          <h3 class="font-bold text-purple-900 mb-2">Latin Honors</h3>
+          <ul class="text-xs text-purple-800 space-y-1">
+            <li><strong>Summa Cum Laude:</strong> 3.9+</li>
+            <li><strong>Magna Cum Laude:</strong> 3.7–3.9</li>
+            <li><strong>Cum Laude:</strong> 3.5–3.7</li>
+          </ul>
+          <p class="text-xs text-purple-600 mt-2">Thresholds vary by school</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">GPA for Graduate School Admissions</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr>
+            <th class="text-left p-3 text-xs font-semibold text-gray-700">Program Type</th>
+            <th class="text-right p-3 text-xs font-semibold text-gray-700">Typical Minimum</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[['Medical School (MD)','3.7+'],['Law School (top 20)','3.7+'],['MBA (top programs)','3.5+'],['PhD Programs','3.5+'],['Master\'s Programs','3.0+'],['Most Graduate Schools','2.5–3.0']].map(r => (
+              <tr><td class="p-3 text-xs">{r[0]}</td><td class="p-3 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">How to Improve Your GPA</h2>
+        <div class="space-y-2">
+          {[
+            'Retake failed or low-grade courses if your school allows grade replacement',
+            'Take more credit hours — larger credit load means each course affects GPA less',
+            'Prioritize high-credit courses (4–5 credits affect GPA more than 1-credit courses)',
+            'Attend office hours and use tutoring centers early in the semester',
+            'Drop courses before the deadline rather than earning a failing grade',
+            'Consider a lighter course load to focus on grade quality over quantity',
+          ].map(tip => (
+            <div class="flex gap-2 text-xs text-gray-600">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>{tip}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

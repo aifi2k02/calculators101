@@ -1,0 +1,244 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const unit = inputs.unit
+  let weightKg, heightM
+  if (unit === 'imperial') {
+    const feet = parseFloat(inputs.feet) || 0
+    const inches = parseFloat(inputs.inches) || 0
+    heightM = (feet * 12 + inches) * 0.0254
+    weightKg = parseFloat(inputs.weight) * 0.453592
+  } else {
+    heightM = parseFloat(inputs.heightCm) / 100
+    weightKg = parseFloat(inputs.weight)
+  }
+  if (!heightM || heightM <= 0) throw new Error('Enter a valid height.')
+  if (!weightKg || weightKg <= 0) throw new Error('Enter a valid weight.')
+  const bmi = weightKg / (heightM * heightM)
+  const bmiPrime = bmi / 25
+  const pi = weightKg / Math.pow(heightM, 3)
+  const minHealthyKg = 18.5 * heightM * heightM
+  const maxHealthyKg = 24.9 * heightM * heightM
+  const minHealthyLbs = (minHealthyKg * 2.20462).toFixed(0)
+  const maxHealthyLbs = (maxHealthyKg * 2.20462).toFixed(0)
+  const currentLbs = weightKg * 2.20462
+  let category, advice
+  if (bmi < 16) { category = 'Severe Thinness'; advice = 'Significantly underweight. Medical attention recommended.' }
+  else if (bmi < 17) { category = 'Moderate Thinness'; advice = 'Underweight. A healthcare provider can help with a nutrition plan.' }
+  else if (bmi < 18.5) { category = 'Mild Thinness'; advice = 'Slightly underweight. Consider increasing caloric intake.' }
+  else if (bmi < 25) { category = 'Normal Weight'; advice = 'Great — you are in the healthy weight range. Maintain with balanced diet and exercise.' }
+  else if (bmi < 30) { category = 'Overweight'; advice = 'Above healthy range. Moderate diet and exercise improvements can help.' }
+  else if (bmi < 35) { category = 'Obese Class I'; advice = 'Moderate obesity. Consult a healthcare provider for a weight management plan.' }
+  else if (bmi < 40) { category = 'Obese Class II'; advice = 'Severe obesity. Medical guidance is strongly recommended.' }
+  else { category = 'Obese Class III'; advice = 'Very severe obesity. Please consult a doctor.' }
+  const toGainLose = bmi < 18.5
+    ? 'Gain ' + ((minHealthyKg - weightKg) * 2.20462).toFixed(1) + ' lbs to reach healthy range'
+    : bmi > 25 ? 'Lose ' + ((weightKg - maxHealthyKg) * 2.20462).toFixed(1) + ' lbs to reach healthy range' : 'You are within the healthy weight range'
+  return {
+    value: bmi.toFixed(1),
+    gaugeValue: bmi,
+    stats: [
+      { label: 'Category', value: category },
+      { label: 'Healthy BMI', value: '18.5 – 25' },
+      { label: 'Healthy Weight', value: minHealthyLbs + '–' + maxHealthyLbs + ' lbs' },
+      { label: 'BMI Prime', value: bmiPrime.toFixed(2) },
+      { label: 'Ponderal Index', value: pi.toFixed(1) + ' kg/m³' },
+    ],
+    breakdown: [
+      'Weight: ' + weightKg.toFixed(1) + ' kg (' + currentLbs.toFixed(1) + ' lbs)',
+      'Height: ' + (heightM * 100).toFixed(1) + ' cm',
+      'BMI = ' + weightKg.toFixed(1) + ' ÷ ' + (heightM).toFixed(3) + '² = ' + bmi.toFixed(2),
+      'Category: ' + category,
+      toGainLose,
+      '—',
+      advice,
+    ]
+  }
+`
+
+const gauge = {
+  min: 10,
+  clampMax: 45,
+  max: 45,
+  unit: '',
+  zones: [
+    { label: 'Underweight', color: '#60a5fa', from: 10, to: 18.5 },
+    { label: 'Normal', color: '#22c55e', from: 18.5, to: 25 },
+    { label: 'Overweight', color: '#facc15', from: 25, to: 30 },
+    { label: 'Obese I', color: '#f97316', from: 30, to: 35 },
+    { label: 'Obese II', color: '#ef4444', from: 35, to: 40 },
+    { label: 'Obese III', color: '#dc2626', from: 40, to: 45 },
+  ]
+}
+---
+<Layout
+  title="BMI Calculator: Check Body Mass Index & Healthy Weight Range"
+  description="Calculate your Body Mass Index (BMI), weight category, healthy weight range, BMI Prime, and Ponderal Index. Free BMI calculator with WHO classification table."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"BMI Calculator",href:"/calculators/bmi-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <span class="text-gray-900">BMI Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="BMI Calculator"
+          description="Body Mass Index — your weight relative to height"
+          formulaId="bmi"
+          formulaFn={formulaFn}
+          resultLabel="Your BMI"
+          resultUnit="kg/m²"
+          gauge={gauge}
+          inputs={[
+            { id: 'unit', label: 'Units', type: 'select', options: [
+              { value: 'imperial', label: 'Imperial (lbs, ft & in)' },
+              { value: 'metric', label: 'Metric (kg, cm)' },
+            ], defaultValue: 'imperial' },
+            { id: 'feet', label: 'Height — Feet', type: 'number', placeholder: '5', min: 1, max: 8, defaultValue: 5 },
+            { id: 'inches', label: 'Height — Inches', type: 'number', placeholder: '10', min: 0, max: 11, defaultValue: 10 },
+            { id: 'heightCm', label: 'Height (cm)', type: 'number', placeholder: '178', min: 50, max: 250 },
+            { id: 'weight', label: 'Weight (lbs or kg)', type: 'number', placeholder: '160', min: 1, defaultValue: 160 },
+          ]}
+          relatedCalcs={[
+            { name: 'Body Fat Calculator', href: '/calculators/body-fat-calculator' },
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'Ideal Weight Calculator', href: '/calculators/ideal-weight-calculator' },
+            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
+            { name: 'Waist-to-Hip Ratio', href: '/calculators/waist-hip-calculator' },
+            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
+          ]}
+          faqs={[
+            { question: 'What is BMI and how is it calculated?', answer: 'BMI (Body Mass Index) = weight(kg) ÷ height(m)². For example, 70 kg at 1.75 m = 70 ÷ 3.0625 = 22.9. In imperial: BMI = (lbs × 703) ÷ inches². It\'s a quick screening tool used by WHO and CDC.' },
+            { question: 'What is a healthy BMI for adults?', answer: 'WHO defines healthy BMI as 18.5–24.9. Under 18.5 = underweight, 25–29.9 = overweight, 30+ = obese. Note: some Asian populations use lower thresholds (23 for overweight).' },
+            { question: 'Why is my BMI high but I exercise a lot?', answer: 'BMI doesn\'t distinguish between muscle and fat. Muscle is denser than fat, so athletes and bodybuilders often have "overweight" or "obese" BMIs despite very low body fat. Use body fat % or waist circumference for a more accurate picture.' },
+            { question: 'What is BMI Prime?', answer: 'BMI Prime = your BMI ÷ 25. A value of 1.0 means you\'re exactly at the upper edge of normal. Below 0.74 = underweight, 0.74–1.0 = normal, above 1.0 = overweight or obese. It shows proportional distance from the normal limit.' },
+            { question: 'What is the Ponderal Index?', answer: 'Ponderal Index = weight(kg) ÷ height(m)³. It\'s considered more accurate for very tall or very short individuals where BMI can be misleading. Healthy Ponderal Index: 11–15 kg/m³.' },
+          ]}
+        />
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">BMI Classification (WHO)</h3>
+          </div>
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="text-left px-4 py-2.5 text-gray-500 font-medium">Category</th>
+                <th class="text-right px-4 py-2.5 text-gray-500 font-medium">BMI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['Severe Thinness', '< 16', '#60a5fa'],
+                ['Moderate Thinness', '16–17', '#93c5fd'],
+                ['Mild Thinness', '17–18.5', '#bfdbfe'],
+                ['Normal Weight', '18.5–25', '#22c55e'],
+                ['Overweight', '25–30', '#facc15'],
+                ['Obese Class I', '30–35', '#f97316'],
+                ['Obese Class II', '35–40', '#ef4444'],
+                ['Obese Class III', '> 40', '#dc2626'],
+              ].map(([cat, range, color]) => (
+                <tr class="border-b border-gray-50 hover:bg-gray-50">
+                  <td class="px-4 py-2 text-gray-700 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 inline-block" style={`background:${color}`}></span>
+                    {cat}
+                  </td>
+                  <td class="px-4 py-2 text-right text-gray-600 font-mono">{range}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-2">⚠ BMI is a screening tool</h3>
+          <p class="text-xs text-amber-800 leading-relaxed">BMI does not measure body fat directly. Athletes may have high BMI due to muscle mass. For a complete picture, combine BMI with waist circumference, body fat %, and a clinical assessment.</p>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-4">
+          <h3 class="font-semibold text-gray-800 text-sm mb-3">Healthy Weight by Height</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-gray-500">
+              <th class="text-left pb-2">Height</th>
+              <th class="text-right pb-2">Normal BMI range</th>
+            </tr></thead>
+            <tbody class="text-gray-600">
+              {[
+                ["5'4\"", '108–145 lbs'],
+                ["5'6\"", '115–154 lbs'],
+                ["5'8\"", '122–164 lbs'],
+                ["5'10\"", '129–174 lbs'],
+                ["6'0\"", '136–183 lbs'],
+                ["6'2\"", '144–194 lbs'],
+              ].map(([h, r]) => (
+                <tr class="border-t border-gray-50">
+                  <td class="py-1.5 font-medium">{h}</td>
+                  <td class="py-1.5 text-right">{r}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rich content -->
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">What is BMI?</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">Body Mass Index (BMI) is a value calculated from your height and weight that is used to categorize a person as underweight, normal weight, overweight, or obese. It was developed by Belgian mathematician Adolphe Quetelet in the 1830s and has since become the world\'s most widely used screening tool for weight status.</p>
+        <p class="text-gray-600 leading-relaxed">The World Health Organization (WHO), the CDC, and most national health agencies use BMI as a population-level metric. While not a perfect measure for individuals (especially athletes), it remains a fast, non-invasive, and cost-free first-line screening tool.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Health Risks of Overweight &amp; Obesity</h2>
+        <p class="text-gray-600 leading-relaxed mb-4">Carrying excess body weight — particularly around the abdomen — significantly increases the risk of many serious medical conditions. Studies consistently show that each 5-unit increase in BMI raises the risk of type 2 diabetes by 30% and cardiovascular disease by 25%.</p>
+        <div class="grid sm:grid-cols-2 gap-2">
+          {['Type 2 diabetes', 'High blood pressure', 'Heart disease & stroke', 'Sleep apnea', 'Certain cancers', 'Osteoarthritis', 'Fatty liver disease', 'Gallbladder disease', 'Kidney disease', 'Depression & anxiety'].map(r => (
+            <div class="flex items-center gap-2 text-sm text-gray-600 bg-red-50 rounded-lg px-3 py-2">
+              <span class="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0"></span>{r}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Health Risks of Being Underweight</h2>
+        <p class="text-gray-600 leading-relaxed mb-4">A BMI below 18.5 is associated with malnutrition, immune deficiency, and organ stress. In some cases, being underweight carries similar mortality risks to being obese.</p>
+        <div class="grid sm:grid-cols-2 gap-2">
+          {['Malnutrition & vitamin deficiencies', 'Osteoporosis & fractures', 'Weakened immune system', 'Anemia', 'Fertility issues', 'Muscle weakness', 'Heart arrhythmias', 'Delayed wound healing'].map(r => (
+            <div class="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg px-3 py-2">
+              <span class="w-1.5 h-1.5 bg-blue-400 rounded-full shrink-0"></span>{r}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Limitations of BMI</h2>
+        <div class="space-y-3">
+          {[
+            ['Doesn\'t distinguish muscle from fat', 'A 200 lb athlete and a 200 lb sedentary person have the same BMI but very different health profiles. Muscular individuals often fall in the "overweight" category despite low body fat.'],
+            ['Ignores fat distribution', 'Visceral fat (around the organs) is far more dangerous than subcutaneous fat. Two people with the same BMI can have very different metabolic risk profiles depending on where they carry weight.'],
+            ['Age and sex variation', 'Women naturally carry more body fat than men at the same BMI. Older adults tend to lose muscle and gain fat, so their BMI may understate their true adiposity.'],
+            ['Ethnic differences', 'Asian populations tend to develop metabolic diseases at lower BMIs. Adjusted thresholds: overweight ≥23, obese ≥27.5 for Asian adults.'],
+          ].map(([title, desc]) => (
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="font-semibold text-gray-800 text-sm mb-1">{title}</p>
+              <p class="text-sm text-gray-600 leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

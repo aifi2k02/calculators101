@@ -1,0 +1,132 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const size = parseFloat(inputs.size)||0
+  const from = inputs.from||"us_men"
+  const gender = inputs.gender||"men"
+  if(size<=0) throw new Error("Enter a valid shoe size.")
+  let usMen, usWomen, uk, eu, cm
+  const toUSMen = {
+    us_men: s=>s,
+    us_women: s=>s-1.5,
+    uk: s=>s+0.5,
+    eu: s=>(s-31.5)/0.667,
+    cm: s=>(s-9.3)/0.85
+  }
+  usMen = (toUSMen[from]||toUSMen.us_men)(size)
+  usWomen = usMen+1.5
+  uk = usMen-0.5
+  eu = Math.round(usMen*0.667+31.5)
+  cm = (usMen*0.85+9.3).toFixed(1)
+  return {
+    value:"US Men: "+usMen.toFixed(1)+" | EU: "+eu+" | UK: "+uk.toFixed(1),
+    gaugeValue:Math.min(usMen/18*100,100),
+    breakdown:["Input: "+size+" ("+from.replace("_"," ")+")","US Men: "+usMen.toFixed(1),"US Women: "+usWomen.toFixed(1),"UK: "+uk.toFixed(1),"EU: "+eu,"CM (foot length): "+cm+" cm"],
+    stats:[
+      {label:"US Men",value:usMen.toFixed(1)},
+      {label:"US Women",value:usWomen.toFixed(1)},
+      {label:"EU",value:String(eu)},
+      {label:"UK",value:uk.toFixed(1)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How do I convert US to EU shoe sizes?", answer: "EU = (US men size × 0.667) + 31.5, rounded to nearest whole. US Men 10 ≈ EU 43. US Men 11 ≈ EU 44. US Women are typically 1.5 sizes larger than US Men (US Women 10 = US Men 8.5 = EU 42). Always try shoes on as brands and styles vary." },
+  { question: "What is the difference between US men and women sizes?", answer: "US Women sizes are 1.5 larger than US Men sizes. A US Women 8 = US Men 6.5. When shopping men shoes as a woman or vice versa: subtract 1.5 for women buying men shoes, add 1.5 for men buying women shoes. UK and EU sizes are unisex (usually men sizing)." },
+  { question: "How do I measure my foot for shoe size?", answer: "Trace your foot on paper, measure the longest distance (heel to longest toe) in centimeters. Use this chart: 22cm = EU35, 23cm = EU36, 24cm = EU37, 25cm = EU38/39, 26cm = EU40, 27cm = EU41/42, 28cm = EU43, 29cm = EU44/45. Measure both feet — buy for the larger one." },
+  { question: "How do UK and EU shoe sizes compare?", answer: "UK size = EU size - 33 (approximately). UK 7 ≈ EU 40. UK 8 ≈ EU 42. UK 9 ≈ EU 43. UK 10 ≈ EU 44. UK 11 ≈ EU 46. UK sizes are similar to US Men but typically 0.5 size smaller: US Men 10 = UK 9.5. UK and US women sizes differ by about 2 sizes." },
+  { question: "Why do shoe sizes vary between brands?", answer: "Shoe sizes are not standardized internationally and vary by: country system (US, UK, EU, JP). Brand and model (some brands run narrow or wide). Style (sneakers vs dress shoes vs boots). Manufacturers develop lasts (foot-shaped forms) to their own specifications. Always check individual brand sizing charts and read reviews about fit." }
+]
+---
+<Layout
+  title="Shoe Size Converter: US, UK, EU, CM Sizes"
+  description="Convert shoe sizes between US, UK, European (EU), and centimeter sizing for men and women. Free shoe size converter chart."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Shoe Size Converter", href: "/calculators/shoe-size-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Shoe Size Converter</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Shoe Size Converter"
+          description="Convert shoe sizes between US, UK, EU, and cm"
+          formulaId="shoe-size"
+          formulaFn={formulaFn}
+          resultLabel="Size"
+          inputs={[
+            {id:"size",label:"Shoe size",type:"number",placeholder:"10",min:0,step:0.5,defaultValue:10},
+            {id:"from",label:"Size system",type:"select",options:[
+              {value:"us_men",label:"US Men"},
+              {value:"us_women",label:"US Women"},
+              {value:"uk",label:"UK"},
+              {value:"eu",label:"EU (European)"},
+              {value:"cm",label:"CM (foot length in cm)"},
+            ],defaultValue:"us_men"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small (US < 7)", color: "#22c55e", from: 0, to: 38 },
+              { label: "Average (US 7-11)", color: "#3b82f6", from: 38, to: 61 },
+              { label: "Large (US 11+)", color: "#f59e0b", from: 61, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Height Converter", href: "/calculators/height-converter-calculator" },
+            { name: "BMI Calculator", href: "/calculators/bmi-calculator" },
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Men Size Chart</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700"><th class="text-left">US</th><th>UK</th><th>EU</th><th class="text-right">CM</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[[7,6.5,40,25],[8,7.5,41,26],[9,8.5,42,27],[10,9.5,43,28],[11,10.5,44,29],[12,11.5,45,30],[13,12.5,47,31]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-center">{r[1]}</td><td class="text-center">{r[2]}</td><td class="text-right">{r[3]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Women Shoe Size Chart</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">US Women</th><th class="p-2 text-xs text-right">US Men</th><th class="p-2 text-xs text-right">EU</th><th class="p-2 text-xs text-right">UK</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[[5,3.5,36,3],[6,4.5,37,4],[7,5.5,38,5],[8,6.5,39,6],[9,7.5,40,7],[10,8.5,41,8],[11,9.5,42,9]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td><td class="p-2 text-xs text-right">{r[3]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Finding Your Size</h2>
+        <div class="space-y-2">
+          {["Measure foot at end of day (feet swell throughout the day)","Measure both feet — use the larger foot for sizing","Stand while measuring — feet spread under weight","Trace foot on paper, measure longest dimension","Add 0.5-1cm (0.2-0.4in) for toe space in closed shoes","Check brand specific sizing guides — they vary significantly"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

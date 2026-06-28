@@ -1,0 +1,117 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const name1 = (inputs.name1||"").toLowerCase().trim()
+  const name2 = (inputs.name2||"").toLowerCase().trim()
+  if(!name1||!name2) throw new Error("Enter both names.")
+  const numValue = s => s.split("").reduce((acc,c)=>{const code=c.charCodeAt(0)-96;return code>0&&code<=26?acc+code:acc},0)
+  const n1 = numValue(name1)
+  const n2 = numValue(name2)
+  const combined = (n1+n2)
+  const score = Math.abs((combined*37+name1.length*n2+name2.length*n1)%101)
+  const adjScore = Math.max(score, 100-score)
+  const level = adjScore>=90?"Perfect Match":adjScore>=75?"Strong Connection":adjScore>=60?"Good Compatibility":adjScore>=45?"Some Compatibility":"Challenging"
+  return {
+    value:adjScore+"% — "+level,
+    gaugeValue:adjScore,
+    breakdown:["Name 1: "+inputs.name1+" (value: "+n1+")","Name 2: "+inputs.name2+" (value: "+n2+")","Combined: "+combined,"Compatibility score: "+adjScore+"%","Status: "+level,"Note: This is just for fun — real compatibility is built over time!"],
+    stats:[
+      {label:"Compatibility",value:adjScore+"%"},
+      {label:"Level",value:level},
+      {label:inputs.name1+" value",value:String(n1)},
+      {label:inputs.name2+" value",value:String(n2)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How does love compatibility work?", answer: "Our calculator assigns numerical values to letters in each name and computes a fun compatibility score. This is purely for entertainment — real relationship compatibility depends on shared values, communication, respect, trust, and time spent together, not on names or numbers." },
+  { question: "What makes a relationship truly compatible?", answer: "Research shows the key factors are: shared values (most important), emotional intelligence (ability to manage conflict), similar relationship goals, respect and trust, good communication, and physical attraction. Couples who openly discuss differences and resolve conflicts constructively tend to have the most lasting relationships." },
+  { question: "What is the FLAME compatibility method?", answer: "FLAME is a classic schoolyard compatibility game using both names. Write out FRIENDS LOVE AFFECTION MARRIAGE ENEMIES, then cross off shared letters between names, count what remains, and cycle through FLAME letters until one remains. It is purely a fun game with no scientific basis." },
+  { question: "Do zodiac signs predict relationship compatibility?", answer: "Astrology compatibility is a popular cultural tradition. Sun signs are often matched (e.g., Taurus and Virgo as earth signs), but there is no scientific evidence that zodiac signs predict relationship outcomes. Real compatibility researchers (like John Gottman) focus on communication patterns, conflict resolution, and shared goals." },
+  { question: "What is the most important factor in relationship success?", answer: "Research by John Gottman (University of Washington) identifies the ratio of positive to negative interactions. Successful couples average 5:1 positive-to-negative interactions. Other key factors: avoiding the four horsemen (criticism, contempt, defensiveness, stonewalling), turning toward each other during stress, and maintaining friendship and admiration." }
+]
+---
+<Layout
+  title="Love Compatibility Calculator: Relationship Compatibility Score"
+  description="Find your love compatibility score based on names and birthdays. Fun relationship compatibility calculator using numerology and astrology."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Love Compatibility Calculator", href: "/calculators/love-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Love Compatibility Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Love Compatibility Calculator"
+          description="Calculate fun love compatibility score"
+          formulaId="love"
+          formulaFn={formulaFn}
+          resultLabel="Compatibility %"
+          inputs={[
+            {id:"name1",label:"Your name",type:"text",placeholder:"Alice",defaultValue:"Alice"},
+            {id:"name2",label:"Partner name",type:"text",placeholder:"Bob",defaultValue:"Bob"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% compatibility",
+            zones: [
+              { label: "Challenging (<50%)", color: "#ef4444", from: 0, to: 50 },
+              { label: "Good (50-75%)", color: "#f59e0b", from: 50, to: 75 },
+              { label: "Strong (75-90%)", color: "#3b82f6", from: 75, to: 90 },
+              { label: "Perfect (90%+)", color: "#22c55e", from: 90, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Age Calculator", href: "/calculators/age-calculator" },
+            { name: "Zodiac Calculator", href: "/calculators/zodiac-calculator" },
+            { name: "Numerology Calculator", href: "/calculators/numerology-calculator" },
+            { name: "Birthday Calculator", href: "/calculators/date-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Love Language Breakdown</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            {[["Words of Affirmation","Verbal compliments, appreciation"],["Quality Time","Undivided attention, shared experiences"],["Acts of Service","Helpful actions, taking care of tasks"],["Gifts","Thoughtful presents, symbolic tokens"],["Physical Touch","Hugs, holding hands, closeness"]].map(([l,d]) => (
+              <div class="border-b border-blue-100 pb-0.5"><div class="font-semibold">{l}</div><div>{d}</div></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Zodiac Compatibility</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Sign</th><th class="p-2 text-xs font-semibold text-right">Best Matches</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Aries","Leo, Sagittarius"],["Taurus","Virgo, Capricorn"],["Gemini","Libra, Aquarius"],["Cancer","Scorpio, Pisces"],["Leo","Aries, Sagittarius"],["Virgo","Taurus, Capricorn"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Relationship Tips</h2>
+        <div class="space-y-2">
+          {["Learn your partner love language (Gary Chapman framework)","Gottman ratio: aim for 5 positive interactions per negative","Show appreciation daily — even small acknowledgements matter","Conflict is normal — it is how you resolve it that counts","Shared experiences build stronger bonds than material gifts","Maintain individual friendships and hobbies outside the relationship"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-red-400 mt-0.5">♥</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

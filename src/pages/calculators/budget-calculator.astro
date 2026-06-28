@@ -1,0 +1,138 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const income = parseFloat(inputs.income) || 0
+  const housing = parseFloat(inputs.housing) || 0
+  const food = parseFloat(inputs.food) || 0
+  const transport = parseFloat(inputs.transport) || 0
+  const utilities = parseFloat(inputs.utilities) || 0
+  const insurance = parseFloat(inputs.insurance) || 0
+  const entertainment = parseFloat(inputs.entertainment) || 0
+  const other = parseFloat(inputs.other) || 0
+  if (income <= 0) throw new Error("Enter monthly income.")
+  const expenses = housing + food + transport + utilities + insurance + entertainment + other
+  const remaining = income - expenses
+  const savingsRate = income > 0 ? (remaining / income) * 100 : 0
+  const housingPct = (housing / income) * 100
+  return {
+    value: "$" + remaining.toFixed(2) + " left over",
+    gaugeValue: Math.max(0, Math.min(savingsRate, 100)),
+    breakdown: ["Income: $" + income, "Total expenses: $" + expenses.toFixed(2), "Remaining: $" + remaining.toFixed(2), "Savings rate: " + savingsRate.toFixed(1) + "%", "Housing ratio: " + housingPct.toFixed(1) + "% (target: <30%)"],
+    stats: [
+      { label: "Monthly Surplus", value: "$" + remaining.toFixed(2) },
+      { label: "Savings Rate", value: savingsRate.toFixed(1) + "%" },
+      { label: "Total Expenses", value: "$" + expenses.toFixed(2) },
+      { label: "Housing %", value: housingPct.toFixed(1) + "%" },
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How much of my income should go to housing?", answer: "The standard rule is to keep housing costs under 30% of gross income (or 28% for a mortgage). Some financial experts use 25% of net take-home pay. Above 30% is considered cost-burdened by the US Department of Housing." },
+  { question: "What is the 50/30/20 budgeting rule?", answer: "50% to needs (housing, food, transport, utilities), 30% to wants (dining, entertainment, subscriptions), 20% to savings and debt repayment. It provides structure while allowing flexibility. Adjust percentages based on your income and goals." },
+  { question: "How do I track my spending?", answer: "Bank and credit card statements are the most accurate source. Apps like YNAB, Mint, Copilot, or Monarch Money link to accounts and auto-categorize. A simple spreadsheet works too. Review weekly or monthly to catch overspending early." },
+  { question: "What should be in an emergency fund?", answer: "3–6 months of essential expenses (housing, food, transport, utilities, insurance). Not total income — just what you need to survive. Keep it in a high-yield savings account (HYSA) for 4–5% APY and easy access." },
+  { question: "How do I stop overspending?", answer: "Track every expense for 30 days (awareness alone reduces spending). Use a zero-based budget (assign every dollar). Try envelope budgeting for variable categories. Delay discretionary purchases 24–48 hours (reduces impulse buying by 50%+)." }
+]
+---
+<Layout
+  title="Budget Calculator: Monthly Budget Planner"
+  description="Create a monthly budget by category. See where your money goes and how much you can save. Free budget calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Budget Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Budget Calculator"
+          description="Plan your monthly budget by category and find your savings rate"
+          formulaId="budget"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Surplus"
+          inputs={[
+            { id: "income", label: "Monthly Take-Home Income", type: "number", placeholder: "5000", min: 0, unit: "$", defaultValue: 5000 },
+            { id: "housing", label: "Housing (rent/mortgage)", type: "number", placeholder: "1500", min: 0, unit: "$", defaultValue: 1500 },
+            { id: "food", label: "Food & Groceries", type: "number", placeholder: "500", min: 0, unit: "$", defaultValue: 500 },
+            { id: "transport", label: "Transportation", type: "number", placeholder: "400", min: 0, unit: "$", defaultValue: 400 },
+            { id: "utilities", label: "Utilities & Phone", type: "number", placeholder: "200", min: 0, unit: "$", defaultValue: 200 },
+            { id: "insurance", label: "Insurance & Healthcare", type: "number", placeholder: "300", min: 0, unit: "$", defaultValue: 300 },
+            { id: "entertainment", label: "Entertainment & Dining Out", type: "number", placeholder: "300", min: 0, unit: "$", defaultValue: 300 },
+            { id: "other", label: "Other Expenses", type: "number", placeholder: "200", min: 0, unit: "$", defaultValue: 200 }
+          ]}
+          gauge={{min: 0, max: 100, unit: "% savings rate",
+            zones: [
+              { label: "Negative", color: "#ef4444", from: 0, to: 5 },
+              { label: "Low", color: "#f59e0b", from: 5, to: 15 },
+              { label: "Good", color: "#3b82f6", from: 15, to: 25 },
+              { label: "Excellent", color: "#22c55e", from: 25, to: 100 },
+            ]}}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Savings Calculator", href: "/calculators/savings-calculator" },
+            { name: "Emergency Fund Calculator", href: "/calculators/emergency-fund-calculator" },
+            { name: "Salary Calculator", href: "/calculators/salary-calculator" }
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">50/30/20 Budget Guide</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[["Needs (50%)","Housing, food, transport, utilities, insurance"],["Wants (30%)","Dining, entertainment, hobbies, subscriptions"],["Savings (20%)","Emergency fund, retirement, goals, debt payoff"]].map(([cat, items]) => (
+              <div class="border-b border-blue-100 pb-2">
+                <div class="font-medium">{cat}</div>
+                <div class="text-blue-600">{items}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Average American Spending (2023)</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold text-gray-700">Category</th><th class="text-right p-2 text-xs font-semibold text-gray-700">Monthly Avg</th><th class="text-right p-2 text-xs font-semibold text-gray-700">% of Income</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Housing","$2,025","32%"],["Food","$779","12%"],["Transportation","$1,025","16%"],["Healthcare","$421","7%"],["Entertainment","$301","5%"],["Clothing","$163","3%"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Source: BLS Consumer Expenditure Survey</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Savings Rate and Retirement Age</h2>
+        <p class="text-xs text-gray-600 mb-3">Higher savings rates dramatically reduce how long you need to work:</p>
+        <div class="space-y-2">
+          {[
+            { rate: "5%", retire: "~66 years from start" },
+            { rate: "10%", retire: "~51 years from start" },
+            { rate: "20%", retire: "~37 years from start" },
+            { rate: "30%", retire: "~28 years from start" },
+            { rate: "50%", retire: "~17 years from start" },
+            { rate: "75%", retire: "~7 years from start" },
+          ].map(s => (
+            <div class="flex justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs">
+              <span class="font-medium text-blue-600">{s.rate} savings rate</span>
+              <span class="text-gray-600">{s.retire}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

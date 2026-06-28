@@ -1,0 +1,130 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const msrp = parseFloat(inputs.msrp)||0
+  const capCost = parseFloat(inputs.capCost)||msrp
+  const residual = parseFloat(inputs.residual)||60
+  const moneyFactor = parseFloat(inputs.moneyFactor)||0.002
+  const term = parseInt(inputs.term)||36
+  const downPayment = parseFloat(inputs.downPayment)||0
+  const taxes = parseFloat(inputs.taxes)||8
+  if(msrp<=0) throw new Error("Enter MSRP.")
+  const adjCap = capCost-downPayment
+  const residualValue = msrp*(residual/100)
+  const depreciation = (adjCap-residualValue)/term
+  const finance = (adjCap+residualValue)*moneyFactor
+  const basePayment = depreciation+finance
+  const totalPayment = basePayment*(1+taxes/100)
+  const totalCost = totalPayment*term+downPayment
+  const apr = moneyFactor*2400
+  return {
+    value:"$"+totalPayment.toFixed(2)+"/mo",
+    gaugeValue:Math.min(totalPayment/1000*100,100),
+    breakdown:["Base payment: $"+basePayment.toFixed(2),"Tax: "+taxes+"%","Total monthly: $"+totalPayment.toFixed(2),"Residual value: $"+residualValue.toFixed(0),"Effective APR: "+apr.toFixed(2)+"%","Total lease cost: $"+totalCost.toFixed(0)],
+    stats:[
+      {label:"Monthly Payment",value:"$"+totalPayment.toFixed(2)},
+      {label:"Residual Value",value:"$"+residualValue.toFixed(0)},
+      {label:"Effective APR",value:apr.toFixed(2)+"%"},
+      {label:"Total Lease Cost",value:"$"+totalCost.toFixed(0)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is money factor in a car lease?", answer: "Money factor is the financing rate, similar to APR but expressed differently. To convert: Money Factor x 2400 = APR. A money factor of 0.002 = 4.8% APR. Lower money factor = cheaper financing. Dealers may not reveal this — you can calculate it from the payment breakdown." },
+  { question: "What is residual value?", answer: "The residual value is the car's predicted worth at lease end, set by the leasing company as a percentage of MSRP. Higher residual = lower monthly payment (less depreciation to cover). SUVs and luxury brands often have strong residuals. This is NOT negotiable — it is set by the manufacturer." },
+  { question: "Should I put money down on a lease?", answer: "Generally no. A down payment reduces monthly payments but provides zero benefit if the car is totaled or stolen — the insurance pays the leasing company, not you. This money is lost. Instead, keep cash and invest it; let the lease run at its natural monthly payment." },
+  { question: "What is cap cost (capitalized cost)?", answer: "Cap cost is the negotiated selling price of the vehicle — it IS negotiable. Lower cap cost = lower monthly payment. Always negotiate the sale price down before discussing lease terms. Never agree to a lease without knowing the cap cost — dealers may hide inflated prices." },
+  { question: "Leasing vs buying: which is better?", answer: "Leasing: lower monthly payments, always in a new car, no resale hassle, but no equity built and mileage limits. Buying: builds equity, no mileage limits, better long-term value if you keep the car 7-10 years. If you drive more than 15k miles/year or want to keep the car long-term, buying usually wins." }
+]
+---
+<Layout
+  title="Car Lease Calculator: Monthly Payment & Total Cost"
+  description="Calculate your car lease monthly payment, total cost, and compare leasing vs buying. Free car lease calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Car Lease Calculator", href: "/calculators/car-lease-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Car Lease Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Car Lease Calculator"
+          description="Calculate your car lease payment and total lease cost"
+          formulaId="car-lease"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Payment"
+          inputs={[
+            {id:"msrp",label:"Vehicle MSRP",type:"number",placeholder:"40000",min:0,unit:"$",defaultValue:40000},
+            {id:"capCost",label:"Negotiated Price (Cap Cost)",type:"number",placeholder:"38000",min:0,unit:"$",defaultValue:38000},
+            {id:"residual",label:"Residual Value %",type:"number",placeholder:"55",min:0,max:90,step:1,unit:"%",defaultValue:55},
+            {id:"moneyFactor",label:"Money Factor",type:"number",placeholder:"0.002",min:0,max:0.01,step:0.0001,defaultValue:0.002},
+            {id:"term",label:"Lease Term",type:"select",options:[{value:"24",label:"24 months"},{value:"36",label:"36 months"},{value:"48",label:"48 months"}],defaultValue:"36"},
+            {id:"downPayment",label:"Down Payment / Cap Reduction",type:"number",placeholder:"0",min:0,unit:"$",defaultValue:0},
+            {id:"taxes",label:"Sales Tax Rate",type:"number",placeholder:"8",min:0,max:15,step:0.1,unit:"%",defaultValue:8}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Low (<$300/mo)", color: "#22c55e", from: 0, to: 30 },
+              { label: "Moderate ($300-500)", color: "#3b82f6", from: 30, to: 50 },
+              { label: "High ($500-800)", color: "#f59e0b", from: 50, to: 80 },
+              { label: "Very High (>$800)", color: "#ef4444", from: 80, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Auto Loan Calculator", href: "/calculators/auto-loan-calculator" },
+            { name: "Loan Calculator", href: "/calculators/loan-calculator" },
+            { name: "Budget Calculator", href: "/calculators/budget-calculator" },
+            { name: "Depreciation Calculator", href: "/calculators/investment-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Lease vs Buy — Quick Look</h3>
+          <div class="text-xs text-blue-800 space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-blue-100 rounded p-2"><strong>Lease Pros</strong><br/>Lower payments<br/>New car every 3 yrs<br/>Less maintenance</div>
+              <div class="bg-blue-100 rounded p-2"><strong>Buy Pros</strong><br/>Build equity<br/>No mileage limit<br/>Lower total cost</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Lease vs Finance Comparison</h2>
+        <p class="text-xs text-gray-600 mb-3">$40,000 vehicle, 36-month example</p>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold"></th><th class="text-right p-2 text-xs font-semibold">Lease</th><th class="text-right p-2 text-xs font-semibold">Finance (60mo)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Monthly","~$450","~$720"],["Down","$0","$0"],["3-yr cost","$16,200","$25,920"],["End of 3 yrs","No car","Own car (~$24k)"]].map(r => (
+              <tr><td class="p-2 text-xs font-medium">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Lease Negotiation Tips</h2>
+        <div class="space-y-2">
+          {["Always negotiate the cap cost (selling price) — treat it like a purchase","Research money factor and residual on sites like Edmunds MF before visiting dealer","Avoid rolling fees into the lease — pay them upfront or shop elsewhere","Know your mileage needs — excess mileage fees run $0.15-0.25/mile","Multiple security deposit (MSD) programs can lower the money factor at some brands","Get multiple quotes — same car, different dealers can have different fees"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

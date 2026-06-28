@@ -1,0 +1,141 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const shape = inputs.shape||"slab"
+  const len = parseFloat(inputs.len)||0
+  const width = parseFloat(inputs.width)||0
+  const depth = parseFloat(inputs.depth)||0
+  const bagSize = parseFloat(inputs.bagSize)||60
+  let cubicFeet, description
+  if(shape==="slab"){
+    if(len<=0||width<=0||depth<=0) throw new Error("Enter length, width, and depth.")
+    cubicFeet=len*width*depth/12; description=len+"ft x "+width+"ft x "+depth+"in slab"
+  } else if(shape==="column"){
+    const radius=len/2
+    if(len<=0||depth<=0) throw new Error("Enter diameter and height.")
+    cubicFeet=Math.PI*radius*radius*depth/144; description=len+"in dia x "+depth+"in column"
+  } else if(shape==="footing"){
+    if(len<=0||width<=0||depth<=0) throw new Error("Enter length, width, and depth.")
+    cubicFeet=len*width*depth/144; description=len+"in x "+width+"in x "+depth+"in footing"
+  }
+  const cubicYards=cubicFeet/27
+  const withWaste=cubicYards*1.1
+  const bags60=Math.ceil(cubicFeet/0.45)
+  const bags80=Math.ceil(cubicFeet/0.60)
+  const actualBags=bagSize===60?bags60:bags80
+  return {
+    value:withWaste.toFixed(2)+" cubic yards (+10% waste)",
+    gaugeValue:Math.min(cubicYards/10*100,100),
+    breakdown:["Shape: "+description,"Cubic feet: "+cubicFeet.toFixed(4),"Cubic yards: "+cubicYards.toFixed(4),"With 10% waste: "+withWaste.toFixed(4)+" yd3",bagSize+"lb bags needed: "+actualBags,"60lb bags alt: "+bags60,"80lb bags alt: "+bags80],
+    stats:[
+      {label:"Cubic Yards",value:withWaste.toFixed(2)+" yd³"},
+      {label:"Cubic Feet",value:cubicFeet.toFixed(2)+" ft³"},
+      {label:"60lb Bags",value:String(bags60)},
+      {label:"80lb Bags",value:String(bags80)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How many bags of concrete per cubic yard?", answer: "At 60 lb bags: approximately 60 bags per cubic yard (1 bag = 0.45 cu ft, 1 cu yd = 27 cu ft, 27/0.45 = 60). At 80 lb bags: approximately 45 bags per cubic yard. Always add 10% extra for waste and overfill. Mix coverage can vary slightly by brand." },
+  { question: "How thick should a concrete slab be?", answer: "Sidewalk/patio: 4 inches. Residential driveway: 4-6 inches. Garage floor: 4-6 inches. Road pavement: 6-8 inches. Heavy industrial: 8+ inches. Footings extend below the frost line (varies by climate). Always check local building codes." },
+  { question: "What is the correct concrete mix ratio?", answer: "Standard mix (3000 psi): 1 part cement: 2 parts sand: 3 parts gravel (1:2:3) by volume, plus water-cement ratio of 0.5-0.6. For bags: follow manufacturer instructions — typically 2.5 quarts of water per 60 lb bag for 80% strength. Too much water weakens concrete." },
+  { question: "How long does concrete take to cure?", answer: "Concrete reaches initial set in 24-48 hours (do not walk on). 70% strength in 7 days. Full strength (28-day strength) in 28 days. Avoid freezing temperatures in first 24-48 hours. Keep moist for 7 days by covering with wet burlap or plastic sheeting for optimal curing." },
+  { question: "When should I use ready-mix vs bagged concrete?", answer: "Bagged concrete (60/80 lb bags): small projects under 1 cubic yard — patching, fence posts, small slabs. Ready-mix truck: over 1 cubic yard, large slabs, driveways, foundations. Ready-mix is usually more cost-effective above 0.5 cubic yards and gives better quality control." }
+]
+---
+<Layout
+  title="Concrete Calculator: Bags, Cubic Yards, Volume for Slabs"
+  description="Calculate how many bags of concrete you need for a slab, column, or footing. Find cubic yards and cubic feet. Free concrete calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Concrete Calculator", href: "/calculators/concrete-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Concrete Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Concrete Calculator"
+          description="Calculate concrete volume and bags needed for any project"
+          formulaId="concrete"
+          formulaFn={formulaFn}
+          resultLabel="Cubic Yards"
+          inputs={[
+            {id:"shape",label:"Shape",type:"select",options:[
+              {value:"slab",label:"Slab / Pad (length × width in feet, depth in inches)"},
+              {value:"column",label:"Circular Column (diameter in inches, height in inches)"},
+              {value:"footing",label:"Wall Footing (length × width in inches, depth in inches)"},
+            ],defaultValue:"slab"},
+            {id:"len",label:"Length (ft for slab, inches for column diameter/footing)",type:"number",placeholder:"10",min:0,step:0.01,defaultValue:10},
+            {id:"width",label:"Width (ft for slab, inches for footing — skip for column)",type:"number",placeholder:"10",min:0,step:0.01,defaultValue:10},
+            {id:"depth",label:"Depth/Thickness (inches for slab/footing, inches for column height)",type:"number",placeholder:"4",min:0,step:0.01,defaultValue:4},
+            {id:"bagSize",label:"Bag size",type:"select",options:[
+              {value:"60",label:"60 lb bags"},
+              {value:"80",label:"80 lb bags"},
+            ],defaultValue:"60"}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "cubic yards",
+            zones: [
+              { label: "Small (< 1 yd3)", color: "#22c55e", from: 0, to: 10 },
+              { label: "Medium (1-5 yd3)", color: "#3b82f6", from: 10, to: 50 },
+              { label: "Large (5+ yd3)", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Paint Calculator", href: "/calculators/paint-calculator" },
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Volume Calculator", href: "/calculators/volume-calculator" },
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Quick Reference</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>1 cubic yard = 27 cubic feet</div>
+            <div>60 lb bag ≈ 0.45 cubic feet</div>
+            <div>80 lb bag ≈ 0.60 cubic feet</div>
+            <div>~60 bags (60lb) per cubic yard</div>
+            <div>~45 bags (80lb) per cubic yard</div>
+            <div>Always add 10% for waste</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Concrete Slab Examples</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Slab Size</th><th class="p-2 text-xs font-semibold text-right">4in thick</th><th class="p-2 text-xs font-semibold text-right">60lb bags</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["5 ft × 5 ft","0.31 yd³","~19"],["10 ft × 10 ft","1.23 yd³","~74"],["12 ft × 12 ft","1.78 yd³","~107"],["20 ft × 20 ft","4.94 yd³","~296"],["8 ft × 20 ft","1.98 yd³","~119"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Concrete Strength Guide</h2>
+        <div class="space-y-2">
+          {["2500 psi — light residential (sidewalks, patios)","3000 psi — standard residential (slabs, driveways)","3500 psi — moderate commercial (foundations)","4000 psi — heavy duty (bridges, industrial floors)","Higher PSI = stronger but higher cement ratio","Fiber reinforcement reduces cracking without rebar"].map(s => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{s}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

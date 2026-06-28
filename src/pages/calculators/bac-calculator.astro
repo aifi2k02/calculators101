@@ -1,0 +1,193 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const weight = parseFloat(inputs.weight)
+  const unit = inputs.unit
+  const sex = inputs.sex
+  const drinks = parseFloat(inputs.drinks)
+  const hours = parseFloat(inputs.hours)
+  if (isNaN(weight)||weight<=0) throw new Error('Enter a valid weight.')
+  if (isNaN(drinks)||drinks<0) throw new Error('Enter number of drinks.')
+  if (isNaN(hours)||hours<0) throw new Error('Enter hours since first drink.')
+  const weightKg = unit === 'lb' ? weight * 0.453592 : weight
+  const weightGrams = weightKg * 1000
+  const r = sex === 'male' ? 0.68 : 0.55
+  const alcoholGrams = drinks * 14
+  const bac = (alcoholGrams / (weightGrams * r)) * 100
+  const metabolized = hours * 0.015
+  const currentBac = Math.max(0, bac - metabolized)
+  let effect
+  if (currentBac < 0.02) effect = 'No apparent effect'
+  else if (currentBac < 0.06) effect = 'Mild relaxation, slight impairment'
+  else if (currentBac < 0.08) effect = 'Approaching legal limit — impaired'
+  else if (currentBac < 0.10) effect = 'Over legal limit — do not drive'
+  else if (currentBac < 0.15) effect = 'Significant impairment'
+  else if (currentBac < 0.20) effect = 'Severe impairment'
+  else effect = 'Dangerous — risk of alcohol poisoning'
+  const hoursToSober = currentBac > 0 ? Math.ceil(currentBac / 0.015) : 0
+  const hoursToLegal = currentBac > 0.08 ? Math.ceil((currentBac - 0.08) / 0.015) : 0
+  return {
+    value: currentBac.toFixed(3) + '% BAC',
+    gaugeValue: currentBac * 100,
+    stats: [
+      { label: 'Peak BAC', value: bac.toFixed(3) + '%' },
+      { label: 'Current BAC', value: currentBac.toFixed(3) + '%' },
+      { label: 'Status', value: effect },
+      { label: 'Hours to sober', value: currentBac > 0 ? '~' + hoursToSober + ' hrs' : 'Sober now' },
+    ],
+    breakdown: [
+      'Standard drinks: ' + drinks + ' (× 14g alcohol each)',
+      'Hours elapsed: ' + hours,
+      '—',
+      'Peak BAC (Widmark formula): ' + bac.toFixed(3) + '%',
+      'Metabolized (' + hours + ' hrs × 0.015%): −' + metabolized.toFixed(3) + '%',
+      'Current estimated BAC: ' + currentBac.toFixed(3) + '%',
+      '—',
+      'Effect: ' + effect,
+      'US legal driving limit: 0.080%',
+      currentBac > 0.08 ? 'Hours until legal to drive: ~' + hoursToLegal + ' hrs' : '',
+      currentBac > 0 ? 'Hours until fully sober: ~' + hoursToSober + ' hrs' : 'Already sober',
+    ].filter(Boolean)
+  }
+`
+
+const gauge = {
+  min: 0, max: 25, clampMax: 25, unit: '×0.01% BAC',
+  zones: [
+    { label: 'Sober', color: '#22c55e', from: 0, to: 2 },
+    { label: 'Mild', color: '#4ade80', from: 2, to: 6 },
+    { label: 'Impaired', color: '#facc15', from: 6, to: 10 },
+    { label: 'Over limit', color: '#f97316', from: 10, to: 15 },
+    { label: 'Severe', color: '#ef4444', from: 15, to: 25 },
+  ]
+}
+---
+<Layout
+  title="BAC Calculator: Blood Alcohol Content Estimator"
+  description="Estimate your blood alcohol content (BAC) with the Widmark formula. See impairment level, hours until sober, and US legal driving limit comparison."
+  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"BAC Calculator",href:"/calculators/bac-calculator"}]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <span class="text-gray-900">BAC Calculator</span>
+    </nav>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-sm text-amber-800">
+      <strong>Disclaimer:</strong> This calculator provides estimates only. Actual BAC varies by individual. Never use a calculator to decide if you are safe to drive — if you have consumed alcohol, do not drive.
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="BAC Calculator"
+          description="Estimate blood alcohol content with the Widmark formula"
+          formulaId="bac"
+          formulaFn={formulaFn}
+          resultLabel="Estimated Blood Alcohol Content"
+          gauge={gauge}
+          inputs={[
+            { id: 'sex', label: 'Biological Sex', type: 'select', options: [
+              {value:'male',label:'Male'},{value:'female',label:'Female'},
+            ], defaultValue: 'male' },
+            { id: 'weight', label: 'Body Weight', type: 'number', placeholder: '170', min: 50, defaultValue: 170 },
+            { id: 'unit', label: 'Weight Unit', type: 'select', options: [
+              {value:'lb',label:'Pounds (lb)'},{value:'kg',label:'Kilograms (kg)'},
+            ], defaultValue: 'lb' },
+            { id: 'drinks', label: 'Standard Drinks Consumed', type: 'number', placeholder: '3', min: 0, step: 0.5, defaultValue: 3 },
+            { id: 'hours', label: 'Hours Since First Drink', type: 'number', placeholder: '2', min: 0, step: 0.5, defaultValue: 2 },
+          ]}
+          relatedCalcs={[
+            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
+            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
+            { name: 'Body Fat Calculator', href: '/calculators/body-fat-calculator' },
+          ]}
+          faqs={[
+            { question: 'What is a standard drink?', answer: 'A standard drink in the US contains 14 grams of pure alcohol: 12 oz regular beer (5%), 5 oz wine (12%), or 1.5 oz distilled spirits (40%). A pint of strong craft beer may count as 1.5–2 standard drinks.' },
+            { question: 'How does the body metabolize alcohol?', answer: 'The liver metabolizes about 0.015% BAC per hour (roughly one standard drink per hour for an average person). This rate is fairly constant — coffee, food, exercise, or water cannot speed it up significantly.' },
+            { question: 'Why do women have higher BAC than men at the same intake?', answer: 'Women generally have a lower ratio of body water to total weight (55% vs 68% for men). Since alcohol distributes through body water, less dilution means higher BAC. This is the "r" factor in the Widmark formula.' },
+            { question: 'What BAC is legal for driving in the US?', answer: 'The US federal limit is 0.08% BAC. At 0.08%, driving risk doubles compared to 0.00%. At 0.05% (the legal limit in many countries), reaction time and judgment are already measurably impaired.' },
+            { question: 'Is this calculator accurate?', answer: 'The Widmark formula gives an estimate. Individual metabolism varies by up to ±30%. Factors like food consumption, medications, liver health, and tolerance affect actual BAC. Only a breathalyzer or blood test gives a precise reading.' },
+          ]}
+        />
+      </div>
+      <div class="space-y-5">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">BAC Impairment Levels</h3>
+          </div>
+          <div class="divide-y divide-gray-50">
+            {[
+              ['0.02–0.05%', 'Mild relaxation, slight warming', '#22c55e'],
+              ['0.05–0.08%', 'Reduced coordination, impaired judgment', '#facc15'],
+              ['0.08%', 'US legal limit for driving', '#f97316'],
+              ['0.08–0.15%', 'Slurred speech, poor balance', '#f97316'],
+              ['0.15–0.25%', 'Confusion, nausea, vomiting', '#ef4444'],
+              ['0.25%+', 'Blackout risk, alcohol poisoning', '#dc2626'],
+            ].map(([bac, effect, color]) => (
+              <div class="px-4 py-2.5 flex items-start gap-2.5">
+                <span class="w-2 h-2 rounded-full mt-1.5 shrink-0" style={`background:${color}`}></span>
+                <div>
+                  <p class="text-xs font-semibold text-gray-700">{bac}</p>
+                  <p class="text-xs text-gray-500">{effect}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h3 class="font-semibold text-blue-900 text-sm mb-2">Standard Drink Equivalents</h3>
+          <div class="space-y-1.5 text-xs text-blue-800">
+            <div class="flex justify-between"><span>Regular beer (12 oz, 5%)</span><span>1 drink</span></div>
+            <div class="flex justify-between"><span>Wine (5 oz, 12%)</span><span>1 drink</span></div>
+            <div class="flex justify-between"><span>Spirits (1.5 oz, 40%)</span><span>1 drink</span></div>
+            <div class="flex justify-between"><span>Craft IPA pint (8%)</span><span>~1.5 drinks</span></div>
+            <div class="flex justify-between"><span>Hard seltzer (12 oz, 5%)</span><span>1 drink</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl space-y-10">
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">How BAC Is Calculated (Widmark Formula)</h2>
+        <p class="text-gray-600 leading-relaxed mb-3">The Widmark formula is the standard method used by law enforcement and medical professionals to estimate BAC:</p>
+        <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-2">
+          <p class="font-mono text-sm text-gray-800">BAC = (alcohol grams ÷ (body weight grams × r)) × 100</p>
+          <p class="font-mono text-sm text-gray-800">Current BAC = Peak BAC − (0.015 × hours elapsed)</p>
+          <p class="text-xs text-gray-500 mt-2">r = body water constant (0.68 for men, 0.55 for women) | 1 standard drink = 14g pure alcohol</p>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">Legal BAC Limits Around the World</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
+            <thead class="bg-gray-50"><tr>
+              <th class="text-left px-4 py-3 font-semibold text-gray-700">Country / Region</th>
+              <th class="text-center px-4 py-3 font-semibold text-gray-700">Legal Limit</th>
+            </tr></thead>
+            <tbody>
+              {[
+                ['United States', '0.08%'],
+                ['United Kingdom', '0.08% (0.05% in Scotland)'],
+                ['European Union (most)', '0.05%'],
+                ['Germany', '0.05% (0.00% for new drivers)'],
+                ['Japan', '0.03%'],
+                ['Sweden / Poland', '0.02%'],
+              ].map(([country, limit], i) => (
+                <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td class="px-4 py-2.5 text-gray-700">{country}</td>
+                  <td class="px-4 py-2.5 text-center font-medium text-gray-900">{limit}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,130 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const value = parseFloat(inputs.value)||0
+  const mean = parseFloat(inputs.mean)||0
+  const stdDev = parseFloat(inputs.stdDev)||1
+  if(stdDev<=0) throw new Error("Standard deviation must be positive.")
+  const z = (value-mean)/stdDev
+  const erf = x => {
+    const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911
+    const sign=x<0?-1:1
+    const t=1/(1+p*Math.abs(x))
+    return sign*(1-(a1*t+a2*t*t+a3*Math.pow(t,3)+a4*Math.pow(t,4)+a5*Math.pow(t,5))*Math.exp(-x*x))
+  }
+  const percentile = (1+erf(z/Math.sqrt(2)))/2*100
+  const pctBelow = percentile
+  const pctAbove = 100-percentile
+  return {
+    value:"z = "+z.toFixed(4),
+    gaugeValue:Math.min(Math.max(percentile,0),100),
+    breakdown:["Value: "+value,"Mean: "+mean,"Std Dev: "+stdDev,"z-score: "+z.toFixed(4),"Percentile: "+percentile.toFixed(2)+"%","Above: "+pctAbove.toFixed(2)+"% of data","Below: "+pctBelow.toFixed(2)+"% of data"],
+    stats:[
+      {label:"Z-Score",value:z.toFixed(4)},
+      {label:"Percentile",value:percentile.toFixed(2)+"%"},
+      {label:"% Below",value:pctBelow.toFixed(2)+"%"},
+      {label:"% Above",value:pctAbove.toFixed(2)+"%"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a z-score?", answer: "A z-score (standard score) measures how many standard deviations a value is from the mean. z = (x - mean) / standard_deviation. A z-score of 0 means exactly at the mean. z = +1 means 1 standard deviation above mean. z = -2 means 2 standard deviations below mean." },
+  { question: "What percentile is a z-score of 1.65?", answer: "z = 1.65 corresponds to approximately the 95th percentile. Common z-score to percentile conversions: z=0 → 50th, z=1 → 84th, z=1.28 → 90th, z=1.65 → 95th, z=2 → 97.7th, z=2.33 → 99th, z=3 → 99.87th." },
+  { question: "What is the empirical rule (68-95-99.7)?", answer: "For normal distributions: 68% of data falls within 1 standard deviation of mean; 95% within 2 standard deviations; 99.7% within 3 standard deviations. A z-score beyond ±3 is very unusual — less than 0.3% of data in a normal distribution." },
+  { question: "How do I use z-scores to compare different distributions?", answer: "Z-scores standardize data across different scales. Example: a student scored 85 on math (mean=75, SD=8) and 76 on English (mean=70, SD=5). Math z = 1.25, English z = 1.2. Despite lower absolute English score, performance is very similar relative to peers." },
+  { question: "What is the difference between z-score and t-score?", answer: "Both measure standard deviations from the mean. Z-score: used when population mean and standard deviation are known. T-score: used when estimating from a sample (more common in practice). T-distributions have heavier tails than normal and adjust for small samples. For large samples (n > 30), t and z are nearly identical." }
+]
+---
+<Layout
+  title="Z-Score Calculator: Standard Score & Percentile"
+  description="Calculate z-score (standard score) and find the corresponding percentile rank. Convert between z-scores and probabilities. Free z-score calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Math", href: "/calculators/math" },
+    { name: "Z-Score Calculator", href: "/calculators/z-score-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Z-Score Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Z-Score Calculator"
+          description="Calculate z-score, percentile, and probability from any normal distribution"
+          formulaId="z-score"
+          formulaFn={formulaFn}
+          resultLabel="Z-Score"
+          inputs={[
+            {id:"value",label:"Value (x)",type:"number",placeholder:"75",step:0.001,defaultValue:75},
+            {id:"mean",label:"Mean (average)",type:"number",placeholder:"70",step:0.001,defaultValue:70},
+            {id:"stdDev",label:"Standard Deviation",type:"number",placeholder:"10",min:0.001,step:0.001,defaultValue:10}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% percentile",
+            zones: [
+              { label: "Very low (<5%)", color: "#ef4444", from: 0, to: 5 },
+              { label: "Below avg (5-40%)", color: "#f59e0b", from: 5, to: 40 },
+              { label: "Average (40-60%)", color: "#3b82f6", from: 40, to: 60 },
+              { label: "Above avg (60%+)", color: "#22c55e", from: 60, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Average Calculator", href: "/calculators/average-calculator" },
+            { name: "Percentage Calculator", href: "/calculators/percentage-calculator" },
+            { name: "Combination Calculator", href: "/calculators/combination-calculator" },
+            { name: "Grade Calculator", href: "/calculators/grade-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Z-Score to Percentile</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">z-score</th><th class="text-right pb-1">Percentile</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["-2.0","2.3%"],["-1.0","15.9%"],["0","50%"],["+1.0","84.1%"],["+1.65","95%"],["+2.0","97.7%"],["+3.0","99.87%"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5 font-mono">{r[0]}</td><td class="text-right">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">The Empirical Rule (Normal Distribution)</h2>
+        <div class="space-y-3">
+          {[
+            {range:"Within 1 SD (z = -1 to +1)",pct:"68.3% of data"},
+            {range:"Within 2 SD (z = -2 to +2)",pct:"95.4% of data"},
+            {range:"Within 3 SD (z = -3 to +3)",pct:"99.7% of data"},
+            {range:"Beyond 3 SD",pct:"Only 0.3% of data — very unusual"},
+          ].map(e => (
+            <div class="flex justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs">
+              <span class="text-gray-700">{e.range}</span>
+              <span class="font-medium text-blue-700">{e.pct}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Z-Score Applications</h2>
+        <div class="space-y-2">
+          {["Standardized testing — compare scores across different tests","Identifying outliers in datasets (|z| > 2 or 3 is suspect)","Quality control — products outside 3 sigma are defective","Medical tests — compare patient values to reference ranges","Finance — z-scores used in Altman Z-Score for bankruptcy prediction","Sports analytics — compare player performance across leagues"].map(a => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{a}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

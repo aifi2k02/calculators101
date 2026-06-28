@@ -1,0 +1,136 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const length = parseFloat(inputs.length)||0
+  const width = parseFloat(inputs.width)||0
+  const height = parseFloat(inputs.height)||0
+  const doors = parseFloat(inputs.doors)||0
+  const windows = parseFloat(inputs.windows)||0
+  const coats = parseFloat(inputs.coats)||2
+  const coverage = parseFloat(inputs.coverage)||350
+  if(length<=0||width<=0||height<=0) throw new Error("Enter room dimensions.")
+  const wallArea = 2*(length+width)*height
+  const doorArea = doors*21
+  const windowArea = windows*15
+  const paintableArea = wallArea-doorArea-windowArea
+  const gallonsNeeded = (paintableArea/coverage)*coats
+  const gallonsWithWaste = gallonsNeeded*1.1
+  const ceilingArea = length*width
+  const ceilingGallons = (ceilingArea/coverage)*coats
+  return {
+    value:gallonsWithWaste.toFixed(2)+" gallons (+10% waste)",
+    gaugeValue:Math.min(gallonsWithWaste/20*100,100),
+    breakdown:["Room: "+length+"ft x "+width+"ft x "+height+"ft","Wall area: "+wallArea.toFixed(1)+" sq ft","Doors ("+doors+"): -"+doorArea.toFixed(0)+" sq ft","Windows ("+windows+"): -"+windowArea.toFixed(0)+" sq ft","Paintable area: "+paintableArea.toFixed(1)+" sq ft","Coverage: "+coverage+" sq ft/gallon","Coats: "+coats,"Gallons needed: "+gallonsNeeded.toFixed(2),"With 10% waste: "+gallonsWithWaste.toFixed(2)],
+    stats:[
+      {label:"Paint (walls)",value:gallonsWithWaste.toFixed(2)+" gal"},
+      {label:"Wall Area",value:paintableArea.toFixed(0)+" sq ft"},
+      {label:"Ceiling Area",value:ceilingArea.toFixed(0)+" sq ft"},
+      {label:"Ceiling Paint",value:(ceilingGallons*1.1).toFixed(2)+" gal"},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "How much paint do I need for a room?", answer: "Measure total wall area (2 x (length + width) x height), subtract doors (~21 sq ft each) and windows (~15 sq ft each). Divide by coverage (typically 350-400 sq ft/gallon). Multiply by number of coats. Add 10% waste. Example: 12x10x8 room with 1 door, 2 windows, 2 coats = about 3 gallons." },
+  { question: "How many square feet does 1 gallon of paint cover?", answer: "Most interior paints cover 350-400 sq ft per coat (one gallon). Higher-quality paints may cover 400-450 sq ft. Rough or porous surfaces (new drywall, stucco, brick) absorb more: 300 sq ft/gallon. Always check the manufacturer label for actual coverage." },
+  { question: "Do I need a primer before painting?", answer: "Yes in these cases: New drywall or unpainted surfaces. Drastic color changes (dark to light). Stains, repairs, or water damage. Shiny surfaces being repainted. Primer improves adhesion, evens out surface porosity, and can reduce the number of paint coats needed. Self-priming paint claims to combine both." },
+  { question: "What is the difference between eggshell, satin, and gloss paint?", answer: "Flat/matte: no sheen, hides imperfections well. Best for ceilings and low-traffic walls. Eggshell: slight sheen, slightly washable. Good for living rooms. Satin: medium sheen, more washable. Best for hallways, kids rooms. Semi-gloss: shinier, very washable. Best for trim, doors, bathrooms. High-gloss: highest sheen, most durable. Best for trim." },
+  { question: "How long does a gallon of paint last if stored?", answer: "Latex/water-based paint: 10 years if stored properly (sealed, room temperature, never frozen). Oil-based paint: 15 years. Signs it has gone bad: lumpy, stringy, won separated with stirring, or smells very sour. Store paint cans upside-down initially to create a seal, then upright. Never store in freezing temperatures." }
+]
+---
+<Layout
+  title="Paint Calculator: How Many Gallons Do I Need?"
+  description="Calculate how much paint you need to cover a room or surface. Accounts for doors, windows, and multiple coats. Free paint calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Other", href: "/calculators/other" },
+    { name: "Paint Calculator", href: "/calculators/paint-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Paint Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Paint Calculator"
+          description="Calculate how much paint you need for any room"
+          formulaId="paint"
+          formulaFn={formulaFn}
+          resultLabel="Gallons"
+          inputs={[
+            {id:"length",label:"Room length (ft)",type:"number",placeholder:"12",min:0,step:0.5,defaultValue:12},
+            {id:"width",label:"Room width (ft)",type:"number",placeholder:"10",min:0,step:0.5,defaultValue:10},
+            {id:"height",label:"Ceiling height (ft)",type:"number",placeholder:"8",min:0,step:0.5,defaultValue:8},
+            {id:"doors",label:"Number of doors",type:"number",placeholder:"1",min:0,step:1,defaultValue:1},
+            {id:"windows",label:"Number of windows",type:"number",placeholder:"2",min:0,step:1,defaultValue:2},
+            {id:"coats",label:"Number of coats",type:"number",placeholder:"2",min:1,max:5,step:1,defaultValue:2},
+            {id:"coverage",label:"Paint coverage (sq ft per gallon)",type:"number",placeholder:"350",min:100,step:10,defaultValue:350}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "gallons",
+            zones: [
+              { label: "Small room (<3 gal)", color: "#22c55e", from: 0, to: 15 },
+              { label: "Medium room (3-8 gal)", color: "#3b82f6", from: 15, to: 40 },
+              { label: "Large room (8+ gal)", color: "#f59e0b", from: 40, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Concrete Calculator", href: "/calculators/concrete-calculator" },
+            { name: "Area Calculator", href: "/calculators/area-calculator" },
+            { name: "Unit Converter", href: "/calculators/unit-converter-calculator" },
+            { name: "Volume Calculator", href: "/calculators/volume-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Paint Guide</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>1 gallon ≈ 350-400 sq ft</div>
+            <div>Standard door ≈ 21 sq ft</div>
+            <div>Standard window ≈ 15 sq ft</div>
+            <div>Always buy 10% extra</div>
+            <div>2 coats typical for walls</div>
+            <div>Ceiling usually 1 coat</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Paint Finish Guide</h2>
+        <div class="space-y-2">
+          {[
+            {f:"Flat/Matte",r:"Ceilings, low-traffic walls",p:"Hides imperfections, not washable"},
+            {f:"Eggshell",r:"Living rooms, dining rooms",p:"Slight sheen, slightly washable"},
+            {f:"Satin",r:"Hallways, kids rooms",p:"Medium sheen, more durable"},
+            {f:"Semi-gloss",r:"Trim, doors, bathrooms",p:"Shinier, very washable, water-resistant"},
+            {f:"High-gloss",r:"Doors, cabinetry, trim",p:"Highest sheen, most durable"},
+          ].map(p => (
+            <div class="bg-gray-50 rounded-lg p-2"><div class="font-semibold text-xs text-blue-700">{p.f} — {p.r}</div><div class="text-xs text-gray-600">{p.p}</div></div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Typical Room Paint Needs</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Room</th><th class="p-2 text-xs font-semibold text-right">Gallons (2 coats)</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Bathroom (5×7ft)","1-2"],["Bedroom (10×12ft)","2-3"],["Living room (14×18ft)","4-5"],["Open plan (20×25ft)","6-8"],["Whole house avg","15-25+"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>

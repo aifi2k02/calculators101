@@ -1,0 +1,141 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+
+  const rate = parseFloat(inputs.rate)||0
+  const years = parseFloat(inputs.years)||0
+  if(rate>0){
+    const doublingYears = 72/rate
+    const exact = Math.log(2)/Math.log(1+rate/100)
+    const error = Math.abs(doublingYears-exact)/exact*100
+    return {
+      value:doublingYears.toFixed(1)+" years to double",
+      gaugeValue:Math.min(100-doublingYears*2,100),
+      breakdown:["Rate: "+rate+"%","Rule of 72 estimate: "+doublingYears.toFixed(2)+" years","Exact calculation: "+exact.toFixed(2)+" years","Approximation error: "+error.toFixed(2)+"%","At 20yr: $10k → $"+(10000*Math.pow(2,20/doublingYears)).toFixed(0)],
+      stats:[
+        {label:"Years to Double",value:doublingYears.toFixed(1)},
+        {label:"Exact Answer",value:exact.toFixed(2)+" yrs"},
+        {label:"Approximation Error",value:error.toFixed(2)+"%"},
+        {label:"Doubles in 20yr",value:(20/doublingYears).toFixed(1)+"x"},
+      ]
+    }
+  } else if(years>0){
+    const reqRate = 72/years
+    return {
+      value:reqRate.toFixed(2)+"% rate needed",
+      gaugeValue:Math.min(reqRate*3,100),
+      breakdown:["Desired doubling time: "+years+" years","Required rate (Rule of 72): "+reqRate.toFixed(2)+"%"],
+      stats:[
+        {label:"Required Rate",value:reqRate.toFixed(2)+"%"},
+        {label:"Target Years",value:years},
+        {label:"Est. Quadruple",value:(years*2)+" years"},
+        {label:"Est. 8x growth",value:(years*3)+" years"},
+      ]
+    }
+  }
+  throw new Error("Enter either rate or desired years.")
+
+`
+
+const faqs = [
+  { question: "What is the Rule of 72?", answer: "The Rule of 72 is a simple formula to estimate doubling time: Years to Double = 72 / Annual Return Rate. At 8% return, money doubles in 72/8 = 9 years. At 6%, it doubles in 12 years. At 3%, in 24 years. It works because 72 is close to the mathematical constant needed for continuous compounding." },
+  { question: "How accurate is the Rule of 72?", answer: "Very accurate for rates between 5-12%. At 8%, Rule of 72 gives 9 years; exact answer is 9.01 years (0.1% error). At 4%, it gives 18 years vs. exact 17.67 (1.9% error). At 25%, error is about 2.5%. More accurate alternatives: Rule of 70 (lower rates), Rule of 69.3 (continuous compounding)." },
+  { question: "How can I use the Rule of 72 to understand debt?", answer: "Works for debt too. A credit card at 18% APR doubles your debt in 72/18 = 4 years if you make no payments. Payday loan at 400% APR: debt doubles in 72/400 = 0.18 years (about 66 days). This mental math is powerful for understanding the cost of high-interest debt." },
+  { question: "What is the Rule of 69 and when should I use it?", answer: "Rule of 69.3 is more mathematically precise for continuous compounding. For comparing very different rates or for precise calculations, use the exact formula: Years = ln(2) / ln(1 + r). The Rule of 72 is for quick mental math. Rule of 69 is for precise calculations. Both give the same approximate result." },
+  { question: "How does the Rule of 72 apply to inflation?", answer: "Inflation erodes purchasing power at the same rate math applies. At 3% inflation, prices double in 72/3 = 24 years. At 7% inflation, prices double in just 10.3 years. This is why high inflation is dangerous: a 7% inflation rate halves your purchasing power in a decade." }
+]
+---
+<Layout
+  title="Rule of 72 Calculator: Doubling Time for Investments"
+  description="Calculate how long to double your investment using the Rule of 72. Find required rate for any doubling time. Free Rule of 72 calculator."
+  breadcrumbs={[
+    { name: "Home", href: "/" },
+    { name: "Financial", href: "/calculators/financial" },
+    { name: "Rule of 72 Calculator", href: "/calculators/rule-of-72-calculator" },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Rule of 72 Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Rule of 72 Calculator"
+          description="Calculate doubling time using the Rule of 72"
+          formulaId="rule-of-72"
+          formulaFn={formulaFn}
+          resultLabel="Years to Double"
+          inputs={[
+            {id:"rate",label:"Annual Return Rate (leave 0 to find required rate)",type:"number",placeholder:"7",min:0,max:50,step:0.5,unit:"%",defaultValue:7},
+            {id:"years",label:"Desired Years to Double (leave 0 if entering rate)",type:"number",placeholder:"0",min:0,max:100,unit:"years",defaultValue:0}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "% speed",
+            zones: [
+              { label: "Doubles quickly <5yr", color: "#22c55e", from: 0, to: 30 },
+              { label: "5-10 year double", color: "#3b82f6", from: 30, to: 60 },
+              { label: "10-20 year double", color: "#f59e0b", from: 60, to: 85 },
+              { label: "Slow double >20yr", color: "#ef4444", from: 85, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: "Compound Interest Calculator", href: "/calculators/compound-interest-calculator" },
+            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
+            { name: "DCA Calculator", href: "/calculators/dca-calculator" },
+            { name: "Inflation Calculator", href: "/calculators/inflation-calculator" },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Rule of 72 Quick Reference</h3>
+          <table class="w-full text-xs">
+            <thead><tr class="text-blue-700 border-b border-blue-200"><th class="text-left pb-1">Rate</th><th class="text-right pb-1">Doubles In</th></tr></thead>
+            <tbody class="text-blue-900">
+              {[["2% (savings)","36 yrs"],["4% (bonds)","18 yrs"],["6% (conservative)","12 yrs"],["8% (balanced)","9 yrs"],["10% (aggressive)","7.2 yrs"],["18% (credit card)","4 yrs"]].map(r => (
+                <tr class="border-t border-blue-100"><td class="py-0.5">{r[0]}</td><td class="text-right font-medium">{r[1]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Power of Compounding: $10,000 at 8%</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="text-left p-2 text-xs font-semibold">Years</th><th class="text-right p-2 text-xs font-semibold">Doublings</th><th class="text-right p-2 text-xs font-semibold">Value</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["9 (1st)","1x","$20,000"],["18 (2nd)","2x","$40,000"],["27 (3rd)","3x","$80,000"],["36 (4th)","4x","$160,000"],["45 (5th)","5x","$320,000"]].map(r => (
+              <tr><td class="p-2 text-xs">{r[0]}</td><td class="p-2 text-xs text-right">{r[1]}</td><td class="p-2 text-xs text-right font-medium text-green-700">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Each doubling period adds as much as ALL previous periods combined.</p>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Rule of 72 Uses Beyond Investing</h2>
+        <div class="space-y-3">
+          {[
+            {use:"Credit Card Debt",eg:"18% APR → debt doubles in 4 years without payments"},
+            {use:"Inflation Erosion",eg:"7% inflation → purchasing power halves in ~10 years"},
+            {use:"Population Growth",eg:"2% growth → population doubles in 36 years"},
+            {use:"Company Revenue",eg:"25% growth → revenue doubles in ~3 years"},
+            {use:"Economic GDP",eg:"3.5% growth → GDP doubles in ~20 years"},
+          ].map(u => (
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-semibold text-xs text-blue-700 mb-0.5">{u.use}</div>
+              <div class="text-xs text-gray-600">{u.eg}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
