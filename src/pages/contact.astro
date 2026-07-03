@@ -91,12 +91,7 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
 
       <!-- Cloudflare Turnstile widget -->
       <div>
-        <div
-          class="cf-turnstile"
-          data-sitekey={TURNSTILE_SITE_KEY}
-          data-theme="light"
-          data-size="normal"
-        ></div>
+        <div id="turnstile-widget"></div>
         <p id="captcha-error" class="hidden mt-1.5 text-xs text-red-600">Please complete the security check before sending.</p>
       </div>
 
@@ -131,11 +126,17 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
 </Layout>
 
 <script>
-  // Dynamically load Turnstile script
+  // Dynamically load Turnstile and explicitly render the widget
   const ts = document.createElement('script')
-  ts.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+  ts.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
   ts.async = true
   ts.defer = true
+  ts.onload = () => {
+    ;(window as any).turnstile.render('#turnstile-widget', {
+      sitekey: '0x4AAAAAADvI_JBa22IsjT8D',
+      theme: 'light',
+    })
+  }
   document.head.appendChild(ts)
 
   const WEB3FORMS_KEY = '148b0019-52c0-48c0-84eb-d9941161aac2'
