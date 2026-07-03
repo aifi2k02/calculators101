@@ -8,7 +8,6 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
   canonical="https://supercalculator.xyz/contact"
 >
   <!-- Cloudflare Turnstile script -->
-  <Fragment set:html='<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' />
 
   <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center">
@@ -132,6 +131,13 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
 </Layout>
 
 <script>
+  // Dynamically load Turnstile script
+  const ts = document.createElement('script')
+  ts.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+  ts.async = true
+  ts.defer = true
+  document.head.appendChild(ts)
+
   const WEB3FORMS_KEY = '148b0019-52c0-48c0-84eb-d9941161aac2'
 
   const form = document.getElementById('contact-form') as HTMLFormElement
