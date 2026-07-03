@@ -2,7 +2,7 @@
 // Set allowIndexing to true only when the site is ready for public launch.
 
 const siteConfig = {
-  allowIndexing: false,
+  allowIndexing: true,
   siteUrl: 'https://supercalculator.xyz',
   siteName: 'Super Calculator',
   siteDescription:
