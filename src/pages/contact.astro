@@ -1,11 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro'
+const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
 ---
 <Layout
   title="Contact Us — Super Calculator"
   description="Get in touch with the Super Calculator team. Send us a message and we'll respond as soon as possible."
   canonical="https://supercalculator.xyz/contact"
 >
+  <!-- Cloudflare Turnstile script -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer is:inline></script>
+
   <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
@@ -15,7 +19,7 @@ import Layout from '../layouts/Layout.astro'
     <h1 class="text-3xl font-bold text-gray-900 mb-2">Contact Us</h1>
     <p class="text-gray-500 text-sm mb-8">Have a question, found a bug, or want to suggest a calculator? Fill out the form below and we'll get back to you.</p>
 
-    <!-- Success message (hidden by default) -->
+    <!-- Success message -->
     <div id="success-msg" class="hidden bg-green-50 border border-green-200 rounded-xl px-5 py-4 mb-6 text-sm text-green-800 flex items-start gap-3">
       <svg class="w-5 h-5 shrink-0 mt-0.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -86,6 +90,17 @@ import Layout from '../layouts/Layout.astro'
         ></textarea>
       </div>
 
+      <!-- Cloudflare Turnstile widget -->
+      <div>
+        <div
+          class="cf-turnstile"
+          data-sitekey={TURNSTILE_SITE_KEY}
+          data-theme="light"
+          data-size="normal"
+        ></div>
+        <p id="captcha-error" class="hidden mt-1.5 text-xs text-red-600">Please complete the security check before sending.</p>
+      </div>
+
       <button
         type="submit"
         id="submit-btn"
@@ -123,13 +138,23 @@ import Layout from '../layouts/Layout.astro'
   const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
   const successMsg = document.getElementById('success-msg')
   const errorMsg = document.getElementById('error-msg')
+  const captchaError = document.getElementById('captcha-error')
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault()
-    submitBtn.disabled = true
-    submitBtn.textContent = 'Sending…'
     errorMsg?.classList.add('hidden')
     successMsg?.classList.add('hidden')
+    captchaError?.classList.add('hidden')
+
+    // Get Turnstile token
+    const turnstileToken = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value
+    if (!turnstileToken) {
+      captchaError?.classList.remove('hidden')
+      return
+    }
+
+    submitBtn.disabled = true
+    submitBtn.textContent = 'Sending…'
 
     const payload = {
       access_key: WEB3FORMS_KEY,
@@ -141,6 +166,7 @@ import Layout from '../layouts/Layout.astro'
       message: (document.getElementById('message') as HTMLTextAreaElement).value,
       source: 'supercalculator.xyz',
       replyto: (document.getElementById('email') as HTMLInputElement).value,
+      'cf-turnstile-response': turnstileToken,
     }
 
     try {
@@ -152,6 +178,10 @@ import Layout from '../layouts/Layout.astro'
       const json = await res.json()
       if (json.success) {
         form.reset()
+        // Reset Turnstile widget
+        if (typeof (window as any).turnstile !== 'undefined') {
+          (window as any).turnstile.reset()
+        }
         successMsg?.classList.remove('hidden')
         successMsg?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       } else {
