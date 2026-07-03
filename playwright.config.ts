@@ -6,7 +6,7 @@ export default defineConfig({
   retries: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4322',
+    baseURL: process.env.BASE_URL || 'http://localhost:4322',
     headless: true,
   },
   projects: [
