@@ -7,7 +7,7 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
   description="Get in touch with the Super Calculator team. Send us a message and we'll respond as soon as possible."
   canonical="https://supercalculator.xyz/contact"
 >
-  <script slot="head" is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <Fragment slot="head"><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script></Fragment>
 
   <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center">
