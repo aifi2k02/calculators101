@@ -117,6 +117,8 @@ import Layout from '../layouts/Layout.astro'
 </Layout>
 
 <script>
+  const WEB3FORMS_KEY = '148b0019-52c0-48c0-84eb-d9941161aac2'
+
   const form = document.getElementById('contact-form') as HTMLFormElement
   const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
   const successMsg = document.getElementById('success-msg')
@@ -127,31 +129,39 @@ import Layout from '../layouts/Layout.astro'
     submitBtn.disabled = true
     submitBtn.textContent = 'Sending…'
     errorMsg?.classList.add('hidden')
+    successMsg?.classList.add('hidden')
 
-    const data = {
+    const payload = {
+      access_key: WEB3FORMS_KEY,
+      from_name: 'Super Calculator Contact',
+      subject: `[supercalculator.xyz] ${(document.getElementById('subject') as HTMLSelectElement).value}`,
       name: (document.getElementById('name') as HTMLInputElement).value,
       email: (document.getElementById('email') as HTMLInputElement).value,
-      subject: (document.getElementById('subject') as HTMLSelectElement).value,
+      topic: (document.getElementById('subject') as HTMLSelectElement).value,
       message: (document.getElementById('message') as HTMLTextAreaElement).value,
       source: 'supercalculator.xyz',
+      replyto: (document.getElementById('email') as HTMLInputElement).value,
     }
 
-    // mailto fallback — opens email client with pre-filled content
-    // In production, replace this with a backend endpoint or Formspree/EmailJS
-    const mailtoBody = encodeURIComponent(
-      `Name: ${data.name}\nEmail: ${data.email}\nSubject: ${data.subject}\nSource: ${data.source}\n\nMessage:\n${data.message}`
-    )
-    const mailtoLink = `mailto:aifi2k02@gmail.com?subject=[supercalculator.xyz] ${encodeURIComponent(data.subject)}&body=${mailtoBody}`
-
-    window.location.href = mailtoLink
-
-    // Show success after short delay
-    setTimeout(() => {
-      form.reset()
-      successMsg?.classList.remove('hidden')
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      if (json.success) {
+        form.reset()
+        successMsg?.classList.remove('hidden')
+        successMsg?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      } else {
+        throw new Error(json.message ?? 'Submission failed')
+      }
+    } catch {
+      errorMsg?.classList.remove('hidden')
+    } finally {
       submitBtn.disabled = false
       submitBtn.textContent = 'Send Message'
-      form.scrollIntoView({ behavior: 'smooth' })
-    }, 800)
+    }
   })
 </script>
