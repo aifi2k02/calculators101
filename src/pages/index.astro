@@ -161,7 +161,82 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
     </div>
   </section>
 
+  <!-- About / AEO content -->
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">What is Super Calculator?</h2>
+    <div class="grid md:grid-cols-3 gap-6 mb-12">
+      {[
+        { icon: '💰', heading: 'Financial Calculators', body: 'Mortgage payments, compound interest, loan schedules, retirement projections, and 45+ more financial tools. Every result includes a full breakdown so you understand where the numbers come from.' },
+        { icon: '🏃', heading: 'Fitness & Health Calculators', body: 'BMI, calorie needs, TDEE, body fat percentage, macros, heart rate zones, and 25+ more health tools. Results follow WHO and ACSM guidelines for accuracy.' },
+        { icon: '📐', heading: 'Math & Everyday Calculators', body: 'Percentages, fractions, unit conversions, statistics, date and time tools, GPA, tip calculator, and 60+ more utilities for school, work, and daily life.' },
+      ].map(item => (
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <div class="text-3xl mb-3">{item.icon}</div>
+          <h3 class="font-bold text-gray-900 mb-2 text-base">{item.heading}</h3>
+          <p class="text-sm text-gray-600 leading-relaxed">{item.body}</p>
+        </div>
+      ))}
+    </div>
+
+    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-8">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">How Super Calculator Works</h2>
+      <div class="grid sm:grid-cols-2 gap-6 text-sm text-gray-700 leading-relaxed">
+        <div>
+          <p class="font-semibold text-gray-900 mb-1">Instant, free, and private</p>
+          <p>Every calculation runs entirely in your browser. No sign-up, no account, no data sent to a server. Results are immediate.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 mb-1">Step-by-step breakdowns</p>
+          <p>Every result shows a full breakdown — inputs used, formula applied, and what each number means — so you can verify and understand your answer.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 mb-1">AI explanations included</p>
+          <p>After calculating, tap "Explain this result" to get a plain-English summary of what your number means and what to do next.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 mb-1">Accurate formulas</p>
+          <p>Financial calculators use standard amortization math. Health calculators follow WHO and peer-reviewed guidelines. Math tools use IEEE-standard arithmetic.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ for homepage AEO -->
+    <div class="mt-10">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+      <div class="space-y-3">
+        {[
+          { q: 'Are all calculators free?', a: 'Yes. Every calculator on Super Calculator is completely free to use with no sign-up, subscription, or account required.' },
+          { q: 'Are the calculations accurate?', a: 'Yes. Financial calculators use standard amortization and investment formulas. Health calculators follow WHO, CDC, and ACSM guidelines. Each calculator page explains the formula used.' },
+          { q: 'Is my data private?', a: 'All calculations run entirely in your browser. No inputs or results are sent to our servers. Your data stays on your device.' },
+          { q: 'How many calculators are available?', a: 'Super Calculator currently offers 135+ free calculators across financial, fitness & health, math, and everyday life categories, with more added regularly.' },
+          { q: 'Can I use Super Calculator on mobile?', a: 'Yes. Every calculator is fully responsive and works on any device — phone, tablet, or desktop — with no app download required.' },
+        ].map(faq => (
+          <details class="bg-white border border-gray-200 rounded-lg px-4 py-3 group">
+            <summary class="text-sm font-medium text-gray-800 cursor-pointer list-none flex justify-between items-center">
+              {faq.q}
+              <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform shrink-0 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <p class="mt-2 text-sm text-gray-600 leading-relaxed">{faq.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
   <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Are all calculators free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every calculator on Super Calculator is completely free to use with no sign-up, subscription, or account required." } },
+      { "@type": "Question", "name": "Are the calculations accurate?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Financial calculators use standard amortization and investment formulas. Health calculators follow WHO, CDC, and ACSM guidelines." } },
+      { "@type": "Question", "name": "Is my data private?", "acceptedAnswer": { "@type": "Answer", "text": "All calculations run entirely in your browser. No inputs or results are sent to our servers. Your data stays on your device." } },
+      { "@type": "Question", "name": "How many calculators are available?", "acceptedAnswer": { "@type": "Answer", "text": "Super Calculator currently offers 135+ free calculators across financial, fitness & health, math, and everyday life categories." } },
+      { "@type": "Question", "name": "Can I use Super Calculator on mobile?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every calculator is fully responsive and works on any device — phone, tablet, or desktop — with no app download required." } },
+    ]
+  })} />
 </Layout>
 
 <script define:vars={{ allCalcs }}>

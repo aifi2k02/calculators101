@@ -14,9 +14,11 @@ interface Props {
   ogType?: 'website' | 'article'
   breadcrumbs?: BreadcrumbItem[]
   noSchema?: boolean
+  lastUpdated?: string   // ISO date e.g. '2026-06-29'
+  pageType?: 'tool' | 'article' | 'category' | 'home'
 }
 
-const { title, description, canonical, ogType = 'website', breadcrumbs, noSchema } = Astro.props
+const { title, description, canonical, ogType = 'website', breadcrumbs, noSchema, lastUpdated, pageType = 'tool' } = Astro.props
 
 const { siteUrl, siteName, allowIndexing, twitterHandle, locale } = siteConfig
 
@@ -37,6 +39,16 @@ const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0
       })),
     }
   : null
+
+// Organization schema — emitted on every page
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: siteName,
+  url: siteUrl,
+  logo: `${siteUrl}/favicon.svg`,
+  sameAs: [],
+}
 ---
 
 <!doctype html>
@@ -75,7 +87,11 @@ const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#2563eb" />
 
-    <!-- BreadcrumbList structured data -->
+    {lastUpdated && <meta property="article:modified_time" content={lastUpdated} />}
+    <meta name="author" content={siteName} />
+
+    <!-- Structured data -->
+    {!noSchema && <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />}
     {breadcrumbSchema && !noSchema && (
       <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
     )}

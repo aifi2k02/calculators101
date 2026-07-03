@@ -93,6 +93,9 @@ const gauge = {
             { id: 'insurance', label: 'Annual Home Insurance (optional)', type: 'number', placeholder: '1800', min: 0, unit: '$', defaultValue: 0 },
           ]}
           gauge={gauge}
+          intro="A mortgage calculator estimates your monthly principal and interest payment based on the loan amount, interest rate, and term. Add property tax, insurance, and PMI to see your full PITI payment. Use this before applying to understand your budget and compare loan options."
+          disclaimer="Results are estimates for planning purposes only. Actual payments vary by lender, credit score, and local tax rates. Consult a licensed mortgage professional before making borrowing decisions."
+          lastUpdated="2026-06-29"
           relatedCalcs={[
             { name: 'Amortization Calculator', href: '/calculators/amortization-calculator' },
             { name: 'House Affordability', href: '/calculators/house-affordability-calculator' },
