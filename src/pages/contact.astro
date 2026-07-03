@@ -8,7 +8,7 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
   canonical="https://supercalculator.xyz/contact"
 >
   <!-- Cloudflare Turnstile script -->
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer is:inline></script>
+  <Fragment set:html='<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' />
 
   <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center">
