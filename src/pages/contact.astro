@@ -7,7 +7,7 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
   description="Get in touch with the Super Calculator team. Send us a message and we'll respond as soon as possible."
   canonical="https://supercalculator.xyz/contact"
 >
-  <!-- Cloudflare Turnstile script -->
+  <script slot="head" is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
 
   <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center">
@@ -126,18 +126,18 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAADvI_JBa22IsjT8D'
 </Layout>
 
 <script>
-  // Dynamically load Turnstile and explicitly render the widget
-  const ts = document.createElement('script')
-  ts.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-  ts.async = true
-  ts.defer = true
-  ts.onload = () => {
-    ;(window as any).turnstile.render('#turnstile-widget', {
-      sitekey: '0x4AAAAAADvI_JBa22IsjT8D',
-      theme: 'light',
-    })
+  // Render Turnstile widget explicitly once the API is ready
+  function renderTurnstile() {
+    if (typeof (window as any).turnstile !== 'undefined') {
+      ;(window as any).turnstile.render('#turnstile-widget', {
+        sitekey: '0x4AAAAAADvI_JBa22IsjT8D',
+        theme: 'light',
+      })
+    } else {
+      setTimeout(renderTurnstile, 100)
+    }
   }
-  document.head.appendChild(ts)
+  renderTurnstile()
 
   const WEB3FORMS_KEY = '148b0019-52c0-48c0-84eb-d9941161aac2'
 

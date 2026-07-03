@@ -95,6 +95,7 @@ const orgSchema = {
     {breadcrumbSchema && !noSchema && (
       <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
     )}
+    <slot name="head" />
   </head>
   <body class="min-h-screen flex flex-col">
     <!-- Header -->
