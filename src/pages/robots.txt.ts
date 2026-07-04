@@ -5,7 +5,7 @@ export const GET: APIRoute = () => {
   const { allowIndexing, siteUrl } = siteConfig
 
   const content = allowIndexing
-    ? `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
+    ? `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap_index.xml\n`
     : `User-agent: *\nDisallow: /\n`
 
   return new Response(content, {
