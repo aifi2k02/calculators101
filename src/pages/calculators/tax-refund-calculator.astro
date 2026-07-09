@@ -1,0 +1,154 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const filing = inputs.filing || 'single'
+  const wages = parseFloat(inputs.wages) || 0
+  const withheld = parseFloat(inputs.withheld) || 0
+  const other = parseFloat(inputs.other) || 0
+  const adj = parseFloat(inputs.adjustments) || 0
+  if (wages <= 0 && other <= 0) throw new Error('Enter your total wages or income.')
+  const STD = { single: 16100, mfj: 32200 }
+  const BR = {
+    single: [[12400,0.10],[50400,0.12],[105700,0.22],[201775,0.24],[256225,0.32],[640600,0.35],[Infinity,0.37]],
+    mfj: [[24800,0.10],[100800,0.12],[211400,0.22],[403550,0.24],[512450,0.32],[768700,0.35],[Infinity,0.37]]
+  }
+  function fedTax(t, br){ let tax=0, prev=0; for (const b of br){ const cap=b[0], rate=b[1]; if (t>prev){ tax += (Math.min(t,cap)-prev)*rate; prev=cap } else break } return tax }
+  const agi = Math.max(0, wages + other - adj)
+  const std = STD[filing]
+  const taxable = Math.max(0, agi - std)
+  const tax = fedTax(taxable, BR[filing])
+  const balance = withheld - tax
+  const isRefund = balance >= 0
+  const eff = agi > 0 ? (tax / agi * 100) : 0
+  const amt = Math.abs(Math.round(balance))
+  return {
+    value: isRefund ? '$' + amt.toLocaleString() + ' refund' : '$' + amt.toLocaleString() + ' owed',
+    gaugeValue: Math.min(eff, 37),
+    stats: [
+      { label: isRefund ? 'Your Refund' : 'You Owe', value: '$' + amt.toLocaleString() },
+      { label: 'Federal Tax', value: '$' + Math.round(tax).toLocaleString() },
+      { label: 'Taxable Income', value: '$' + Math.round(taxable).toLocaleString() },
+      { label: 'Effective Rate', value: eff.toFixed(1) + '%' }
+    ],
+    breakdown: [
+      'Filing status: ' + (filing === 'mfj' ? 'Married filing jointly' : 'Single'),
+      'Total income: $' + Math.round(wages + other).toLocaleString(),
+      adj > 0 ? 'Adjustments (IRA, HSA, etc.): -$' + Math.round(adj).toLocaleString() : '',
+      'Adjusted gross income (AGI): $' + Math.round(agi).toLocaleString(),
+      'Standard deduction (2026): -$' + std.toLocaleString(),
+      'Taxable income: $' + Math.round(taxable).toLocaleString(),
+      '—',
+      'Federal income tax: $' + Math.round(tax).toLocaleString(),
+      'Tax withheld (W-2 box 2): $' + Math.round(withheld).toLocaleString(),
+      isRefund ? 'Estimated refund: $' + amt.toLocaleString() : 'Estimated balance due: $' + amt.toLocaleString(),
+      'Effective federal tax rate: ' + eff.toFixed(1) + '%'
+    ].filter(Boolean),
+    share: {
+      kicker: 'My 2026 federal return',
+      heroNumber: '$' + amt.toLocaleString(),
+      heroSub: isRefund ? 'estimated federal refund' : 'estimated balance due to the IRS',
+      hook: 'On $' + Math.round(agi).toLocaleString() + ' income — an effective federal rate of ' + eff.toFixed(1) + '%.',
+      chips: ['Tax $' + Math.round(tax).toLocaleString(), 'Withheld $' + Math.round(withheld).toLocaleString(), eff.toFixed(1) + '% eff.']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 37, unit: '%',
+  zones: [
+    { label: 'Low', color: '#22c55e', from: 0, to: 12 },
+    { label: 'Moderate', color: '#3b82f6', from: 12, to: 22 },
+    { label: 'High', color: '#f59e0b', from: 22, to: 30 },
+    { label: 'Top', color: '#ef4444', from: 30, to: 37 },
+  ]
+}
+
+const faqs = [
+  { question: 'How is my tax refund calculated?', answer: 'Your refund is the difference between the federal income tax you actually owe and the amount already withheld from your paychecks. We subtract your 2026 standard deduction from your income to get taxable income, apply the 2026 federal brackets to find your tax, then compare it to your withholding. If you withheld more than you owe, you get a refund; if less, you owe a balance.' },
+  { question: 'What are the 2026 federal standard deductions?', answer: 'For tax year 2026, the standard deduction is $16,100 for single filers and $32,200 for married filing jointly (per IRS Rev. Proc. 2025-32 under the One Big Beautiful Bill Act). Most taxpayers take the standard deduction rather than itemizing.' },
+  { question: 'What are the 2026 federal tax brackets?', answer: 'The 2026 rates are 10%, 12%, 22%, 24%, 32%, 35%, and 37%. For single filers the brackets start at $0 (10%), $12,400 (12%), $50,400 (22%), $105,700 (24%), $201,775 (32%), $256,225 (35%), and $640,600 (37%). Brackets are roughly double for married filing jointly.' },
+  { question: 'Why is my refund different from last year?', answer: 'Refunds change when your income, withholding, filing status, or the tax brackets change. The 2026 brackets and standard deduction rose with inflation, so if your income stayed flat, your tax likely dropped slightly. Adjusting your W-4 withholding is the biggest lever on your refund size.' },
+  { question: 'Is a big refund a good thing?', answer: 'Not necessarily. A large refund means you gave the IRS an interest-free loan all year. Many financial advisors suggest adjusting your W-4 so you break even — keeping that money in each paycheck instead. A refund is your own money coming back, not a bonus.' },
+]
+---
+<Layout
+  title="Tax Refund Calculator 2026: Estimate Your Federal Refund"
+  description="Estimate your 2026 federal tax refund or balance due. Free tax refund calculator using official 2026 IRS brackets and standard deductions — no signup."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Tax Refund Calculator', href: '/calculators/tax-refund-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Tax Refund Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Tax Refund Calculator (2026)"
+          description="Estimate your federal refund or balance due using 2026 IRS figures"
+          formulaId="tax-refund"
+          formulaFn={formulaFn}
+          resultLabel="Estimated Refund / Owed"
+          shareStyle="money"
+          inputs={[
+            { id: 'filing', label: 'Filing Status', type: 'select', options: [
+              { value: 'single', label: 'Single' },
+              { value: 'mfj', label: 'Married filing jointly' },
+            ], defaultValue: 'single' },
+            { id: 'wages', label: 'Total Wages (W-2 Box 1)', type: 'number', placeholder: '65000', min: 0, step: 100, unit: '$', defaultValue: 65000 },
+            { id: 'withheld', label: 'Federal Tax Withheld (W-2 Box 2)', type: 'number', placeholder: '7200', min: 0, step: 50, unit: '$', defaultValue: 7200 },
+            { id: 'other', label: 'Other Income (interest, etc.)', type: 'number', placeholder: '0', min: 0, step: 50, unit: '$', defaultValue: 0 },
+            { id: 'adjustments', label: 'Adjustments (IRA, HSA, student loan interest)', type: 'number', placeholder: '0', min: 0, step: 50, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This tax refund calculator estimates your 2026 federal refund or balance due. It applies the official 2026 IRS standard deduction and tax brackets to your income and compares the result to the tax already withheld from your paychecks. Supports single and married-filing-jointly filers."
+          disclaimer="Estimate for federal income tax only — it does not include state tax, tax credits (Child Tax Credit, EITC), or itemized deductions. Consult a tax professional or the IRS before filing. 2026 figures per IRS Rev. Proc. 2025-32."
+          lastUpdated="2026-07-09"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
+            { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
+            { name: 'Quarterly Estimated Tax', href: '/calculators/quarterly-tax-calculator' },
+            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">2026 Standard Deduction</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['Single','$16,100'],['Married filing jointly','$32,200'],['Head of household','$24,150']].map(([f,v]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{f}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-semibold text-gray-800 text-sm">2026 Brackets — Single</h3>
+          </div>
+          <table class="w-full text-xs">
+            <thead><tr class="text-gray-500"><th class="text-left px-4 py-1.5">Rate</th><th class="text-right px-4 py-1.5">Taxable income over</th></tr></thead>
+            <tbody class="text-gray-700">
+              {[['10%','$0'],['12%','$12,400'],['22%','$50,400'],['24%','$105,700'],['32%','$201,775'],['35%','$256,225'],['37%','$640,600']].map(([r,v]) => (
+                <tr class="border-t border-gray-50"><td class="px-4 py-1.5 font-medium">{r}</td><td class="px-4 py-1.5 text-right">{v}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Break-even beats a big refund</h3>
+          <p class="text-xs text-amber-800">A giant refund is an interest-free loan to the IRS. Tune your W-4 to keep that money in every paycheck instead.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

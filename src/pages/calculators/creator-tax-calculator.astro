@@ -1,0 +1,152 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const filing = inputs.filing || 'single'
+  const income = Math.max(0, parseFloat(inputs.income) || 0)
+  const expenses = Math.max(0, parseFloat(inputs.expenses) || 0)
+  const other = Math.max(0, parseFloat(inputs.other) || 0)
+  if (income <= 0) throw new Error('Enter your total creator income.')
+  const netSE = Math.max(0, income - expenses)
+  const STD = { single: 16100, mfj: 32200 }
+  const BR = {
+    single: [[12400,0.10],[50400,0.12],[105700,0.22],[201775,0.24],[256225,0.32],[640600,0.35],[Infinity,0.37]],
+    mfj: [[24800,0.10],[100800,0.12],[211400,0.22],[403550,0.24],[512450,0.32],[768700,0.35],[Infinity,0.37]]
+  }
+  function fedTax(t, br){ let tax=0, prev=0; for (const b of br){ const cap=b[0], rate=b[1]; if (t>prev){ tax += (Math.min(t,cap)-prev)*rate; prev=cap } else break } return tax }
+  const seBase = netSE * 0.9235
+  const ss = Math.min(seBase, 184500) * 0.124
+  const med = seBase * 0.029
+  const addlThresh = filing === 'mfj' ? 250000 : 200000
+  const addlMed = Math.max(0, seBase - addlThresh) * 0.009
+  const seTax = ss + med + addlMed
+  const halfSE = seTax / 2
+  const taxable = Math.max(0, netSE - halfSE + other - STD[filing])
+  const incomeTax = fedTax(taxable, BR[filing])
+  const totalTax = seTax + incomeTax
+  const keep = income - totalTax
+  const pct = income > 0 ? (totalTax / income * 100) : 0
+  return {
+    value: '$' + Math.round(totalTax).toLocaleString() + ' tax',
+    gaugeValue: Math.min(pct, 50),
+    stats: [
+      { label: 'Total Tax', value: '$' + Math.round(totalTax).toLocaleString() },
+      { label: 'You Keep', value: '$' + Math.round(keep).toLocaleString() },
+      { label: 'Self-Employment Tax', value: '$' + Math.round(seTax).toLocaleString() },
+      { label: 'Per Quarter', value: '$' + Math.round(totalTax / 4).toLocaleString() }
+    ],
+    breakdown: [
+      'Filing status: ' + (filing === 'mfj' ? 'Married filing jointly' : 'Single'),
+      'Total creator income (sponsorships, ads, affiliate, merch): $' + Math.round(income).toLocaleString(),
+      expenses > 0 ? 'Deductible expenses (gear, software, etc.): -$' + Math.round(expenses).toLocaleString() : '',
+      'Net self-employment income: $' + Math.round(netSE).toLocaleString(),
+      '—',
+      'Self-employment tax (15.3%): $' + Math.round(seTax).toLocaleString(),
+      'Federal income tax: $' + Math.round(incomeTax).toLocaleString(),
+      'Total tax: $' + Math.round(totalTax).toLocaleString() + ' (' + pct.toFixed(1) + '% of income)',
+      '—',
+      'You keep: $' + Math.round(keep).toLocaleString(),
+      'Set aside per quarter: $' + Math.round(totalTax / 4).toLocaleString()
+    ].filter(Boolean),
+    share: {
+      kicker: 'What creators actually keep',
+      heroNumber: '$' + Math.round(keep).toLocaleString(),
+      heroSub: 'take-home from $' + Math.round(income).toLocaleString() + ' of creator income',
+      hook: 'After ' + pct.toFixed(0) + '% in self-employment + federal income tax. Set aside $' + Math.round(totalTax / 4).toLocaleString() + '/quarter.',
+      chips: ['Tax $' + Math.round(totalTax).toLocaleString(), 'Keep $' + Math.round(keep).toLocaleString(), pct.toFixed(0) + '% to tax']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 50, unit: '%',
+  zones: [
+    { label: 'Light', color: '#22c55e', from: 0, to: 20 },
+    { label: 'Typical', color: '#3b82f6', from: 20, to: 30 },
+    { label: 'High', color: '#f59e0b', from: 30, to: 40 },
+    { label: 'Top', color: '#ef4444', from: 40, to: 50 },
+  ]
+}
+
+const faqs = [
+  { question: 'Do content creators have to pay taxes?', answer: 'Yes. Income from sponsorships, YouTube/AdSense, TikTok Creator Fund, affiliate links, merch, Twitch subs, Patreon, and even free products of value is taxable. Most creators are treated as self-employed, so you owe both self-employment tax (15.3%) and federal income tax on your net profit.' },
+  { question: 'What tax forms do creators receive?', answer: 'You may get a 1099-NEC from brands and sponsors that paid you $600+, and a 1099-K from platforms and payment processors (YouTube, Twitch, PayPal, Stripe) once you cross their reporting threshold. Even if you receive no form, you\'re still required to report all income.' },
+  { question: 'What can content creators deduct?', answer: 'Ordinary business costs: cameras, lighting, microphones, computers, editing software and subscriptions, a home studio or office, internet and phone (business portion), props and products bought for content, travel for shoots, and agency or editor fees. Track everything — deductions cut both SE and income tax.' },
+  { question: 'Are free products and gifts taxable?', answer: 'Often yes. If a brand sends you a product in exchange for a post or review, the fair market value is generally taxable income. Genuine no-strings gifts are different, but "gifted" items tied to promotion usually count. When in doubt, log the value.' },
+  { question: 'How much should creators set aside for taxes?', answer: 'A safe starting point is 25–30% of your net creator income in a separate account, paid to the IRS quarterly. This calculator gives your exact figure. High earners in top brackets should lean toward 35%+, especially in states with income tax.' },
+]
+---
+<Layout
+  title="Content Creator Tax Calculator 2026: Influencer & YouTuber Taxes"
+  description="Estimate 2026 taxes on creator income — sponsorships, AdSense, affiliate, and merch. See what you keep and set aside each quarter. Free creator tax calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Creator Tax Calculator', href: '/calculators/creator-tax-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Creator Tax Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Content Creator Tax Calculator (2026)"
+          description="Taxes on sponsorships, ad revenue, affiliate, and merch — and what you keep"
+          formulaId="creator-tax"
+          formulaFn={formulaFn}
+          resultLabel="Total Tax on Creator Income"
+          shareStyle="money"
+          inputs={[
+            { id: 'filing', label: 'Filing Status', type: 'select', options: [
+              { value: 'single', label: 'Single' },
+              { value: 'mfj', label: 'Married filing jointly' },
+            ], defaultValue: 'single' },
+            { id: 'income', label: 'Total Creator Income (all platforms)', type: 'number', placeholder: '80000', min: 0, step: 100, unit: '$', defaultValue: 80000 },
+            { id: 'expenses', label: 'Business Expenses (gear, software, studio)', type: 'number', placeholder: '15000', min: 0, step: 100, unit: '$', defaultValue: 15000 },
+            { id: 'other', label: 'Other (W-2) Income (optional)', type: 'number', placeholder: '0', min: 0, step: 100, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This creator tax calculator estimates 2026 taxes for YouTubers, streamers, TikTokers, and influencers. It treats your income (sponsorships, AdSense, affiliate, merch, tips) as self-employment, subtracts your gear and software expenses, and combines self-employment tax with federal income tax to show what you owe, what you keep, and your quarterly set-aside."
+          disclaimer="Federal estimate only — excludes state tax, credits, and the QBI deduction. Free products received for promotion may be taxable and aren't auto-included. Consult a tax pro. 2026 figures per IRS Rev. Proc. 2025-32."
+          lastUpdated="2026-07-09"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
+            { name: 'Quarterly Estimated Tax', href: '/calculators/quarterly-tax-calculator' },
+            { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+            { name: 'Tax Refund Calculator', href: '/calculators/tax-refund-calculator' },
+            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Deductible creator expenses</h3>
+          <ul class="space-y-1.5 text-xs text-blue-800 list-disc pl-4">
+            <li>Cameras, lenses, lighting, mics</li>
+            <li>Editing software &amp; subscriptions</li>
+            <li>Home studio / office space</li>
+            <li>Internet &amp; phone (business %)</li>
+            <li>Props &amp; products for content</li>
+            <li>Editors, VAs, agency fees</li>
+            <li>Travel for shoots</li>
+          </ul>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">1099-NEC &amp; 1099-K</h3>
+          <p class="text-xs text-amber-800">Brands send 1099-NEC at $600+. Platforms and PayPal/Stripe send 1099-K. Report all income even without a form.</p>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+          <h3 class="font-semibold text-green-900 text-sm mb-1">Gifted ≠ free</h3>
+          <p class="text-xs text-green-800">Products sent in exchange for a post are usually taxable at fair market value. Log what you receive.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

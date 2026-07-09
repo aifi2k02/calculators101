@@ -90,6 +90,11 @@ export const categories: Category[] = [
       { name: 'Hourly to Salary Calculator', href: '/calculators/hourly-to-salary-calculator', description: 'Convert an hourly wage to weekly, monthly, and annual pay', icon: '💵', live: true },
       { name: 'Overtime Calculator', href: '/calculators/overtime-calculator', description: 'Overtime pay at 1.5× or 2× plus total weekly earnings', icon: '⏰', live: true },
       { name: 'Wedding Budget Calculator', href: '/calculators/wedding-budget-calculator', description: 'Break down your wedding budget by category', icon: '💒', live: true },
+      { name: 'Tax Refund Calculator', href: '/calculators/tax-refund-calculator', description: 'Estimate your 2026 federal refund or balance due', icon: '💵', live: true },
+      { name: '1099 / Freelancer Tax Calculator', href: '/calculators/1099-tax-calculator', description: 'Self-employment + income tax and quarterly set-aside', icon: '🧾', live: true },
+      { name: 'Quarterly Estimated Tax Calculator', href: '/calculators/quarterly-tax-calculator', description: 'Per-quarter payments and all four IRS due dates', icon: '📆', live: true },
+      { name: 'Self-Employment Tax Calculator', href: '/calculators/self-employment-tax-calculator', description: 'Social Security + Medicare on freelance earnings', icon: '🧮', live: true },
+      { name: 'Content Creator Tax Calculator', href: '/calculators/creator-tax-calculator', description: 'Taxes on sponsorships, ads, affiliate, and merch', icon: '🎥', live: true },
     ],
   },
   {

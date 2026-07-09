@@ -1,0 +1,145 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const filing = inputs.filing || 'single'
+  const netSE = Math.max(0, parseFloat(inputs.net) || 0)
+  const withheld = parseFloat(inputs.withheld) || 0
+  if (netSE <= 0) throw new Error('Enter your expected net self-employment income.')
+  const STD = { single: 16100, mfj: 32200 }
+  const BR = {
+    single: [[12400,0.10],[50400,0.12],[105700,0.22],[201775,0.24],[256225,0.32],[640600,0.35],[Infinity,0.37]],
+    mfj: [[24800,0.10],[100800,0.12],[211400,0.22],[403550,0.24],[512450,0.32],[768700,0.35],[Infinity,0.37]]
+  }
+  function fedTax(t, br){ let tax=0, prev=0; for (const b of br){ const cap=b[0], rate=b[1]; if (t>prev){ tax += (Math.min(t,cap)-prev)*rate; prev=cap } else break } return tax }
+  const seBase = netSE * 0.9235
+  const ss = Math.min(seBase, 184500) * 0.124
+  const med = seBase * 0.029
+  const addlThresh = filing === 'mfj' ? 250000 : 200000
+  const addlMed = Math.max(0, seBase - addlThresh) * 0.009
+  const seTax = ss + med + addlMed
+  const halfSE = seTax / 2
+  const taxable = Math.max(0, netSE - halfSE - STD[filing])
+  const incomeTax = fedTax(taxable, BR[filing])
+  const totalTax = seTax + incomeTax
+  const owed = Math.max(0, totalTax - withheld)
+  const quarterly = owed / 4
+  return {
+    value: '$' + Math.round(quarterly).toLocaleString() + '/quarter',
+    gaugeValue: Math.min(netSE > 0 ? owed / netSE * 100 : 0, 50),
+    stats: [
+      { label: 'Each Quarter', value: '$' + Math.round(quarterly).toLocaleString() },
+      { label: 'Annual Estimated Tax', value: '$' + Math.round(owed).toLocaleString() },
+      { label: 'Self-Employment Tax', value: '$' + Math.round(seTax).toLocaleString() },
+      { label: 'Federal Income Tax', value: '$' + Math.round(incomeTax).toLocaleString() }
+    ],
+    breakdown: [
+      'Expected net self-employment income: $' + Math.round(netSE).toLocaleString(),
+      'Self-employment tax (15.3%): $' + Math.round(seTax).toLocaleString(),
+      'Federal income tax: $' + Math.round(incomeTax).toLocaleString(),
+      'Total estimated tax: $' + Math.round(totalTax).toLocaleString(),
+      withheld > 0 ? 'Less tax already withheld: -$' + Math.round(withheld).toLocaleString() : '',
+      'Net owed via estimates: $' + Math.round(owed).toLocaleString(),
+      '—',
+      'Payment 1 — due Apr 15: $' + Math.round(quarterly).toLocaleString(),
+      'Payment 2 — due Jun 15: $' + Math.round(quarterly).toLocaleString(),
+      'Payment 3 — due Sep 15: $' + Math.round(quarterly).toLocaleString(),
+      'Payment 4 — due Jan 15: $' + Math.round(quarterly).toLocaleString()
+    ].filter(Boolean),
+    share: {
+      kicker: 'My quarterly estimated tax',
+      heroNumber: '$' + Math.round(quarterly).toLocaleString(),
+      heroSub: 'due to the IRS every quarter',
+      hook: 'Four payments a year on $' + Math.round(netSE).toLocaleString() + ' of self-employment income — no April surprise.',
+      chips: ['Apr 15', 'Jun 15', 'Sep 15', 'Jan 15']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 50, unit: '%',
+  zones: [
+    { label: 'Light', color: '#22c55e', from: 0, to: 20 },
+    { label: 'Typical', color: '#3b82f6', from: 20, to: 30 },
+    { label: 'High', color: '#f59e0b', from: 30, to: 40 },
+    { label: 'Top', color: '#ef4444', from: 40, to: 50 },
+  ]
+}
+
+const faqs = [
+  { question: 'Who has to pay quarterly estimated taxes?', answer: 'Anyone who expects to owe $1,000 or more in tax beyond their withholding — mainly freelancers, contractors, gig workers, and business owners. If you have no employer withholding taxes for you, the IRS expects you to pay as you earn, four times a year.' },
+  { question: 'When are 2026 quarterly taxes due?', answer: 'The four estimated-tax deadlines fall on approximately April 15, June 15, September 15, and January 15 of the following year. If a date lands on a weekend or holiday, it shifts to the next business day. The periods are uneven, but the payment amounts are usually split evenly.' },
+  { question: 'What happens if I miss a quarterly payment?', answer: 'The IRS charges an underpayment penalty, calculated like interest on the amount you should have paid. Paying late — or paying too little — both trigger it. The safest approach is to pay on time and use the "safe harbor" rule below.' },
+  { question: 'What is the safe harbor rule?', answer: 'You avoid underpayment penalties if you pay at least 90% of this year\'s tax, or 100% of last year\'s tax (110% if your prior-year AGI was over $150,000) — whichever is smaller. Many freelancers simply pay 100–110% of last year\'s total in four equal installments.' },
+  { question: 'How do I actually pay?', answer: 'The easiest way is IRS Direct Pay or the EFTPS system online — both are free. You can also mail Form 1040-ES vouchers. Keep a record of each payment; you\'ll reconcile them against your total tax when you file your annual return.' },
+]
+---
+<Layout
+  title="Quarterly Estimated Tax Calculator 2026: Payment Schedule"
+  description="Calculate your 2026 quarterly estimated tax payments and see all four IRS due dates. Free quarterly tax calculator for freelancers and self-employed."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Quarterly Estimated Tax', href: '/calculators/quarterly-tax-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Quarterly Estimated Tax</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Quarterly Estimated Tax Calculator (2026)"
+          description="Your per-quarter payment and all four IRS due dates"
+          formulaId="quarterly-tax"
+          formulaFn={formulaFn}
+          resultLabel="Payment Per Quarter"
+          shareStyle="money"
+          inputs={[
+            { id: 'filing', label: 'Filing Status', type: 'select', options: [
+              { value: 'single', label: 'Single' },
+              { value: 'mfj', label: 'Married filing jointly' },
+            ], defaultValue: 'single' },
+            { id: 'net', label: 'Expected Net Self-Employment Income', type: 'number', placeholder: '60000', min: 0, step: 100, unit: '$', defaultValue: 60000 },
+            { id: 'withheld', label: 'Tax Already Withheld (W-2 job / spouse)', type: 'number', placeholder: '0', min: 0, step: 100, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This quarterly estimated tax calculator shows freelancers and self-employed workers exactly how much to send the IRS each quarter for 2026 — combining self-employment tax and federal income tax, minus any withholding, split across the four payment deadlines (April, June, September, January)."
+          disclaimer="Federal estimate only — excludes state estimated taxes and credits. Payment periods are uneven; amounts are split evenly. Use IRS Form 1040-ES or Direct Pay to submit. 2026 figures per IRS Rev. Proc. 2025-32."
+          lastUpdated="2026-07-09"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
+            { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
+            { name: 'Creator / Influencer Tax', href: '/calculators/creator-tax-calculator' },
+            { name: 'Tax Refund Calculator', href: '/calculators/tax-refund-calculator' },
+            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">2026 Payment Deadlines</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['Q1','April 15, 2026'],['Q2','June 15, 2026'],['Q3','September 15, 2026'],['Q4','January 15, 2027']].map(([q,d]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span class="font-semibold">{q}</span><span>{d}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Safe harbor</h3>
+          <p class="text-xs text-amber-800">Pay 100% of last year's tax (110% if prior AGI &gt; $150k) in four installments and you avoid underpayment penalties — even if you earn more this year.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4">
+          <h3 class="font-semibold text-gray-900 text-sm mb-1">Pay online, free</h3>
+          <p class="text-xs text-gray-600">IRS Direct Pay and EFTPS are free. Keep a receipt of each payment to reconcile at filing.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

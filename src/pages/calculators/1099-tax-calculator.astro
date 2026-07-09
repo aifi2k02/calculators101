@@ -1,0 +1,154 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const filing = inputs.filing || 'single'
+  const gross = parseFloat(inputs.gross) || 0
+  const expenses = parseFloat(inputs.expenses) || 0
+  const other = parseFloat(inputs.other) || 0
+  if (gross <= 0) throw new Error('Enter your 1099 / freelance income.')
+  const netSE = Math.max(0, gross - expenses)
+  const STD = { single: 16100, mfj: 32200 }
+  const BR = {
+    single: [[12400,0.10],[50400,0.12],[105700,0.22],[201775,0.24],[256225,0.32],[640600,0.35],[Infinity,0.37]],
+    mfj: [[24800,0.10],[100800,0.12],[211400,0.22],[403550,0.24],[512450,0.32],[768700,0.35],[Infinity,0.37]]
+  }
+  function fedTax(t, br){ let tax=0, prev=0; for (const b of br){ const cap=b[0], rate=b[1]; if (t>prev){ tax += (Math.min(t,cap)-prev)*rate; prev=cap } else break } return tax }
+  const seBase = netSE * 0.9235
+  const ss = Math.min(seBase, 184500) * 0.124
+  const med = seBase * 0.029
+  const addlThresh = filing === 'mfj' ? 250000 : 200000
+  const addlMed = Math.max(0, seBase - addlThresh) * 0.009
+  const seTax = ss + med + addlMed
+  const halfSE = seTax / 2
+  const taxable = Math.max(0, netSE - halfSE + other - STD[filing])
+  const incomeTax = fedTax(taxable, BR[filing])
+  const totalTax = seTax + incomeTax
+  const quarterly = totalTax / 4
+  const pct = netSE > 0 ? (totalTax / netSE * 100) : 0
+  return {
+    value: '$' + Math.round(totalTax).toLocaleString() + ' total',
+    gaugeValue: Math.min(pct, 50),
+    stats: [
+      { label: 'Set Aside (Total)', value: '$' + Math.round(totalTax).toLocaleString() },
+      { label: 'Self-Employment Tax', value: '$' + Math.round(seTax).toLocaleString() },
+      { label: 'Federal Income Tax', value: '$' + Math.round(incomeTax).toLocaleString() },
+      { label: 'Per Quarter', value: '$' + Math.round(quarterly).toLocaleString() }
+    ],
+    breakdown: [
+      'Filing status: ' + (filing === 'mfj' ? 'Married filing jointly' : 'Single'),
+      'Gross 1099 income: $' + Math.round(gross).toLocaleString(),
+      expenses > 0 ? 'Business expenses: -$' + Math.round(expenses).toLocaleString() : '',
+      'Net self-employment income: $' + Math.round(netSE).toLocaleString(),
+      '—',
+      'SE tax base (92.35%): $' + Math.round(seBase).toLocaleString(),
+      'Self-employment tax (15.3%): $' + Math.round(seTax).toLocaleString(),
+      'Deductible half of SE tax: -$' + Math.round(halfSE).toLocaleString(),
+      other > 0 ? 'Other (W-2) income: $' + Math.round(other).toLocaleString() : '',
+      'Standard deduction (2026): -$' + STD[filing].toLocaleString(),
+      'Taxable income: $' + Math.round(taxable).toLocaleString(),
+      'Federal income tax: $' + Math.round(incomeTax).toLocaleString(),
+      '—',
+      'TOTAL tax to set aside: $' + Math.round(totalTax).toLocaleString() + ' (' + pct.toFixed(1) + '% of net)',
+      'Suggested per quarter: $' + Math.round(quarterly).toLocaleString()
+    ].filter(Boolean),
+    share: {
+      kicker: 'Set aside for taxes',
+      heroNumber: '$' + Math.round(totalTax).toLocaleString(),
+      heroSub: 'to set aside on $' + Math.round(netSE).toLocaleString() + ' of freelance income',
+      hook: "That's " + pct.toFixed(0) + '% — self-employment tax plus federal income tax combined.',
+      chips: ['SE tax $' + Math.round(seTax).toLocaleString(), 'Fed $' + Math.round(incomeTax).toLocaleString(), 'Quarterly $' + Math.round(quarterly).toLocaleString()]
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 50, unit: '%',
+  zones: [
+    { label: 'Light', color: '#22c55e', from: 0, to: 20 },
+    { label: 'Typical', color: '#3b82f6', from: 20, to: 30 },
+    { label: 'High', color: '#f59e0b', from: 30, to: 40 },
+    { label: 'Top', color: '#ef4444', from: 40, to: 50 },
+  ]
+}
+
+const faqs = [
+  { question: 'How much should I set aside for 1099 taxes?', answer: 'A common rule of thumb is 25–30% of your net freelance income, but the exact amount depends on your total income and filing status. This calculator gives a precise figure by combining self-employment tax (15.3%) with your federal income tax bracket. For most freelancers earning $40k–$90k, 25–30% is a safe target.' },
+  { question: 'What is self-employment tax?', answer: 'Self-employment (SE) tax is Social Security and Medicare tax for people who work for themselves — 15.3% total (12.4% Social Security up to $184,500 in 2026, plus 2.9% Medicare on all net earnings). W-2 employees split this with their employer; freelancers pay both halves, though half is deductible.' },
+  { question: 'Do 1099 workers pay more tax than W-2 employees?', answer: 'On the same income, yes — because you pay the full 15.3% SE tax instead of splitting it with an employer. But freelancers can deduct business expenses and half of their SE tax, which W-2 employees generally cannot, so real-world tax bills are often closer than they appear.' },
+  { question: 'What business expenses can I deduct?', answer: 'Ordinary and necessary costs of running your business: home office, software and subscriptions, equipment, internet and phone (business portion), mileage, professional services, and supplies. Every dollar of legitimate expense lowers both your SE tax and income tax, so track them carefully.' },
+  { question: 'When are 1099 taxes due?', answer: 'Freelancers generally pay quarterly estimated taxes on roughly April 15, June 15, September 15, and January 15. Missing them can trigger IRS underpayment penalties. Divide your total estimated tax by four, or use our Quarterly Estimated Tax Calculator for the exact schedule.' },
+]
+---
+<Layout
+  title="1099 Tax Calculator 2026: Freelancer & Self-Employed Taxes"
+  description="Estimate your 1099 / freelance taxes for 2026 — self-employment tax plus federal income tax, with how much to set aside each quarter. Free, no signup."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: '1099 Tax Calculator', href: '/calculators/1099-tax-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">1099 Tax Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="1099 / Freelancer Tax Calculator (2026)"
+          description="Self-employment + federal income tax, and what to set aside each quarter"
+          formulaId="1099-tax"
+          formulaFn={formulaFn}
+          resultLabel="Total Tax to Set Aside"
+          shareStyle="money"
+          inputs={[
+            { id: 'filing', label: 'Filing Status', type: 'select', options: [
+              { value: 'single', label: 'Single' },
+              { value: 'mfj', label: 'Married filing jointly' },
+            ], defaultValue: 'single' },
+            { id: 'gross', label: 'Gross 1099 / Freelance Income', type: 'number', placeholder: '65000', min: 0, step: 100, unit: '$', defaultValue: 65000 },
+            { id: 'expenses', label: 'Business Expenses', type: 'number', placeholder: '8000', min: 0, step: 100, unit: '$', defaultValue: 8000 },
+            { id: 'other', label: 'Other (W-2) Income (optional)', type: 'number', placeholder: '0', min: 0, step: 100, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This 1099 tax calculator estimates what freelancers and self-employed workers owe for 2026 — combining self-employment tax (15.3%) with federal income tax, minus deductible expenses and half of SE tax. It shows the total to set aside and a per-quarter target so you never get surprised at tax time."
+          disclaimer="Federal estimate only — excludes state tax, credits, and QBI deduction. Half of SE tax is deducted as an adjustment. Consult a tax professional. 2026 figures per IRS Rev. Proc. 2025-32; SS wage base $184,500."
+          lastUpdated="2026-07-09"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Quarterly Estimated Tax', href: '/calculators/quarterly-tax-calculator' },
+            { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
+            { name: 'Creator / Influencer Tax', href: '/calculators/creator-tax-calculator' },
+            { name: 'Tax Refund Calculator', href: '/calculators/tax-refund-calculator' },
+            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">The 30% rule</h3>
+          <p class="text-xs text-blue-800">A safe default for most freelancers: set aside <strong>~30%</strong> of every payment in a separate tax account. This calculator refines that to your exact number.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-3">2026 SE Tax Facts</h3>
+          <div class="space-y-2 text-xs text-gray-600">
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>SE tax rate</span><span class="font-medium">15.3%</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Social Security portion</span><span class="font-medium">12.4%</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Medicare portion</span><span class="font-medium">2.9%</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>SS wage base</span><span class="font-medium">$184,500</span></div>
+            <div class="flex justify-between"><span>Taxed on</span><span class="font-medium">92.35% of net</span></div>
+          </div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+          <h3 class="font-semibold text-green-900 text-sm mb-1">Deduct everything legit</h3>
+          <p class="text-xs text-green-800">Every $1,000 in real business expenses saves roughly $250–$400 in combined SE + income tax.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

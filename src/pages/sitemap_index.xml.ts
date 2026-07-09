@@ -167,6 +167,12 @@ const pages = [
   { url: '/calculators/mulch-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/carbon-footprint-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/pizza-calculator', priority: '0.8', changefreq: 'monthly' },
+  // Phase 2 — Cluster 1: Tax Power Hub
+  { url: '/calculators/tax-refund-calculator', priority: '0.9', changefreq: 'monthly' },
+  { url: '/calculators/1099-tax-calculator', priority: '0.9', changefreq: 'monthly' },
+  { url: '/calculators/quarterly-tax-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/self-employment-tax-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/creator-tax-calculator', priority: '0.85', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

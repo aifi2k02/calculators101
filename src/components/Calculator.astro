@@ -49,9 +49,11 @@ export interface Props {
   disclaimer?: string
   /** ISO date of last content review, e.g. '2026-06-29' */
   lastUpdated?: string
+  /** Visual style for the shareable result card (gradient). Card appears when formulaFn returns a `share` object. */
+  shareStyle?: 'money' | 'viral' | 'time'
 }
 
-const { title, description, inputs, resultLabel, resultUnit, formulaId, formulaFn, relatedCalcs = [], faqs = [], gauge, intro, disclaimer, lastUpdated } = Astro.props
+const { title, description, inputs, resultLabel, resultUnit, formulaId, formulaFn, relatedCalcs = [], faqs = [], gauge, intro, disclaimer, lastUpdated, shareStyle = 'money' } = Astro.props
 
 // Pre-serialize gauge for client script
 const gaugeJson = gauge ? JSON.stringify(gauge) : 'null'
@@ -209,10 +211,10 @@ const faqSchema = faqs.length > 0 ? {
         <div id={`result-breakdown-${formulaId}`} class="mt-4 text-sm text-gray-600 space-y-0.5 bg-gray-50 rounded-xl p-4 border border-gray-100"></div>
 
         <!-- Copy / Share row -->
-        <div class="mt-3 flex gap-2">
+        <div class="mt-3 flex flex-wrap gap-2">
           <button
             id={`copy-btn-${formulaId}`}
-            class="flex-1 text-xs border border-gray-200 hover:border-gray-300 bg-white py-2 px-3 rounded-lg text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
+            class="flex-1 min-w-[7rem] text-xs border border-gray-200 hover:border-gray-300 bg-white py-2 px-3 rounded-lg text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
@@ -221,14 +223,24 @@ const faqSchema = faqs.length > 0 ? {
           </button>
           <button
             id={`share-btn-${formulaId}`}
-            class="flex-1 text-xs border border-gray-200 hover:border-gray-300 bg-white py-2 px-3 rounded-lg text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
+            class="flex-1 min-w-[7rem] text-xs border border-gray-200 hover:border-gray-300 bg-white py-2 px-3 rounded-lg text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
             </svg>
             Share
           </button>
+          <button
+            id={`img-btn-${formulaId}`}
+            class="hidden flex-1 min-w-[8rem] text-xs border border-blue-200 hover:border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 py-2 px-3 rounded-lg text-blue-700 font-semibold transition-colors flex items-center justify-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Share image
+          </button>
         </div>
+        <canvas id={`share-canvas-${formulaId}`} width="1080" height="1080" class="hidden"></canvas>
 
         <!-- AI Explain -->
         <button
@@ -310,7 +322,7 @@ const faqSchema = faqs.length > 0 ? {
   </div>
 )}
 
-<script define:vars={{ formulaId, formulaFn, gaugeJson }}>
+<script define:vars={{ formulaId, formulaFn, gaugeJson, shareStyle, calcTitle: title }}>
   const gauge = gaugeJson ? JSON.parse(gaugeJson) : null
 
   // Elements
@@ -330,6 +342,10 @@ const faqSchema = faqs.length > 0 ? {
   const aiResult    = document.getElementById(`ai-result-${formulaId}`)
   const copyBtn     = document.getElementById(`copy-btn-${formulaId}`)
   const shareBtn    = document.getElementById(`share-btn-${formulaId}`)
+  const imgBtn      = document.getElementById(`img-btn-${formulaId}`)
+  const shareCanvas = document.getElementById(`share-canvas-${formulaId}`)
+
+  let lastShare = null
 
   const calculate = new Function('inputs', formulaFn)
 
@@ -443,6 +459,10 @@ const faqSchema = faqs.length > 0 ? {
         if (zoneBadge) zoneBadge.classList.add('hidden')
       }
 
+      // Shareable result card data (optional)
+      lastShare = result.share ?? null
+      if (imgBtn) imgBtn.classList.toggle('hidden', !lastShare)
+
       resultBox?.classList.remove('hidden')
     } catch (err) {
       if (errorText) errorText.textContent = err.message ?? 'Please check your inputs and try again.'
@@ -501,5 +521,149 @@ const faqSchema = faqs.length > 0 ? {
         if (shareBtn) shareBtn.innerHTML = '<svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>Share'
       }, 2000)
     }
+  })
+
+  // ---------- Shareable result card (Canvas) ----------
+  const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+  const cardStyles = {
+    money: { stops: ['#1E1B4B', '#312E81', '#1D4ED8'], glow: 'rgba(250,204,21,0.14)', glowAt: [0.85, -0.05] },
+    viral: { stops: ['#3B0764', '#6D28D9', '#2563EB'], glow: 'rgba(250,204,21,0.16)', glowAt: [0.15, -0.05] },
+    time:  { stops: ['#0C1445', '#155E75', '#0E7490'], glow: 'rgba(59,130,246,0.34)', glowAt: [0.8, 1.05] },
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath()
+    ctx.moveTo(x + r, y)
+    ctx.arcTo(x + w, y, x + w, y + h, r)
+    ctx.arcTo(x + w, y + h, x, y + h, r)
+    ctx.arcTo(x, y + h, x, y, r)
+    ctx.arcTo(x, y, x + w, y, r)
+    ctx.closePath()
+  }
+
+  function drawBolt(ctx, x, y, size) {
+    const s = size / 64
+    const pts = [[38,8],[18,30],[30,30],[26,56],[46,30],[34,30]]
+    ctx.fillStyle = '#FACC15'
+    ctx.beginPath()
+    pts.forEach((p, i) => {
+      const px = x + p[0] * s, py = y + p[1] * s
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+    })
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  function wrapText(ctx, text, maxWidth) {
+    const words = String(text).split(' ')
+    const lines = []
+    let line = ''
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w
+      if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w }
+      else line = test
+    }
+    if (line) lines.push(line)
+    return lines
+  }
+
+  function drawCard(share) {
+    const cv = shareCanvas
+    const ctx = cv.getContext('2d')
+    const W = 1080, H = 1080, pad = 90
+    const st = cardStyles[shareStyle] || cardStyles.money
+
+    // background gradient
+    const g = ctx.createLinearGradient(0, 0, W, H)
+    g.addColorStop(0, st.stops[0]); g.addColorStop(0.5, st.stops[1]); g.addColorStop(1, st.stops[2])
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H)
+    // glow
+    const rg = ctx.createRadialGradient(W*st.glowAt[0], H*st.glowAt[1], 0, W*st.glowAt[0], H*st.glowAt[1], W*0.7)
+    rg.addColorStop(0, st.glow); rg.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H)
+
+    // header
+    ctx.fillStyle = 'rgba(255,255,255,0.14)'
+    roundRect(ctx, pad, 84, 66, 66, 16); ctx.fill()
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 2
+    roundRect(ctx, pad, 84, 66, 66, 16); ctx.stroke()
+    drawBolt(ctx, pad + 13, 96, 42)
+    ctx.textBaseline = 'alphabetic'
+    ctx.fillStyle = '#EEF1FF'; ctx.font = `800 40px ${FONT}`; ctx.textAlign = 'left'
+    ctx.fillText('Super Calculator', pad + 84, 138)
+    ctx.fillStyle = 'rgba(238,241,255,0.72)'; ctx.font = `600 28px ${FONT}`; ctx.textAlign = 'right'
+    let cn = calcTitle
+    while (ctx.measureText(cn).width > 300 && cn.length > 4) cn = cn.slice(0, -2)
+    ctx.fillText(cn === calcTitle ? cn : cn + '…', W - pad, 132)
+
+    // body flow
+    ctx.textAlign = 'left'
+    let y = 505
+    if (share.kicker) {
+      ctx.fillStyle = 'rgba(238,241,255,0.72)'; ctx.font = `700 30px ${FONT}`
+      ctx.fillText(String(share.kicker).toUpperCase(), pad, y); y += 28
+    }
+    // hero number (yellow)
+    ctx.fillStyle = '#FACC15'; ctx.font = `900 122px ${FONT}`
+    ctx.fillText(share.heroNumber ?? '', pad, y + 118); y += 158
+    // hero sub (white, wrapped)
+    if (share.heroSub) {
+      ctx.fillStyle = '#EEF1FF'; ctx.font = `700 46px ${FONT}`
+      for (const ln of wrapText(ctx, share.heroSub, W - pad*2)) { ctx.fillText(ln, pad, y + 40); y += 58 }
+    }
+    // hook (softer white, wrapped)
+    if (share.hook) {
+      y += 18
+      ctx.fillStyle = 'rgba(238,241,255,0.88)'; ctx.font = `400 36px ${FONT}`
+      for (const ln of wrapText(ctx, share.hook, W - pad*2)) { ctx.fillText(ln, pad, y + 32); y += 48 }
+    }
+    // chips
+    if (Array.isArray(share.chips) && share.chips.length) {
+      y += 26; let cx = pad
+      ctx.font = `700 27px ${FONT}`
+      for (const chip of share.chips) {
+        const tw = ctx.measureText(chip).width, cw = tw + 44
+        if (cx + cw > W - pad) break
+        ctx.fillStyle = 'rgba(255,255,255,0.13)'; roundRect(ctx, cx, y, cw, 52, 12); ctx.fill()
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1.5; roundRect(ctx, cx, y, cw, 52, 12); ctx.stroke()
+        ctx.fillStyle = '#EEF1FF'; ctx.fillText(chip, cx + 22, y + 35)
+        cx += cw + 14
+      }
+    }
+    // footer
+    ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.moveTo(pad, 986); ctx.lineTo(W - pad, 986); ctx.stroke()
+    ctx.fillStyle = 'rgba(238,241,255,0.82)'; ctx.font = `600 29px ${FONT}`; ctx.textAlign = 'left'
+    ctx.fillText('supercalculator.xyz', pad, 1032)
+    ctx.fillStyle = '#FACC15'; ctx.textAlign = 'right'
+    ctx.fillText('Calculate yours →', W - pad, 1032)
+    ctx.textAlign = 'left'
+    return cv
+  }
+
+  function resetImgBtn() {
+    if (imgBtn) imgBtn.innerHTML = '<svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Share image'
+  }
+
+  imgBtn?.addEventListener('click', async () => {
+    if (!lastShare) return
+    drawCard(lastShare)
+    imgBtn.textContent = '…'
+    shareCanvas.toBlob(async (blob) => {
+      if (!blob) { resetImgBtn(); return }
+      const file = new File([blob], 'supercalculator-result.png', { type: 'image/png' })
+      const shareData = { files: [file], title: document.title, text: `${calcTitle} — supercalculator.xyz` }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share(shareData) } catch {}
+        resetImgBtn()
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = 'supercalculator-result.png'; a.click()
+        URL.revokeObjectURL(url)
+        imgBtn.textContent = '✓ Image saved!'
+        setTimeout(resetImgBtn, 2200)
+      }
+    }, 'image/png')
   })
 </script>

@@ -1,0 +1,135 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const filing = inputs.filing || 'single'
+  const net = Math.max(0, parseFloat(inputs.net) || 0)
+  const w2 = Math.max(0, parseFloat(inputs.w2) || 0)
+  if (net <= 0) throw new Error('Enter your net self-employment earnings.')
+  const seBase = net * 0.9235
+  const ssRemaining = Math.max(0, 184500 - w2)
+  const ss = Math.min(seBase, ssRemaining) * 0.124
+  const med = seBase * 0.029
+  const addlThresh = filing === 'mfj' ? 250000 : 200000
+  const addlMed = Math.max(0, (seBase + w2) - addlThresh) * 0.009
+  const seTax = ss + med + addlMed
+  const halfSE = seTax / 2
+  const effRate = net > 0 ? (seTax / net * 100) : 0
+  return {
+    value: '$' + Math.round(seTax).toLocaleString(),
+    gaugeValue: Math.min(effRate, 16),
+    stats: [
+      { label: 'Self-Employment Tax', value: '$' + Math.round(seTax).toLocaleString() },
+      { label: 'Social Security', value: '$' + Math.round(ss).toLocaleString() },
+      { label: 'Medicare', value: '$' + Math.round(med + addlMed).toLocaleString() },
+      { label: 'Deductible Half', value: '$' + Math.round(halfSE).toLocaleString() }
+    ],
+    breakdown: [
+      'Net self-employment earnings: $' + Math.round(net).toLocaleString(),
+      'SE tax base (× 92.35%): $' + Math.round(seBase).toLocaleString(),
+      '—',
+      'Social Security (12.4%, up to $184,500 base): $' + Math.round(ss).toLocaleString(),
+      w2 > 0 ? 'W-2 wages already taxed for SS: $' + Math.round(w2).toLocaleString() : '',
+      'Medicare (2.9%, no cap): $' + Math.round(med).toLocaleString(),
+      addlMed > 0 ? 'Additional Medicare (0.9% over $' + addlThresh.toLocaleString() + '): $' + Math.round(addlMed).toLocaleString() : '',
+      '—',
+      'Total self-employment tax: $' + Math.round(seTax).toLocaleString() + ' (' + effRate.toFixed(1) + '% of net)',
+      'Deductible half (income-tax adjustment): $' + Math.round(halfSE).toLocaleString()
+    ].filter(Boolean),
+    share: {
+      kicker: 'My self-employment tax',
+      heroNumber: '$' + Math.round(seTax).toLocaleString(),
+      heroSub: 'in SE tax on $' + Math.round(net).toLocaleString() + ' net earnings',
+      hook: 'Social Security + Medicare at 15.3% — but half is deductible against income tax.',
+      chips: ['Soc. Sec. $' + Math.round(ss).toLocaleString(), 'Medicare $' + Math.round(med + addlMed).toLocaleString(), 'Deduct $' + Math.round(halfSE).toLocaleString()]
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 16, unit: '%',
+  zones: [
+    { label: 'Capped SS', color: '#22c55e', from: 0, to: 8 },
+    { label: 'Standard', color: '#3b82f6', from: 8, to: 14 },
+    { label: 'Full 15.3%', color: '#f59e0b', from: 14, to: 16 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is self-employment tax?', answer: 'Self-employment tax is how self-employed people pay into Social Security and Medicare. W-2 employees split these taxes with their employer (7.65% each). When you work for yourself, you pay both halves — a combined 15.3% — on 92.35% of your net earnings.' },
+  { question: 'How is self-employment tax calculated?', answer: 'First, multiply your net earnings by 92.35% (this removes the employer-half equivalent). Then apply 12.4% for Social Security on earnings up to the 2026 wage base of $184,500, plus 2.9% for Medicare on all earnings, plus an extra 0.9% Medicare on amounts over $200,000 ($250,000 married).' },
+  { question: 'Why is only 92.35% of my income taxed?', answer: 'Because employees don\'t pay Social Security and Medicare tax on their employer\'s half of those taxes, the IRS lets the self-employed deduct an equivalent 7.65% first. Multiplying net earnings by 92.35% (100% − 7.65%) keeps self-employed and employed workers on equal footing.' },
+  { question: 'Is any of my self-employment tax deductible?', answer: 'Yes — you can deduct one half of your self-employment tax as an above-the-line adjustment on your income taxes. It doesn\'t reduce the SE tax itself, but it lowers your adjusted gross income, cutting your federal income tax.' },
+  { question: 'What is the 2026 Social Security wage base?', answer: 'For 2026 the Social Security wage base is $184,500 (up from $176,100 in 2025). Net earnings above this amount are not subject to the 12.4% Social Security portion — but the 2.9% Medicare portion continues with no cap.' },
+]
+---
+<Layout
+  title="Self-Employment Tax Calculator 2026: SE Tax Breakdown"
+  description="Calculate your 2026 self-employment tax — Social Security and Medicare on freelance income, with the deductible half. Free SE tax calculator, no signup."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Self-Employment Tax</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Self-Employment Tax Calculator (2026)"
+          description="Social Security + Medicare on your net self-employment earnings"
+          formulaId="self-employment-tax"
+          formulaFn={formulaFn}
+          resultLabel="Self-Employment Tax"
+          shareStyle="money"
+          inputs={[
+            { id: 'filing', label: 'Filing Status', type: 'select', options: [
+              { value: 'single', label: 'Single' },
+              { value: 'mfj', label: 'Married filing jointly' },
+            ], defaultValue: 'single' },
+            { id: 'net', label: 'Net Self-Employment Earnings', type: 'number', placeholder: '70000', min: 0, step: 100, unit: '$', defaultValue: 70000 },
+            { id: 'w2', label: 'W-2 Wages Already Subject to Social Security (optional)', type: 'number', placeholder: '0', min: 0, step: 100, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This self-employment tax calculator breaks down the 15.3% SE tax for 2026 into its Social Security (12.4%) and Medicare (2.9%) parts, applies the $184,500 Social Security wage base, adds the 0.9% additional Medicare tax where it applies, and shows the deductible half you can write off against income tax."
+          disclaimer="Estimate of SE (Social Security + Medicare) tax only — not your total tax bill. Add federal and state income tax separately. Half of SE tax is deductible against income. 2026 figures per SSA / IRS; SS wage base $184,500."
+          lastUpdated="2026-07-09"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
+            { name: 'Quarterly Estimated Tax', href: '/calculators/quarterly-tax-calculator' },
+            { name: 'Creator / Influencer Tax', href: '/calculators/creator-tax-calculator' },
+            { name: 'Tax Refund Calculator', href: '/calculators/tax-refund-calculator' },
+            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">The 15.3% breakdown</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Social Security</span><span class="font-medium">12.4%</span></div>
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Medicare</span><span class="font-medium">2.9%</span></div>
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Additional Medicare</span><span class="font-medium">+0.9%</span></div>
+            <div class="flex justify-between"><span>Taxed on</span><span class="font-medium">92.35% of net</span></div>
+          </div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+          <h3 class="font-semibold text-green-900 text-sm mb-1">Half is deductible</h3>
+          <p class="text-xs text-green-800">You write off 50% of your SE tax as an income-tax adjustment — it lowers your AGI, not the SE tax itself.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4">
+          <h3 class="font-semibold text-gray-900 text-sm mb-1">SS cap, no Medicare cap</h3>
+          <p class="text-xs text-gray-600">Social Security stops at $184,500 of earnings in 2026. Medicare's 2.9% keeps going on every dollar.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
