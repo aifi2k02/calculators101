@@ -87,6 +87,9 @@ export const categories: Category[] = [
       { name: 'Bond Yield Calculator', href: '/calculators/bond-yield-calculator', description: 'Yield to maturity (YTM) and fair bond price', icon: '📊', live: true },
       { name: 'College Savings Calculator', href: '/calculators/college-savings-calculator', description: '529 plan projections and college funding gap', icon: '🎓', live: true },
       { name: 'Crypto Profit Calculator', href: '/calculators/crypto-calculator', description: 'Profit, ROI, and return multiple for any crypto trade', icon: '₿', live: true },
+      { name: 'Hourly to Salary Calculator', href: '/calculators/hourly-to-salary-calculator', description: 'Convert an hourly wage to weekly, monthly, and annual pay', icon: '💵', live: true },
+      { name: 'Overtime Calculator', href: '/calculators/overtime-calculator', description: 'Overtime pay at 1.5× or 2× plus total weekly earnings', icon: '⏰', live: true },
+      { name: 'Wedding Budget Calculator', href: '/calculators/wedding-budget-calculator', description: 'Break down your wedding budget by category', icon: '💒', live: true },
     ],
   },
   {
@@ -182,6 +185,7 @@ export const categories: Category[] = [
       { name: 'Angle Converter', href: '/calculators/angle-converter-calculator', description: 'Convert between degrees, radians, gradians, and arc minutes', icon: '🔄', live: true },
       { name: 'Distance Formula Calculator', href: '/calculators/distance-calculator', description: 'Distance and midpoint between two points in 2D or 3D', icon: '📏', live: true },
       { name: 'Number Base Converter', href: '/calculators/number-base-calculator', description: 'Convert between binary, decimal, hex, octal, and any base 2–36', icon: '🔢', live: true },
+      { name: 'Tank Volume Calculator', href: '/calculators/tank-volume-calculator', description: 'Capacity of cylinder, rectangular, and oval tanks in gallons or liters', icon: '🛢️', live: true },
     ],
   },
   {
@@ -231,6 +235,12 @@ export const categories: Category[] = [
       { name: 'Cooking Measurement Converter', href: '/calculators/cooking-calculator', description: 'Convert cups, tablespoons, ounces, grams, and more', icon: '🥄', live: true },
       { name: 'Shoe Size Converter', href: '/calculators/shoe-size-calculator', description: 'Convert shoe sizes between US, UK, EU, and cm', icon: '👟', live: true },
       { name: 'Roof Pitch Calculator', href: '/calculators/roof-pitch-calculator', description: 'Pitch, angle, slope, and rafter length', icon: '🏠', live: true },
+      { name: 'Time Card Calculator', href: '/calculators/time-card-calculator', description: 'Total work hours from clock-in and clock-out with breaks', icon: '⏱️', live: true },
+      { name: 'Gas Mileage Calculator', href: '/calculators/gas-mileage-calculator', description: 'MPG, cost per mile, and trip fuel cost', icon: '⛽', live: true },
+      { name: 'Tile Calculator', href: '/calculators/tile-calculator', description: 'Number of tiles and boxes needed for any room', icon: '🧱', live: true },
+      { name: 'Mulch Calculator', href: '/calculators/mulch-calculator', description: 'Cubic yards and bags of mulch for any bed', icon: '🌱', live: true },
+      { name: 'Carbon Footprint Calculator', href: '/calculators/carbon-footprint-calculator', description: 'Estimate your annual CO₂ emissions in tons', icon: '🌍', live: true },
+      { name: 'Pizza Calculator', href: '/calculators/pizza-calculator', description: 'How many pizzas to order for any party size', icon: '🍕', live: true },
     ],
   },
 ]

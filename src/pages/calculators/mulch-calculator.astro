@@ -1,0 +1,113 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const length = parseFloat(inputs.length) || 0
+  const width = parseFloat(inputs.width) || 0
+  const depth = parseFloat(inputs.depth) || 0
+  const bagSize = parseFloat(inputs.bagsize) || 2
+  if (length <= 0 || width <= 0) throw new Error('Enter bed length and width in feet.')
+  if (depth <= 0) throw new Error('Enter mulch depth in inches.')
+  const area = length * width // sq ft
+  const depthFt = depth / 12
+  const cubicFeet = area * depthFt
+  const cubicYards = cubicFeet / 27
+  const bags = Math.ceil(cubicFeet / bagSize)
+  return {
+    value: cubicYards.toFixed(2) + ' cu yd',
+    gaugeValue: Math.min(cubicYards / 5 * 100, 100),
+    stats: [
+      { label: 'Cubic Yards', value: cubicYards.toFixed(2) },
+      { label: 'Cubic Feet', value: cubicFeet.toFixed(1) },
+      { label: 'Bags Needed', value: String(bags) },
+      { label: 'Bed Area', value: area.toFixed(0) + ' sq ft' },
+    ],
+    breakdown: [
+      'Bed: ' + length + ' ft × ' + width + ' ft = ' + area.toFixed(0) + ' sq ft',
+      'Depth: ' + depth + ' in (' + depthFt.toFixed(3) + ' ft)',
+      '—',
+      'Volume: ' + cubicFeet.toFixed(1) + ' cubic feet',
+      'Volume: ' + cubicYards.toFixed(2) + ' cubic yards',
+      'Bags (' + bagSize + ' cu ft each): ' + bags,
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How much mulch do I need?', answer: 'Multiply the bed area (length × width in feet) by the depth in feet, which gives cubic feet. Divide by 27 for cubic yards. For example, a 10×10 ft bed at 3 inches deep needs 25 cubic feet, or about 0.93 cubic yards.' },
+  { question: 'How many bags of mulch are in a cubic yard?', answer: 'A cubic yard is 27 cubic feet. Mulch bags are usually 2 cubic feet, so one cubic yard equals about 13.5 bags. If your bags are 3 cubic feet, one yard is 9 bags.' },
+  { question: 'How deep should mulch be?', answer: 'Apply 2–3 inches for most garden beds and around plants. Use 3–4 inches for weed suppression in open areas, but keep mulch a few inches away from tree trunks and plant stems to prevent rot.' },
+  { question: 'Is it cheaper to buy mulch in bags or bulk?', answer: 'Bulk (by the cubic yard) is almost always cheaper per unit for large projects — often half the price of bagged. Bags are more convenient for small beds and easier to transport in a regular car.' },
+  { question: 'How much area does a yard of mulch cover?', answer: 'One cubic yard covers about 108 sq ft at 3 inches deep, 162 sq ft at 2 inches deep, or 324 sq ft at just 1 inch. Deeper mulch covers less area.' },
+]
+---
+<Layout
+  title="Mulch Calculator: Cubic Yards & Bags of Mulch Needed"
+  description="Calculate how much mulch you need in cubic yards and bags for any garden bed and depth. Free mulch calculator with instant results."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Mulch Calculator', href: '/calculators/mulch-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Mulch Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Mulch Calculator"
+          description="Cubic yards and bags of mulch for any bed and depth"
+          formulaId="mulch"
+          formulaFn={formulaFn}
+          resultLabel="Mulch Needed"
+          inputs={[
+            { id: 'length', label: 'Bed Length', type: 'number', placeholder: '20', min: 0, step: 0.1, unit: 'ft', defaultValue: 20 },
+            { id: 'width', label: 'Bed Width', type: 'number', placeholder: '10', min: 0, step: 0.1, unit: 'ft', defaultValue: 10 },
+            { id: 'depth', label: 'Mulch Depth', type: 'number', placeholder: '3', min: 0, max: 12, step: 0.5, unit: 'in', defaultValue: 3 },
+            { id: 'bagsize', label: 'Bag Size', type: 'select', options: [
+              { value: '2', label: '2 cu ft (standard bag)' },
+              { value: '3', label: '3 cu ft (large bag)' },
+              { value: '1.5', label: '1.5 cu ft (small bag)' },
+            ], defaultValue: '2' },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: 'cu yd÷5',
+            zones: [
+              { label: 'Small job', color: '#22c55e', from: 0, to: 30 },
+              { label: 'Medium', color: '#3b82f6', from: 30, to: 70 },
+              { label: 'Bulk order', color: '#8b5cf6', from: 70, to: 100 },
+            ]
+          }}
+          intro="This mulch calculator tells you how much mulch to buy in cubic yards and bags. Enter your bed length and width in feet and the desired depth in inches. For most beds, 2–3 inches of mulch is ideal for moisture and weed control."
+          disclaimer="Bulk mulch is usually much cheaper than bags for large areas. Keep mulch a few inches away from trunks and stems to avoid rot."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Area Calculator', href: '/calculators/area-calculator' },
+            { name: 'Concrete Calculator', href: '/calculators/concrete-calculator' },
+            { name: 'Volume Calculator', href: '/calculators/volume-calculator' },
+            { name: 'Tile Calculator', href: '/calculators/tile-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-3">1 Cubic Yard Covers</h3>
+          <div class="space-y-2 text-xs text-green-800">
+            {[['1 inch deep','324 sq ft'],['2 inches deep','162 sq ft'],['3 inches deep','108 sq ft'],['4 inches deep','81 sq ft']].map(([d,a]) => (
+              <div class="flex justify-between border-b border-green-100 pb-1"><span>{d}</span><span class="font-medium">{a}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">Bags per Yard</h3>
+          <p class="text-xs text-gray-600">1 cubic yard = 27 cu ft ≈ <strong>13.5 bags</strong> (2 cu ft) or 9 bags (3 cu ft).</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

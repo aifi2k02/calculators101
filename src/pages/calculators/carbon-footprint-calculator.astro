@@ -1,0 +1,122 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const miles = parseFloat(inputs.miles) || 0
+  const mpg = parseFloat(inputs.mpg) || 25
+  const electric = parseFloat(inputs.electric) || 0
+  const flights = parseFloat(inputs.flights) || 0
+  const diet = inputs.diet || 'average'
+  // Car: gallons/year * 8.887 kg CO2 per gallon
+  const carKg = mpg > 0 ? (miles / mpg) * 8.887 : 0
+  // Electricity: kWh/month * 12 * 0.417 kg CO2/kWh (US avg)
+  const elecKg = electric * 12 * 0.417
+  // Flights: ~1100 kg CO2 per round-trip medium-haul flight
+  const flightKg = flights * 1100
+  // Diet annual kg CO2
+  const dietMap = { meat: 3300, average: 2500, vegetarian: 1700, vegan: 1500 }
+  const dietKg = dietMap[diet] || 2500
+  const totalKg = carKg + elecKg + flightKg + dietKg
+  const totalTons = totalKg / 1000
+  const usAvg = 16
+  return {
+    value: totalTons.toFixed(1) + ' tons CO₂',
+    gaugeValue: Math.min(totalTons / 20 * 100, 100),
+    stats: [
+      { label: 'Total (tons/yr)', value: totalTons.toFixed(1) },
+      { label: 'Car', value: (carKg/1000).toFixed(1) + ' t' },
+      { label: 'Diet', value: (dietKg/1000).toFixed(1) + ' t' },
+      { label: 'vs US Avg (16t)', value: (totalTons/usAvg*100).toFixed(0) + '%' },
+    ],
+    breakdown: [
+      'Driving: ' + miles.toLocaleString() + ' mi ÷ ' + mpg + ' MPG → ' + (carKg/1000).toFixed(2) + ' tons',
+      'Electricity: ' + electric + ' kWh/mo → ' + (elecKg/1000).toFixed(2) + ' tons',
+      'Flights: ' + flights + ' round-trips → ' + (flightKg/1000).toFixed(2) + ' tons',
+      'Diet (' + diet + '): ' + (dietKg/1000).toFixed(2) + ' tons',
+      '—',
+      'Total: ' + totalTons.toFixed(2) + ' tons CO₂/year',
+      'US average: ~16 tons · Global average: ~4 tons',
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is a carbon footprint?', answer: 'A carbon footprint is the total greenhouse gas emissions, measured in tons of CO₂ equivalent, caused by your activities in a year — driving, electricity, flights, diet, and consumption. The U.S. average is about 16 tons per person; the global average is around 4 tons.' },
+  { question: 'How is a carbon footprint calculated?', answer: 'Each activity is multiplied by an emission factor. For driving, gallons of gas burned × 8.887 kg CO₂ per gallon. For electricity, kWh × your grid\'s emission rate. Flights, diet, and goods each have standard per-unit factors that are summed into an annual total.' },
+  { question: 'What is a good carbon footprint?', answer: 'To help limit warming to 1.5°C, scientists suggest an average of about 2 tons of CO₂ per person per year by 2050. Anything under the ~4-ton global average is comparatively low; the ~16-ton U.S. average is high.' },
+  { question: 'What has the biggest impact on my footprint?', answer: 'For most people the biggest levers are air travel, driving, home energy, and diet. Cutting one long-haul round-trip flight, switching to renewable electricity, or reducing red-meat consumption each remove roughly one ton or more per year.' },
+  { question: 'How can I reduce my carbon footprint?', answer: 'Drive less or switch to an EV, fly less, improve home insulation, switch to renewable energy, eat less red meat, and reduce consumption of new goods. Small consistent changes across categories add up faster than one big change.' },
+]
+---
+<Layout
+  title="Carbon Footprint Calculator: Your Annual CO₂ Emissions"
+  description="Estimate your annual carbon footprint in tons of CO₂ from driving, electricity, flights, and diet. Free carbon footprint calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Carbon Footprint Calculator', href: '/calculators/carbon-footprint-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Carbon Footprint Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Carbon Footprint Calculator"
+          description="Estimate your yearly CO₂ emissions across the big categories"
+          formulaId="carbon-footprint"
+          formulaFn={formulaFn}
+          resultLabel="Annual Footprint"
+          inputs={[
+            { id: 'miles', label: 'Miles Driven per Year', type: 'number', placeholder: '12000', min: 0, step: 100, unit: 'mi', defaultValue: 12000 },
+            { id: 'mpg', label: 'Vehicle MPG', type: 'number', placeholder: '25', min: 1, unit: 'MPG', defaultValue: 25 },
+            { id: 'electric', label: 'Electricity Use', type: 'number', placeholder: '900', min: 0, unit: 'kWh/mo', defaultValue: 900 },
+            { id: 'flights', label: 'Round-Trip Flights per Year', type: 'number', placeholder: '2', min: 0, max: 100, unit: 'flights', defaultValue: 2 },
+            { id: 'diet', label: 'Diet', type: 'select', options: [
+              { value: 'meat', label: 'Heavy meat eater' },
+              { value: 'average', label: 'Average / some meat' },
+              { value: 'vegetarian', label: 'Vegetarian' },
+              { value: 'vegan', label: 'Vegan' },
+            ], defaultValue: 'average' },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% of 20t',
+            zones: [
+              { label: 'Low', color: '#22c55e', from: 0, to: 30 },
+              { label: 'Average', color: '#f59e0b', from: 30, to: 80 },
+              { label: 'High', color: '#ef4444', from: 80, to: 100 },
+            ]
+          }}
+          intro="This carbon footprint calculator estimates your annual CO₂ emissions in tons from the four biggest sources: driving, home electricity, air travel, and diet. Compare your result to the U.S. average (~16 tons) and the global average (~4 tons) to see where you stand."
+          disclaimer="This is a simplified estimate using average U.S. emission factors. Your real footprint also depends on your local electricity grid, home heating, and consumption of goods."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Gas Mileage Calculator', href: '/calculators/gas-mileage-calculator' },
+            { name: 'Electricity Calculator', href: '/calculators/electricity-calculator' },
+            { name: 'Fuel Cost Calculator', href: '/calculators/fuel-cost-calculator' },
+            { name: 'Distance Calculator', href: '/calculators/distance-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-3">Average CO₂ per Person</h3>
+          <div class="space-y-2 text-xs text-green-800">
+            {[['United States','~16 tons/yr'],['Europe','~7 tons/yr'],['Global average','~4 tons/yr'],['1.5°C target (2050)','~2 tons/yr']].map(([r,t]) => (
+              <div class="flex justify-between border-b border-green-100 pb-1"><span>{r}</span><span class="font-medium">{t}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">Biggest Levers</h3>
+          <p class="text-xs text-gray-600">Flights, driving, home energy, and red meat move the needle most. One fewer long-haul flight ≈ 1+ ton saved.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

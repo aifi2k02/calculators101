@@ -1,0 +1,125 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const wage = parseFloat(inputs.wage) || 0
+  const hours = parseFloat(inputs.hours) || 40
+  const weeks = parseFloat(inputs.weeks) || 52
+  if (wage <= 0) throw new Error('Enter an hourly wage.')
+  if (hours <= 0) throw new Error('Enter hours worked per week.')
+  const weekly = wage * hours
+  const annual = weekly * weeks
+  const monthly = annual / 12
+  const biweekly = weekly * 2
+  const daily = wage * (hours / 5)
+  return {
+    value: '$' + Math.round(annual).toLocaleString() + '/yr',
+    gaugeValue: Math.min(annual / 2000, 100),
+    stats: [
+      { label: 'Annual', value: '$' + Math.round(annual).toLocaleString() },
+      { label: 'Monthly', value: '$' + Math.round(monthly).toLocaleString() },
+      { label: 'Bi-Weekly', value: '$' + Math.round(biweekly).toLocaleString() },
+      { label: 'Weekly', value: '$' + Math.round(weekly).toLocaleString() },
+    ],
+    breakdown: [
+      'Hourly wage: $' + wage.toFixed(2),
+      'Hours per week: ' + hours,
+      'Weeks worked per year: ' + weeks,
+      '—',
+      'Daily (est.): $' + Math.round(daily).toLocaleString(),
+      'Weekly: $' + Math.round(weekly).toLocaleString(),
+      'Bi-weekly: $' + Math.round(biweekly).toLocaleString(),
+      'Monthly: $' + Math.round(monthly).toLocaleString(),
+      'Annual: $' + Math.round(annual).toLocaleString(),
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How do I convert hourly wage to annual salary?', answer: 'Multiply your hourly wage by hours worked per week, then by weeks worked per year. The standard formula is: hourly × 40 hours × 52 weeks. For example, $25/hour × 40 × 52 = $52,000 per year.' },
+  { question: 'How many work hours are in a year?', answer: 'A standard full-time schedule is 2,080 hours per year (40 hours × 52 weeks). If you take two weeks of unpaid vacation, it drops to 2,000 hours (40 × 50).' },
+  { question: 'Is this gross or net pay?', answer: 'This shows gross pay — before taxes and deductions. Your take-home (net) pay will be lower after federal, state, Social Security, Medicare taxes, and any benefits deductions. Expect roughly 20–30% withheld depending on your income and location.' },
+  { question: 'What hourly wage equals $50,000 a year?', answer: 'About $24.04/hour, assuming a full-time 40-hour week for 52 weeks (2,080 hours). $60,000 ≈ $28.85/hour and $100,000 ≈ $48.08/hour.' },
+  { question: 'Should I use 52 weeks or fewer?', answer: 'Use 52 weeks if you have paid time off (your salary continues during vacation). Use 50 weeks if you take two weeks of unpaid leave, or fewer if you work seasonally or part of the year.' },
+]
+---
+<Layout
+  title="Hourly to Salary Calculator: Convert Wage to Annual Pay"
+  description="Convert your hourly wage to weekly, monthly, and annual salary instantly. Free hourly-to-salary calculator with adjustable hours and weeks worked."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Hourly to Salary Calculator', href: '/calculators/hourly-to-salary-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Hourly to Salary Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Hourly to Salary Calculator"
+          description="Convert an hourly wage into weekly, monthly, and yearly pay"
+          formulaId="hourly-to-salary"
+          formulaFn={formulaFn}
+          resultLabel="Annual Salary"
+          inputs={[
+            { id: 'wage', label: 'Hourly Wage', type: 'number', placeholder: '25', min: 0, step: 0.01, unit: '$', defaultValue: 25 },
+            { id: 'hours', label: 'Hours per Week', type: 'number', placeholder: '40', min: 1, max: 168, unit: 'hrs', defaultValue: 40 },
+            { id: 'weeks', label: 'Weeks per Year', type: 'number', placeholder: '52', min: 1, max: 52, unit: 'wks', defaultValue: 52 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: 'k/yr',
+            zones: [
+              { label: 'Entry', color: '#94a3b8', from: 0, to: 30 },
+              { label: 'Mid', color: '#3b82f6', from: 30, to: 60 },
+              { label: 'Senior', color: '#22c55e', from: 60, to: 100 },
+            ]
+          }}
+          intro="This hourly-to-salary calculator converts an hourly wage into weekly, bi-weekly, monthly, and annual pay. Adjust hours per week and weeks per year to match your real schedule. Results show gross pay before taxes."
+          disclaimer="Figures are gross pay before taxes and deductions. Actual take-home pay depends on your tax bracket, state, and benefits."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+            { name: 'Overtime Calculator', href: '/calculators/overtime-calculator' },
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Hourly → Annual (40 hrs, 52 wks)</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['$15/hr','$31,200'],['$20/hr','$41,600'],['$25/hr','$52,000'],['$30/hr','$62,400'],['$40/hr','$83,200'],['$50/hr','$104,000']].map(([h,a]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{h}</span><span class="font-medium">{a}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">Full-Time Hours</h3>
+          <p class="text-xs text-gray-600">A standard full-time year is <strong>2,080 hours</strong> (40 hrs × 52 weeks). With two unpaid weeks off, it's 2,000 hours.</p>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-12 max-w-3xl">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Salary to Hourly — Quick Reference</h2>
+      <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-50"><tr>
+          <th class="text-left p-3 text-xs font-semibold text-gray-700">Annual Salary</th>
+          <th class="text-right p-3 text-xs font-semibold text-gray-700">Hourly (2,080 hrs)</th>
+          <th class="text-right p-3 text-xs font-semibold text-gray-700">Monthly</th>
+        </tr></thead>
+        <tbody class="divide-y divide-gray-100">
+          {[['$40,000','$19.23','$3,333'],['$50,000','$24.04','$4,167'],['$60,000','$28.85','$5,000'],['$75,000','$36.06','$6,250'],['$100,000','$48.08','$8,333']].map(r => (
+            <tr><td class="p-3 text-xs">{r[0]}</td><td class="p-3 text-xs text-right font-medium">{r[1]}</td><td class="p-3 text-xs text-right">{r[2]}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Layout>

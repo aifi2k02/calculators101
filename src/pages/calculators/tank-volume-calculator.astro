@@ -1,0 +1,130 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const shape = inputs.shape || 'cylinder'
+  const d1 = parseFloat(inputs.dim1) || 0
+  const d2 = parseFloat(inputs.dim2) || 0
+  const d3 = parseFloat(inputs.dim3) || 0
+  if (d1 <= 0 || d2 <= 0) throw new Error('Enter tank dimensions in inches.')
+  let cubicInches = 0
+  let shapeLabel = ''
+  if (shape === 'cylinder') {
+    // d1 = diameter, d2 = length (horizontal or vertical cylinder)
+    const r = d1 / 2
+    cubicInches = Math.PI * r * r * d2
+    shapeLabel = 'Cylinder — diameter ' + d1 + '\\", length ' + d2 + '\\"'
+  } else if (shape === 'rectangle') {
+    if (d3 <= 0) throw new Error('Enter length, width, and height in inches.')
+    cubicInches = d1 * d2 * d3
+    shapeLabel = 'Rectangle — ' + d1 + ' × ' + d2 + ' × ' + d3 + '\\"'
+  } else if (shape === 'oval') {
+    if (d3 <= 0) throw new Error('Enter width, height, and length in inches.')
+    // oval (stadium) cross-section: width d1, height d2, length d3
+    const a = d1 / 2, b = d2 / 2
+    cubicInches = Math.PI * a * b * d3
+    shapeLabel = 'Oval — ' + d1 + ' × ' + d2 + ' × ' + d3 + '\\"'
+  }
+  const gallons = cubicInches / 231
+  const liters = cubicInches * 0.0163871
+  const cubicFeet = cubicInches / 1728
+  return {
+    value: gallons.toFixed(1) + ' gal',
+    gaugeValue: Math.min(gallons / 5, 100),
+    stats: [
+      { label: 'US Gallons', value: gallons.toFixed(1) },
+      { label: 'Liters', value: liters.toFixed(1) },
+      { label: 'Cubic Feet', value: cubicFeet.toFixed(2) },
+      { label: 'Cubic Inches', value: Math.round(cubicInches).toLocaleString() },
+    ],
+    breakdown: [
+      shapeLabel,
+      '—',
+      'Volume: ' + Math.round(cubicInches).toLocaleString() + ' cubic inches',
+      'US gallons: ' + gallons.toFixed(2) + ' (÷ 231)',
+      'Liters: ' + liters.toFixed(2),
+      'Imperial gallons: ' + (gallons * 0.832674).toFixed(2),
+      'Cubic feet: ' + cubicFeet.toFixed(3),
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How do I calculate tank volume?', answer: 'For a cylindrical tank, volume = π × radius² × length. For a rectangular tank, volume = length × width × height. Divide cubic inches by 231 to get US gallons, or multiply by 0.0163871 to get liters.' },
+  { question: 'How many gallons is a cubic foot?', answer: 'One cubic foot equals about 7.48 US gallons. One cubic inch equals 1/231 of a gallon, since a US gallon is defined as exactly 231 cubic inches.' },
+  { question: 'What is the difference between US and Imperial gallons?', answer: 'A US gallon is 231 cubic inches (3.785 liters). An Imperial (UK) gallon is larger — about 277 cubic inches (4.546 liters). This calculator shows US gallons in the main result and Imperial in the breakdown.' },
+  { question: 'How do I find the volume of a horizontal cylinder tank?', answer: 'For a completely full horizontal cylinder, use the same formula as a vertical one: π × radius² × length. Partial-fill volume of a horizontal tank requires a more complex "circular segment" formula based on the fill depth.' },
+  { question: 'Does tank wall thickness matter?', answer: 'For capacity, use the internal dimensions. If you only have external measurements, subtract twice the wall thickness from each dimension to get the true holding capacity.' },
+]
+---
+<Layout
+  title="Tank Volume Calculator: Gallons for Cylinder, Rectangle & Oval"
+  description="Calculate tank capacity in gallons and liters for cylindrical, rectangular, and oval tanks. Free tank volume calculator with instant results."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Tank Volume Calculator', href: '/calculators/tank-volume-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Tank Volume Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Tank Volume Calculator"
+          description="Capacity in gallons and liters for any tank shape (dimensions in inches)"
+          formulaId="tank-volume"
+          formulaFn={formulaFn}
+          resultLabel="Tank Capacity"
+          inputs={[
+            { id: 'shape', label: 'Tank Shape', type: 'select', options: [
+              { value: 'cylinder', label: 'Cylinder (round)' },
+              { value: 'rectangle', label: 'Rectangle (box)' },
+              { value: 'oval', label: 'Oval (stadium)' },
+            ], defaultValue: 'cylinder' },
+            { id: 'dim1', label: 'Diameter / Length / Width (in)', type: 'number', placeholder: '24', min: 0, step: 0.1, unit: 'in', defaultValue: 24 },
+            { id: 'dim2', label: 'Length / Width / Height (in)', type: 'number', placeholder: '48', min: 0, step: 0.1, unit: 'in', defaultValue: 48 },
+            { id: 'dim3', label: 'Height / Length (in) — box & oval only', type: 'number', placeholder: '0', min: 0, step: 0.1, unit: 'in', defaultValue: 0 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: 'gal÷5',
+            zones: [
+              { label: 'Small', color: '#22c55e', from: 0, to: 30 },
+              { label: 'Medium', color: '#3b82f6', from: 30, to: 70 },
+              { label: 'Large', color: '#8b5cf6', from: 70, to: 100 },
+            ]
+          }}
+          intro="This tank volume calculator finds the capacity of cylindrical, rectangular, and oval tanks. Enter all dimensions in inches. For a cylinder, use diameter and length; for a box or oval tank, fill in all three dimensions. Results show US gallons, liters, and cubic feet."
+          disclaimer="Use internal dimensions for true holding capacity. Partial-fill volumes for horizontal cylinders require a separate segment calculation."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Volume Calculator', href: '/calculators/volume-calculator' },
+            { name: 'Area Calculator', href: '/calculators/area-calculator' },
+            { name: 'Cylinder Volume', href: '/calculators/volume-calculator' },
+            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-5">
+          <h3 class="font-bold text-purple-900 mb-2">Key Conversions</h3>
+          <div class="space-y-1.5 text-xs text-purple-800">
+            <div>231 cubic inches = 1 US gallon</div>
+            <div>1 cubic foot = 7.48 gallons</div>
+            <div>1 gallon = 3.785 liters</div>
+            <div>1 US gal = 0.833 Imperial gal</div>
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">Cylinder Formula</h3>
+          <p class="text-xs text-gray-600">V = π × r² × length. A 24″ diameter × 48″ tank holds about 94 gallons.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

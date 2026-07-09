@@ -1,0 +1,112 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const budget = parseFloat(inputs.budget) || 0
+  const guests = parseInt(inputs.guests) || 100
+  if (budget <= 0) throw new Error('Enter your total budget.')
+  if (guests < 1) throw new Error('Enter number of guests.')
+  const venue = budget * 0.40
+  const catering = budget * 0.00
+  const perGuest = budget / guests
+  const photo = budget * 0.12
+  const attire = budget * 0.08
+  const flowers = budget * 0.08
+  const music = budget * 0.08
+  const rings = budget * 0.05
+  const other = budget * 0.19
+  return {
+    value: '$' + Math.round(perGuest).toLocaleString() + '/guest',
+    gaugeValue: Math.min(perGuest / 5, 100),
+    stats: [
+      { label: 'Per Guest', value: '$' + Math.round(perGuest).toLocaleString() },
+      { label: 'Venue & Catering', value: '$' + Math.round(venue).toLocaleString() },
+      { label: 'Photography', value: '$' + Math.round(photo).toLocaleString() },
+      { label: 'Total Budget', value: '$' + Math.round(budget).toLocaleString() },
+    ],
+    breakdown: [
+      'Venue & catering (40%): $' + Math.round(venue).toLocaleString(),
+      'Photography & video (12%): $' + Math.round(photo).toLocaleString(),
+      'Attire & beauty (8%): $' + Math.round(attire).toLocaleString(),
+      'Flowers & decor (8%): $' + Math.round(flowers).toLocaleString(),
+      'Music & entertainment (8%): $' + Math.round(music).toLocaleString(),
+      'Rings (5%): $' + Math.round(rings).toLocaleString(),
+      'Stationery, favors, misc (19%): $' + Math.round(other).toLocaleString(),
+      '—',
+      'Cost per guest: $' + Math.round(perGuest).toLocaleString(),
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How much should I budget for a wedding?', answer: 'The average U.S. wedding costs about $30,000–$35,000, though this varies enormously by region and guest count. A useful anchor is cost per guest: many weddings run $150–$300 per guest once venue, catering, and everything else is included.' },
+  { question: 'What percentage of the budget goes to the venue?', answer: 'Venue and catering together are the largest expense — typically 40–50% of the total. This calculator allocates 40% to venue and catering combined, which is a common industry benchmark.' },
+  { question: 'How do I lower my wedding cost?', answer: 'The biggest lever is the guest count — fewer guests means lower catering, larger tables, and a smaller venue. Off-season dates (November–April), weekday or Sunday weddings, and all-inclusive venues also cut costs significantly.' },
+  { question: 'What is the biggest hidden wedding cost?', answer: 'Taxes and service/gratuity fees on catering and venue can add 20–25% on top of quoted prices. Alterations, postage, overtime for vendors, and day-of transportation are also commonly forgotten. Keep 5–10% as a buffer.' },
+  { question: 'Should I include the rings and honeymoon?', answer: 'Wedding rings are usually part of the wedding budget (this calculator allocates 5%). The honeymoon is typically budgeted separately since it varies so much by destination and length.' },
+]
+---
+<Layout
+  title="Wedding Budget Calculator: Cost Breakdown by Category"
+  description="Plan your wedding budget with a category-by-category breakdown. See venue, catering, photography, and per-guest costs. Free wedding budget calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Wedding Budget Calculator', href: '/calculators/wedding-budget-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Wedding Budget Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Wedding Budget Calculator"
+          description="Break your total budget into standard wedding categories"
+          formulaId="wedding-budget"
+          formulaFn={formulaFn}
+          resultLabel="Cost Per Guest"
+          inputs={[
+            { id: 'budget', label: 'Total Wedding Budget', type: 'number', placeholder: '30000', min: 0, step: 100, unit: '$', defaultValue: 30000 },
+            { id: 'guests', label: 'Number of Guests', type: 'number', placeholder: '100', min: 1, max: 1000, unit: 'guests', defaultValue: 100 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '/guest×5',
+            zones: [
+              { label: 'Modest', color: '#22c55e', from: 0, to: 30 },
+              { label: 'Average', color: '#3b82f6', from: 30, to: 60 },
+              { label: 'Luxury', color: '#8b5cf6', from: 60, to: 100 },
+            ]
+          }}
+          intro="This wedding budget calculator splits your total budget across the standard categories couples plan for — venue and catering, photography, attire, flowers, music, rings, and extras — and shows your cost per guest so you can right-size the guest list."
+          disclaimer="Percentages are industry averages and will shift with your priorities. Always add a 5–10% buffer for taxes, gratuity, and surprises."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+            { name: 'Savings Calculator', href: '/calculators/savings-calculator' },
+            { name: 'Tip Calculator', href: '/calculators/tip-calculator' },
+            { name: 'Loan Calculator', href: '/calculators/loan-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Standard Budget Split</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['Venue & catering','40%'],['Photography & video','12%'],['Attire & beauty','8%'],['Flowers & decor','8%'],['Music','8%'],['Rings','5%'],['Everything else','19%']].map(([c,p]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{c}</span><span class="font-medium">{p}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">Cut Costs Fast</h3>
+          <p class="text-xs text-gray-600">Guest count is the #1 cost driver. Trimming from 150 to 100 guests can save 30%+ across catering, venue, and rentals.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

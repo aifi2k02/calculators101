@@ -1,0 +1,119 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const people = parseInt(inputs.people) || 0
+  const appetite = inputs.appetite || 'average'
+  const size = inputs.size || 'large'
+  if (people < 1) throw new Error('Enter number of people.')
+  // slices eaten per person
+  const appetiteMap = { light: 2, average: 3, hearty: 4 }
+  const slicesPer = appetiteMap[appetite] || 3
+  // slices per pizza by size
+  const sizeMap = { small: 6, medium: 8, large: 8, xl: 10 }
+  const slicesPerPie = sizeMap[size] || 8
+  const totalSlices = people * slicesPer
+  const pizzas = Math.ceil(totalSlices / slicesPerPie)
+  const actualSlices = pizzas * slicesPerPie
+  const leftover = actualSlices - totalSlices
+  return {
+    value: pizzas + ' pizzas',
+    gaugeValue: Math.min(pizzas / 10 * 100, 100),
+    stats: [
+      { label: 'Pizzas to Order', value: String(pizzas) },
+      { label: 'Total Slices', value: String(actualSlices) },
+      { label: 'Slices per Person', value: String(slicesPer) },
+      { label: 'Leftover Slices', value: String(leftover) },
+    ],
+    breakdown: [
+      people + ' people × ' + slicesPer + ' slices each = ' + totalSlices + ' slices needed',
+      size + ' pizza = ' + slicesPerPie + ' slices each',
+      '—',
+      'Pizzas: ' + totalSlices + ' ÷ ' + slicesPerPie + ' = ' + (totalSlices/slicesPerPie).toFixed(1) + ' → round up to ' + pizzas,
+      'That gives ' + actualSlices + ' slices (' + leftover + ' leftover)',
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How many pizzas do I need for a party?', answer: 'A common rule of thumb is 3 slices per adult. A large pizza has about 8 slices, so it feeds roughly 3 people. For 10 people, order about 4 large pizzas. Adjust up for hungry crowds or teenagers.' },
+  { question: 'How many slices are in a pizza?', answer: 'A small (10″) pizza usually has 6 slices, medium (12″) and large (14″) have 8 slices, and extra-large (16–18″) has 10–12 slices. This calculator assumes 8 slices for a large pizza.' },
+  { question: 'How many pizzas for 20 people?', answer: 'At 3 slices per person, 20 people need 60 slices — about 8 large pizzas. For a lighter event with sides, 6–7 large pizzas may be enough; for a hungry crowd, order 8–9.' },
+  { question: 'Should I order more variety or more of one type?', answer: 'For groups, order a mix: about 40% cheese/pepperoni (crowd favorites) and 60% variety. Always include at least one vegetarian option, and consider one gluten-free or specialty pie for larger gatherings.' },
+  { question: 'How do I account for sides and appetizers?', answer: 'If you are serving wings, salad, breadsticks, or dessert, reduce to about 2 slices per person. If pizza is the only food, use 3–4 slices per person depending on appetite.' },
+]
+---
+<Layout
+  title="Pizza Calculator: How Many Pizzas to Order for a Party"
+  description="Calculate how many pizzas to order for any group size and appetite. Free pizza party calculator with slices per person and leftovers."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Pizza Calculator', href: '/calculators/pizza-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Pizza Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Pizza Calculator"
+          description="How many pizzas to order for your group"
+          formulaId="pizza"
+          formulaFn={formulaFn}
+          resultLabel="Pizzas to Order"
+          inputs={[
+            { id: 'people', label: 'Number of People', type: 'number', placeholder: '10', min: 1, max: 500, unit: 'people', defaultValue: 10 },
+            { id: 'appetite', label: 'Appetite', type: 'select', options: [
+              { value: 'light', label: 'Light — 2 slices each (with sides)' },
+              { value: 'average', label: 'Average — 3 slices each' },
+              { value: 'hearty', label: 'Hearty — 4 slices each' },
+            ], defaultValue: 'average' },
+            { id: 'size', label: 'Pizza Size', type: 'select', options: [
+              { value: 'small', label: 'Small — 6 slices' },
+              { value: 'medium', label: 'Medium — 8 slices' },
+              { value: 'large', label: 'Large — 8 slices' },
+              { value: 'xl', label: 'Extra Large — 10 slices' },
+            ], defaultValue: 'large' },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: 'pizzas÷10',
+            zones: [
+              { label: 'Small group', color: '#22c55e', from: 0, to: 30 },
+              { label: 'Party', color: '#f59e0b', from: 30, to: 70 },
+              { label: 'Big event', color: '#ef4444', from: 70, to: 100 },
+            ]
+          }}
+          intro="This pizza calculator tells you exactly how many pizzas to order for a party. Enter your headcount, pick an appetite level and pizza size, and it figures out the number of pies, total slices, and any leftovers — using the classic 3-slices-per-person rule."
+          disclaimer="Order a little extra for hungry crowds and always include a vegetarian option. Reduce to 2 slices per person if serving lots of sides."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Tip Calculator', href: '/calculators/tip-calculator' },
+            { name: 'Cooking Converter', href: '/calculators/cooking-calculator' },
+            { name: 'Discount Calculator', href: '/calculators/discount-calculator' },
+            { name: 'Sales Tax Calculator', href: '/calculators/sales-tax-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-3">Large Pizzas by Group</h3>
+          <div class="space-y-2 text-xs text-amber-800">
+            {[['5 people','2 pizzas'],['10 people','4 pizzas'],['15 people','6 pizzas'],['20 people','8 pizzas'],['30 people','12 pizzas']].map(([p,z]) => (
+              <div class="flex justify-between border-b border-amber-100 pb-1"><span>{p}</span><span class="font-medium">{z}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">The 3/8 Rule</h3>
+          <p class="text-xs text-gray-600">3 slices per person ÷ 8 slices per large pizza. So people × 3 ÷ 8 = pizzas, rounded up.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

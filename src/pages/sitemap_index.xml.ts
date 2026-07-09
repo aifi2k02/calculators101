@@ -156,6 +156,17 @@ const pages = [
   { url: '/calculators/cooking-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/shoe-size-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/roof-pitch-calculator', priority: '0.75', changefreq: 'monthly' },
+  // Phase 2 — batch 1
+  { url: '/calculators/hourly-to-salary-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/overtime-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/wedding-budget-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/tank-volume-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/time-card-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/gas-mileage-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/tile-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/mulch-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/carbon-footprint-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/pizza-calculator', priority: '0.8', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

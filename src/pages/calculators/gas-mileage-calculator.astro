@@ -1,0 +1,109 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const miles = parseFloat(inputs.miles) || 0
+  const gallons = parseFloat(inputs.gallons) || 0
+  const price = parseFloat(inputs.price) || 0
+  if (miles <= 0) throw new Error('Enter miles driven.')
+  if (gallons <= 0) throw new Error('Enter gallons of fuel used.')
+  const mpg = miles / gallons
+  const costPerMile = price > 0 ? (price * gallons) / miles : 0
+  const tripCost = price * gallons
+  const kmPerL = mpg * 0.425144
+  const l100km = 235.215 / mpg
+  return {
+    value: mpg.toFixed(1) + ' MPG',
+    gaugeValue: Math.min(mpg / 60 * 100, 100),
+    stats: [
+      { label: 'Miles per Gallon', value: mpg.toFixed(1) },
+      { label: 'Cost per Mile', value: price > 0 ? '$' + costPerMile.toFixed(3) : '—' },
+      { label: 'Trip Fuel Cost', value: price > 0 ? '$' + tripCost.toFixed(2) : '—' },
+      { label: 'L/100km', value: l100km.toFixed(1) },
+    ],
+    breakdown: [
+      'Miles driven: ' + miles.toLocaleString(),
+      'Fuel used: ' + gallons.toFixed(2) + ' gallons',
+      '—',
+      'Fuel economy: ' + mpg.toFixed(2) + ' MPG',
+      'Metric: ' + kmPerL.toFixed(2) + ' km/L · ' + l100km.toFixed(2) + ' L/100km',
+      price > 0 ? 'Fuel price: $' + price.toFixed(2) + '/gallon' : '',
+      price > 0 ? 'Cost per mile: $' + costPerMile.toFixed(3) : '',
+      price > 0 ? 'Cost for this trip: $' + tripCost.toFixed(2) : '',
+    ].filter(Boolean)
+  }
+`
+
+const faqs = [
+  { question: 'How do I calculate gas mileage (MPG)?', answer: 'Divide the miles you drove by the gallons of fuel used. Fill your tank, note the odometer, drive until you refuel, then divide the miles driven by the gallons it took to fill up again. Miles ÷ gallons = MPG.' },
+  { question: 'What is good gas mileage?', answer: 'For gas cars, 25–30 MPG is average, 30–40 MPG is good, and 40+ MPG is excellent (usually hybrids). Trucks and SUVs often get 15–22 MPG. Highway MPG is typically higher than city MPG.' },
+  { question: 'How do I convert MPG to L/100km?', answer: 'Divide 235.215 by the MPG value. For example, 30 MPG equals 235.215 ÷ 30 = 7.84 L/100km. Lower L/100km means better efficiency, which is the opposite of MPG.' },
+  { question: 'What lowers my gas mileage?', answer: 'Aggressive driving, speeding, excess idling, under-inflated tires, roof racks, extra cargo weight, and cold weather all reduce MPG. Gentle acceleration and steady highway speeds around 55–60 mph maximize efficiency.' },
+  { question: 'How much does a trip cost in gas?', answer: 'Divide the trip distance by your MPG to get gallons needed, then multiply by the fuel price. A 300-mile trip at 30 MPG uses 10 gallons; at $3.50/gallon that is $35.' },
+]
+---
+<Layout
+  title="Gas Mileage Calculator: MPG, Cost Per Mile & Trip Cost"
+  description="Calculate your car's gas mileage (MPG), cost per mile, and trip fuel cost. Free gas mileage calculator with metric L/100km conversion."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Gas Mileage Calculator', href: '/calculators/gas-mileage-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Gas Mileage Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Gas Mileage Calculator"
+          description="Miles per gallon, cost per mile, and trip fuel cost"
+          formulaId="gas-mileage"
+          formulaFn={formulaFn}
+          resultLabel="Fuel Economy"
+          inputs={[
+            { id: 'miles', label: 'Miles Driven', type: 'number', placeholder: '300', min: 0, step: 0.1, unit: 'mi', defaultValue: 300 },
+            { id: 'gallons', label: 'Gallons Used', type: 'number', placeholder: '10', min: 0, step: 0.01, unit: 'gal', defaultValue: 10 },
+            { id: 'price', label: 'Fuel Price (optional)', type: 'number', placeholder: '3.50', min: 0, step: 0.01, unit: '$/gal', defaultValue: 3.5 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% of 60 MPG',
+            zones: [
+              { label: 'Thirsty', color: '#ef4444', from: 0, to: 33 },
+              { label: 'Average', color: '#f59e0b', from: 33, to: 55 },
+              { label: 'Efficient', color: '#22c55e', from: 55, to: 100 },
+            ]
+          }}
+          intro="This gas mileage calculator finds your vehicle's fuel economy in MPG from the miles driven and gallons used. Add the fuel price to also see your cost per mile and the total fuel cost of the trip, plus metric km/L and L/100km."
+          disclaimer="Real-world MPG varies with driving style, terrain, load, and weather. For best accuracy, measure over a full tank on similar roads."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Fuel Cost Calculator', href: '/calculators/fuel-cost-calculator' },
+            { name: 'Speed Calculator', href: '/calculators/speed-calculator' },
+            { name: 'Distance Calculator', href: '/calculators/distance-calculator' },
+            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <h3 class="font-bold text-green-900 mb-3">MPG Benchmarks</h3>
+          <div class="space-y-2 text-xs text-green-800">
+            {[['Large SUV / truck','15–22'],['Sedan (average)','25–32'],['Compact car','32–40'],['Hybrid','45–55'],['Plug-in hybrid','50+']].map(([v,m]) => (
+              <div class="flex justify-between border-b border-green-100 pb-1"><span>{v}</span><span class="font-medium">{m} MPG</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">MPG → L/100km</h3>
+          <p class="text-xs text-gray-600">Divide 235.2 by MPG. 30 MPG = 7.84 L/100km. Lower L/100km is better.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

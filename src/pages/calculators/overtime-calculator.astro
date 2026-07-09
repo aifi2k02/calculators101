@@ -1,0 +1,114 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const wage = parseFloat(inputs.wage) || 0
+  const regular = parseFloat(inputs.regular) || 40
+  const otHours = parseFloat(inputs.othours) || 0
+  const multiplier = parseFloat(inputs.multiplier) || 1.5
+  if (wage <= 0) throw new Error('Enter your hourly wage.')
+  const regularPay = wage * regular
+  const otRate = wage * multiplier
+  const otPay = otRate * otHours
+  const total = regularPay + otPay
+  const totalHours = regular + otHours
+  return {
+    value: '$' + otPay.toFixed(2) + ' OT',
+    gaugeValue: Math.min(otHours / 40 * 100, 100),
+    stats: [
+      { label: 'Overtime Pay', value: '$' + otPay.toFixed(2) },
+      { label: 'Regular Pay', value: '$' + regularPay.toFixed(2) },
+      { label: 'Total Weekly Pay', value: '$' + total.toFixed(2) },
+      { label: 'OT Rate', value: '$' + otRate.toFixed(2) + '/hr' },
+    ],
+    breakdown: [
+      'Regular wage: $' + wage.toFixed(2) + '/hr',
+      'Regular hours: ' + regular + ' → $' + regularPay.toFixed(2),
+      '—',
+      'Overtime rate: $' + wage.toFixed(2) + ' × ' + multiplier + ' = $' + otRate.toFixed(2) + '/hr',
+      'Overtime hours: ' + otHours + ' → $' + otPay.toFixed(2),
+      '—',
+      'Total hours: ' + totalHours,
+      'Total weekly pay: $' + total.toFixed(2),
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How is overtime pay calculated?', answer: 'Overtime is your regular hourly rate multiplied by an overtime multiplier (usually 1.5×, called "time and a half") for each hour worked beyond the threshold. For example, $20/hour becomes $30/hour for overtime hours.' },
+  { question: 'When does overtime kick in?', answer: 'Under the U.S. Fair Labor Standards Act (FLSA), non-exempt employees earn overtime for hours worked over 40 in a workweek. Some states (like California) also require daily overtime after 8 hours in a single day.' },
+  { question: 'What is double time?', answer: 'Double time (2×) is twice your regular rate. It is not required federally but is common for holidays, or in California for hours worked beyond 12 in a day or beyond 8 on the seventh consecutive workday.' },
+  { question: 'Who is eligible for overtime?', answer: 'Non-exempt employees — typically hourly workers — are eligible. Salaried employees earning above the FLSA threshold and working in executive, administrative, or professional roles are often exempt. Eligibility depends on job duties and salary, not job title alone.' },
+  { question: 'Is overtime taxed more?', answer: 'No — overtime is taxed at the same rate as regular income. It may appear that more is withheld because the larger paycheck can push that pay period into a higher withholding bracket, but your actual tax rate is unchanged.' },
+]
+---
+<Layout
+  title="Overtime Calculator: Time and a Half & Double Time Pay"
+  description="Calculate overtime pay at 1.5× or 2× your hourly rate plus total weekly earnings. Free overtime calculator for hourly workers."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Overtime Calculator', href: '/calculators/overtime-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Overtime Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Overtime Calculator"
+          description="Overtime pay plus your total weekly earnings"
+          formulaId="overtime"
+          formulaFn={formulaFn}
+          resultLabel="Overtime Pay"
+          inputs={[
+            { id: 'wage', label: 'Regular Hourly Wage', type: 'number', placeholder: '20', min: 0, step: 0.01, unit: '$', defaultValue: 20 },
+            { id: 'regular', label: 'Regular Hours', type: 'number', placeholder: '40', min: 0, max: 168, unit: 'hrs', defaultValue: 40 },
+            { id: 'othours', label: 'Overtime Hours', type: 'number', placeholder: '5', min: 0, max: 100, unit: 'hrs', defaultValue: 5 },
+            { id: 'multiplier', label: 'Overtime Rate', type: 'select', options: [
+              { value: '1.5', label: '1.5× — Time and a half' },
+              { value: '2', label: '2× — Double time' },
+              { value: '1.25', label: '1.25× — Custom' },
+            ], defaultValue: '1.5' },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% OT',
+            zones: [
+              { label: 'Light', color: '#22c55e', from: 0, to: 25 },
+              { label: 'Moderate', color: '#f59e0b', from: 25, to: 60 },
+              { label: 'Heavy', color: '#ef4444', from: 60, to: 100 },
+            ]
+          }}
+          intro="This overtime calculator shows your extra earnings from overtime hours at time-and-a-half (1.5×) or double time (2×), plus your total weekly pay. Enter your regular wage, regular hours, and overtime hours to see the breakdown."
+          disclaimer="Overtime rules vary by state and employment type. This is an estimate — check your local labor laws and employment agreement for exact eligibility."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
+            { name: 'Time Card Calculator', href: '/calculators/time-card-calculator' },
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Time and a Half</h3>
+          <p class="text-xs text-blue-800">The most common overtime rate. Multiply your hourly wage by <strong>1.5</strong>. A $20/hr worker earns $30/hr for each overtime hour.</p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-3">OT Rate by Wage (1.5×)</h3>
+          <div class="space-y-2 text-xs text-amber-800">
+            {[['$15/hr','$22.50/hr'],['$20/hr','$30.00/hr'],['$25/hr','$37.50/hr'],['$30/hr','$45.00/hr']].map(([w,o]) => (
+              <div class="flex justify-between border-b border-amber-100 pb-1"><span>{w}</span><span class="font-medium">{o}</span></div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

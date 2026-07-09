@@ -1,0 +1,121 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  function toMinutes(t) {
+    if (!t) return null
+    const parts = String(t).split(':')
+    if (parts.length !== 2) return null
+    const h = parseInt(parts[0]); const m = parseInt(parts[1])
+    if (isNaN(h) || isNaN(m)) return null
+    return h * 60 + m
+  }
+  const start = toMinutes(inputs.start)
+  const end = toMinutes(inputs.end)
+  const breakMin = parseFloat(inputs.breakmin) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  if (start === null || end === null) throw new Error('Enter start and end time as HH:MM (24-hour), e.g. 09:00 and 17:30.')
+  let worked = end - start
+  if (worked < 0) worked += 24 * 60 // overnight shift
+  worked -= breakMin
+  if (worked < 0) throw new Error('Break is longer than the shift.')
+  const hours = worked / 60
+  const wholeH = Math.floor(worked / 60)
+  const mins = worked % 60
+  const pay = hours * rate
+  return {
+    value: hours.toFixed(2) + ' hrs',
+    gaugeValue: Math.min(hours / 12 * 100, 100),
+    stats: [
+      { label: 'Total Hours', value: hours.toFixed(2) },
+      { label: 'Hours & Minutes', value: wholeH + 'h ' + mins + 'm' },
+      { label: 'Break Deducted', value: breakMin + ' min' },
+      { label: 'Est. Pay', value: rate > 0 ? '$' + pay.toFixed(2) : '—' },
+    ],
+    breakdown: [
+      'Clock in: ' + inputs.start,
+      'Clock out: ' + inputs.end,
+      (end - start < 0 ? '(Overnight shift — crosses midnight)' : ''),
+      'Gross shift: ' + ((worked + breakMin) / 60).toFixed(2) + ' hrs',
+      'Break: ' + breakMin + ' min',
+      '—',
+      'Worked: ' + hours.toFixed(2) + ' hrs (' + wholeH + 'h ' + mins + 'm)',
+      rate > 0 ? 'Pay: ' + hours.toFixed(2) + ' × $' + rate.toFixed(2) + ' = $' + pay.toFixed(2) : '',
+    ].filter(Boolean)
+  }
+`
+
+const faqs = [
+  { question: 'How do I calculate hours worked from clock-in and clock-out?', answer: 'Subtract the start time from the end time, then subtract any unpaid break. For example, 9:00 to 17:30 is 8.5 hours; minus a 30-minute lunch leaves 8 hours worked.' },
+  { question: 'How do I handle an overnight shift?', answer: 'This calculator automatically detects when the clock-out time is earlier than clock-in (e.g. 22:00 to 06:00) and adds 24 hours so the overnight shift calculates correctly as 8 hours.' },
+  { question: 'How do I convert minutes to decimal hours for payroll?', answer: 'Divide the minutes by 60. So 30 minutes = 0.5 hours, 15 minutes = 0.25 hours, and 45 minutes = 0.75 hours. Payroll systems use decimal hours, which this calculator shows automatically.' },
+  { question: 'Should lunch breaks be paid?', answer: 'Under U.S. federal law, bona fide meal breaks (usually 30+ minutes) are unpaid, while short rest breaks (5–20 minutes) are typically paid. Enter only unpaid break time to subtract it from your total.' },
+  { question: 'What time format should I use?', answer: 'Enter times in 24-hour HH:MM format — for example 09:00 for 9 AM and 17:30 for 5:30 PM. This avoids AM/PM confusion and handles overnight shifts cleanly.' },
+]
+---
+<Layout
+  title="Time Card Calculator: Work Hours from Clock In & Out"
+  description="Calculate total work hours from clock-in and clock-out times, minus breaks. Handles overnight shifts and shows decimal hours and pay. Free time card calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Time Card Calculator', href: '/calculators/time-card-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Time Card Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Time Card Calculator"
+          description="Total work hours from clock-in and clock-out, with break and pay"
+          formulaId="time-card"
+          formulaFn={formulaFn}
+          resultLabel="Hours Worked"
+          inputs={[
+            { id: 'start', label: 'Clock In (HH:MM, 24-hr)', type: 'text', placeholder: '09:00', defaultValue: '09:00' },
+            { id: 'end', label: 'Clock Out (HH:MM, 24-hr)', type: 'text', placeholder: '17:30', defaultValue: '17:30' },
+            { id: 'breakmin', label: 'Unpaid Break', type: 'number', placeholder: '30', min: 0, max: 480, unit: 'min', defaultValue: 30 },
+            { id: 'rate', label: 'Hourly Rate (optional)', type: 'number', placeholder: '20', min: 0, step: 0.01, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: '% of 12h',
+            zones: [
+              { label: 'Part shift', color: '#94a3b8', from: 0, to: 33 },
+              { label: 'Full shift', color: '#22c55e', from: 33, to: 67 },
+              { label: 'Long shift', color: '#f59e0b', from: 67, to: 100 },
+            ]
+          }}
+          intro="This time card calculator totals your hours worked from clock-in to clock-out, subtracts unpaid breaks, and converts the result into decimal hours for payroll. It automatically handles overnight shifts that cross midnight. Add your hourly rate to see estimated pay."
+          disclaimer="Enter times in 24-hour HH:MM format. Only subtract unpaid break time. Estimated pay is gross, before taxes."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Overtime Calculator', href: '/calculators/overtime-calculator' },
+            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
+            { name: 'Time Calculator', href: '/calculators/time-calculator' },
+            { name: 'Military Time', href: '/calculators/military-time-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Minutes → Decimal Hours</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['15 min','0.25'],['30 min','0.50'],['45 min','0.75'],['10 min','0.17'],['20 min','0.33'],['40 min','0.67']].map(([m,d]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{m}</span><span class="font-medium">{d} hr</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">Overnight Shifts</h3>
+          <p class="text-xs text-gray-600">Clock out earlier than clock in? The calculator detects the midnight crossing automatically — 22:00 to 06:00 = 8 hours.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

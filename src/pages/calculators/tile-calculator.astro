@@ -1,0 +1,119 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const roomL = parseFloat(inputs.roomL) || 0
+  const roomW = parseFloat(inputs.roomW) || 0
+  const tileL = parseFloat(inputs.tileL) || 0
+  const tileW = parseFloat(inputs.tileW) || 0
+  const waste = parseFloat(inputs.waste) || 10
+  const boxCount = parseInt(inputs.perbox) || 0
+  if (roomL <= 0 || roomW <= 0) throw new Error('Enter room length and width in feet.')
+  if (tileL <= 0 || tileW <= 0) throw new Error('Enter tile size in inches.')
+  const roomArea = roomL * roomW // sq ft
+  const tileArea = (tileL * tileW) / 144 // sq ft per tile
+  const baseTiles = roomArea / tileArea
+  const withWaste = baseTiles * (1 + waste / 100)
+  const tilesNeeded = Math.ceil(withWaste)
+  const boxes = boxCount > 0 ? Math.ceil(tilesNeeded / boxCount) : 0
+  return {
+    value: tilesNeeded + ' tiles',
+    gaugeValue: Math.min(roomArea / 4, 100),
+    stats: [
+      { label: 'Tiles Needed', value: tilesNeeded.toLocaleString() },
+      { label: 'Room Area', value: roomArea.toFixed(1) + ' sq ft' },
+      { label: 'Boxes Needed', value: boxes > 0 ? String(boxes) : '—' },
+      { label: 'Incl. Waste', value: waste + '%' },
+    ],
+    breakdown: [
+      'Room: ' + roomL + ' ft × ' + roomW + ' ft = ' + roomArea.toFixed(1) + ' sq ft',
+      'Tile: ' + tileL + '\\" × ' + tileW + '\\" = ' + tileArea.toFixed(3) + ' sq ft each',
+      '—',
+      'Exact tiles: ' + baseTiles.toFixed(1),
+      'Plus ' + waste + '% waste/cuts: ' + withWaste.toFixed(1),
+      'Round up: ' + tilesNeeded + ' tiles',
+      boxes > 0 ? 'Boxes (' + boxCount + '/box): ' + boxes : '',
+    ].filter(Boolean)
+  }
+`
+
+const faqs = [
+  { question: 'How many tiles do I need?', answer: 'Divide the total floor area by the area of one tile. For example, a 120 sq ft room with 1 sq ft tiles needs 120 tiles before waste. Always add 10–15% extra for cuts, breakage, and future repairs.' },
+  { question: 'How much extra tile should I buy for waste?', answer: 'Add 10% for a simple straight (grid) layout, 15% for diagonal layouts, and up to 20% for herringbone or intricate patterns. Rooms with many corners, angles, or obstacles need more.' },
+  { question: 'How do I calculate square footage of a tile?', answer: 'Multiply the tile length by width in inches, then divide by 144 to convert to square feet. A 12″×12″ tile is 144 ÷ 144 = 1 sq ft; a 12″×24″ tile is 288 ÷ 144 = 2 sq ft.' },
+  { question: 'Should I buy tiles by the box?', answer: 'Yes — tiles are sold in boxes covering a set area or count. Buy full boxes and keep at least one spare box from the same dye lot, since color can vary slightly between production batches.' },
+  { question: 'Does this work for walls too?', answer: 'Yes. Enter the wall height and width instead of room length and width. For a backsplash or shower, calculate each wall section separately and subtract large openings like windows.' },
+]
+---
+<Layout
+  title="Tile Calculator: How Many Tiles & Boxes You Need"
+  description="Calculate how many tiles and boxes you need for any floor or wall, including waste. Free tile calculator for any room and tile size."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Tile Calculator', href: '/calculators/tile-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Tile Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Tile Calculator"
+          description="Tiles and boxes needed for any room, including waste"
+          formulaId="tile"
+          formulaFn={formulaFn}
+          resultLabel="Tiles Needed"
+          inputs={[
+            { id: 'roomL', label: 'Room Length', type: 'number', placeholder: '12', min: 0, step: 0.1, unit: 'ft', defaultValue: 12 },
+            { id: 'roomW', label: 'Room Width', type: 'number', placeholder: '10', min: 0, step: 0.1, unit: 'ft', defaultValue: 10 },
+            { id: 'tileL', label: 'Tile Length', type: 'number', placeholder: '12', min: 0, step: 0.1, unit: 'in', defaultValue: 12 },
+            { id: 'tileW', label: 'Tile Width', type: 'number', placeholder: '12', min: 0, step: 0.1, unit: 'in', defaultValue: 12 },
+            { id: 'waste', label: 'Waste Allowance', type: 'select', options: [
+              { value: '10', label: '10% — Straight/grid layout' },
+              { value: '15', label: '15% — Diagonal layout' },
+              { value: '20', label: '20% — Herringbone/complex' },
+            ], defaultValue: '10' },
+            { id: 'perbox', label: 'Tiles per Box (optional)', type: 'number', placeholder: '10', min: 0, unit: 'tiles', defaultValue: 10 },
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: 'sq ft÷4',
+            zones: [
+              { label: 'Small', color: '#22c55e', from: 0, to: 30 },
+              { label: 'Medium', color: '#3b82f6', from: 30, to: 70 },
+              { label: 'Large', color: '#8b5cf6', from: 70, to: 100 },
+            ]
+          }}
+          intro="This tile calculator tells you how many tiles and boxes to buy for a floor or wall. Enter the room size in feet and the tile size in inches, choose a waste allowance for your layout, and it rounds up to full tiles and boxes."
+          disclaimer="Always buy a little extra from the same dye lot for future repairs. Subtract large openings (islands, windows) from the area for big rooms."
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Area Calculator', href: '/calculators/area-calculator' },
+            { name: 'Paint Calculator', href: '/calculators/paint-calculator' },
+            { name: 'Concrete Calculator', href: '/calculators/concrete-calculator' },
+            { name: 'Mulch Calculator', href: '/calculators/mulch-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Tile Size → Sq Ft</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['12″ × 12″','1.00 sq ft'],['12″ × 24″','2.00 sq ft'],['6″ × 24″','1.00 sq ft'],['18″ × 18″','2.25 sq ft'],['24″ × 24″','4.00 sq ft']].map(([t,a]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{t}</span><span class="font-medium">{a}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 mb-2">Buy Extra</h3>
+          <p class="text-xs text-gray-600">Order 10–20% more than the exact count. Cuts, breakage, and future repairs all eat into your supply.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
