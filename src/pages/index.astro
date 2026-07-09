@@ -100,21 +100,30 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
       <p class="text-blue-100 text-lg sm:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
         Fast, accurate calculators for finance, fitness, math, and everyday life. No ads. Just results.
       </p>
-      <div class="max-w-lg mx-auto relative">
-        <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-          <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
+      <div class="max-w-xl mx-auto relative">
+        <div class="flex items-center bg-white rounded-2xl shadow-xl border border-white/40 overflow-hidden focus-within:ring-2 focus-within:ring-white/60 transition-all">
+          <div class="pl-5 flex items-center pointer-events-none">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input
+            id="hero-search"
+            type="text"
+            placeholder="Search calculators... (e.g. mortgage, BMI, tax)"
+            class="flex-1 px-3 py-4 text-gray-800 placeholder-gray-400 bg-transparent text-sm sm:text-base focus:outline-none"
+            autocomplete="off"
+            aria-label="Search calculators"
+          />
+          <button
+            id="hero-search-btn"
+            type="button"
+            class="m-1.5 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-colors shrink-0"
+          >
+            Search
+          </button>
         </div>
-        <input
-          id="hero-search"
-          type="text"
-          placeholder="Search calculators..."
-          class="w-full pl-12 pr-5 py-4 rounded-2xl text-white placeholder-white/60 bg-white/20 border border-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/25 shadow-xl backdrop-blur-sm transition-all"
-          autocomplete="off"
-          aria-label="Search calculators"
-        />
-        <div id="search-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-64 overflow-y-auto" role="listbox"></div>
+        <div id="search-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-72 overflow-y-auto text-left" role="listbox"></div>
       </div>
     </div>
   </section>
@@ -299,7 +308,21 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
     }
   })
 
+  const searchBtn = document.getElementById('hero-search-btn')
+
+  function goToFirstMatch() {
+    const q = input.value.trim().toLowerCase()
+    if (!q) { input.focus(); return }
+    const matches = allCalcs.filter(c => c.name.toLowerCase().includes(q))
+    if (matches.length) {
+      window.location.href = matches[0].href
+    }
+  }
+
+  searchBtn?.addEventListener('click', goToFirstMatch)
+
   input?.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') dropdown?.classList.add('hidden')
+    if (e.key === 'Enter') { e.preventDefault(); goToFirstMatch() }
   })
 </script>
