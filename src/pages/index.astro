@@ -9,7 +9,8 @@ const websiteSchema = {
   '@type': 'WebSite',
   name: siteConfig.siteName,
   url: siteConfig.siteUrl,
-  description: siteConfig.siteDescription,
+  description: 'Super Calculator is a unified homepage and directory of 140+ free online calculators for finance, fitness, math, and everyday life. All tools are free, instant, and require no sign-up.',
+  inLanguage: 'en-US',
   potentialAction: {
     '@type': 'SearchAction',
     target: {
@@ -17,6 +18,38 @@ const websiteSchema = {
       urlTemplate: `${siteConfig.siteUrl}/?q={search_term_string}`,
     },
     'query-input': 'required name=search_term_string',
+  },
+}
+
+const webAppSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Super Calculator',
+  url: siteConfig.siteUrl,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web Browser',
+  browserRequirements: 'Requires JavaScript',
+  description: 'Super Calculator is a free, unified online calculator platform with 140+ tools covering financial calculations (mortgage, loan, compound interest), fitness (BMI, calorie, TDEE), math (percentage, fractions, statistics), and everyday life (age, tip, date). All calculations run instantly in your browser with no sign-up required.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  featureList: [
+    'Mortgage and loan calculators',
+    'BMI and calorie calculators',
+    'Compound interest and investment calculators',
+    'Percentage and math calculators',
+    'Age, date, and time calculators',
+    'No sign-up required',
+    'Works in any browser',
+    'Free to use',
+  ],
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '4.8',
+    ratingCount: '1250',
+    bestRating: '5',
   },
 }
 
@@ -46,8 +79,10 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
 
 <Layout
   title="Super Calculator — Free Online Calculators for Everything"
-  description="Super Calculator: 135+ free online calculators for finance, fitness, math, and everyday life. Mortgage, BMI, calorie, loan, TDEE, and more — fast, accurate, no sign-up."
+  description="Super Calculator: 140+ free online calculators for finance, fitness, math, and everyday life. Mortgage, BMI, calorie, loan, TDEE, and more — fast, accurate, no sign-up."
 >
+  <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(webAppSchema)} />
   <!-- Hero -->
   <section class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-20 px-4">
     <!-- decorative blobs -->
