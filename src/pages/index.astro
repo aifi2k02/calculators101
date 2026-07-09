@@ -9,7 +9,7 @@ const websiteSchema = {
   '@type': 'WebSite',
   name: siteConfig.siteName,
   url: siteConfig.siteUrl,
-  description: 'Super Calculator is a unified homepage and directory of 140+ free online calculators for finance, fitness, math, and everyday life. All tools are free, instant, and require no sign-up.',
+  description: 'Super Calculator is a unified homepage and directory of 145+ free online calculators for finance, fitness, math, and everyday life. All tools are free, instant, and require no sign-up.',
   inLanguage: 'en-US',
   potentialAction: {
     '@type': 'SearchAction',
@@ -29,7 +29,7 @@ const webAppSchema = {
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web Browser',
   browserRequirements: 'Requires JavaScript',
-  description: 'Super Calculator is a free, unified online calculator platform with 140+ tools covering financial calculations (mortgage, loan, compound interest), fitness (BMI, calorie, TDEE), math (percentage, fractions, statistics), and everyday life (age, tip, date). All calculations run instantly in your browser with no sign-up required.',
+  description: 'Super Calculator is a free, unified online calculator platform with 145+ tools covering financial calculations (mortgage, loan, compound interest), fitness (BMI, calorie, TDEE), math (percentage, fractions, statistics), and everyday life (age, tip, date). All calculations run instantly in your browser with no sign-up required.',
   offers: {
     '@type': 'Offer',
     price: '0',
@@ -79,7 +79,7 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
 
 <Layout
   title="Super Calculator — Free Online Calculators for Everything"
-  description="Super Calculator: 140+ free online calculators for finance, fitness, math, and everyday life. Mortgage, BMI, calorie, loan, TDEE, and more — fast, accurate, no sign-up."
+  description="Super Calculator: 145+ free online calculators for finance, fitness, math, and everyday life. Mortgage, BMI, calorie, loan, TDEE, and more — fast, accurate, no sign-up."
 >
   <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(webAppSchema)} />
@@ -91,7 +91,7 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
     <div class="relative max-w-4xl mx-auto text-center">
       <div class="inline-flex items-center gap-2 bg-white/15 border border-white/25 rounded-full px-4 py-1.5 text-xs font-semibold mb-6 backdrop-blur-sm">
         <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-        135+ free calculators — no sign-up required
+        145+ free calculators — no sign-up required
       </div>
       <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-5 leading-tight tracking-tight">
         Super Calculator<br class="hidden sm:block" />
@@ -132,7 +132,7 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
   <div class="bg-white border-b border-gray-100 shadow-sm">
     <div class="max-w-4xl mx-auto px-4 py-4 grid grid-cols-3 divide-x divide-gray-100 text-center">
       <div class="px-4">
-        <div class="text-2xl font-extrabold text-blue-600">135+</div>
+        <div class="text-2xl font-extrabold text-blue-600">145+</div>
         <div class="text-xs text-gray-500 font-medium mt-0.5">Calculators</div>
       </div>
       <div class="px-4">
@@ -252,7 +252,7 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
           { q: 'Are all calculators free?', a: 'Yes. Every calculator on Super Calculator is completely free to use with no sign-up, subscription, or account required.' },
           { q: 'Are the calculations accurate?', a: 'Yes. Financial calculators use standard amortization and investment formulas. Health calculators follow WHO, CDC, and ACSM guidelines. Each calculator page explains the formula used.' },
           { q: 'Is my data private?', a: 'All calculations run entirely in your browser. No inputs or results are sent to our servers. Your data stays on your device.' },
-          { q: 'How many calculators are available?', a: 'Super Calculator currently offers 135+ free calculators across financial, fitness & health, math, and everyday life categories, with more added regularly.' },
+          { q: 'How many calculators are available?', a: 'Super Calculator currently offers 145+ free calculators across financial, fitness & health, math, and everyday life categories, with more added regularly.' },
           { q: 'Can I use Super Calculator on mobile?', a: 'Yes. Every calculator is fully responsive and works on any device — phone, tablet, or desktop — with no app download required.' },
         ].map(faq => (
           <details class="bg-white border border-gray-200 rounded-lg px-4 py-3 group">
@@ -277,7 +277,7 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
       { "@type": "Question", "name": "Are all calculators free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every calculator on Super Calculator is completely free to use with no sign-up, subscription, or account required." } },
       { "@type": "Question", "name": "Are the calculations accurate?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Financial calculators use standard amortization and investment formulas. Health calculators follow WHO, CDC, and ACSM guidelines." } },
       { "@type": "Question", "name": "Is my data private?", "acceptedAnswer": { "@type": "Answer", "text": "All calculations run entirely in your browser. No inputs or results are sent to our servers. Your data stays on your device." } },
-      { "@type": "Question", "name": "How many calculators are available?", "acceptedAnswer": { "@type": "Answer", "text": "Super Calculator currently offers 135+ free calculators across financial, fitness & health, math, and everyday life categories." } },
+      { "@type": "Question", "name": "How many calculators are available?", "acceptedAnswer": { "@type": "Answer", "text": "Super Calculator currently offers 145+ free calculators across financial, fitness & health, math, and everyday life categories." } },
       { "@type": "Question", "name": "Can I use Super Calculator on mobile?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every calculator is fully responsive and works on any device — phone, tablet, or desktop — with no app download required." } },
     ]
   })} />
