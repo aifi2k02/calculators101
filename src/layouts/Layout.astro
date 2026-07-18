@@ -22,7 +22,10 @@ const { title, description, canonical, ogType = 'website', breadcrumbs, noSchema
 
 const { siteUrl, siteName, allowIndexing, twitterHandle, locale } = siteConfig
 
-const pageUrl = canonical ?? (siteUrl + Astro.url.pathname.replace(/\/$/, '') || siteUrl)
+// Cloudflare serves pages at trailing-slash URLs (308-redirects non-slash → slash),
+// so canonical/og:url must end in a slash to match the real served URL.
+const withSlash = (u: string) => (u.endsWith('/') ? u : u + '/')
+const pageUrl = withSlash(canonical ?? (siteUrl + Astro.url.pathname))
 const fullTitle = `${title} | ${siteName}`
 const robotsContent = allowIndexing ? 'index, follow' : 'noindex, nofollow'
 
@@ -35,7 +38,7 @@ const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0
         '@type': 'ListItem',
         position: i + 1,
         name: crumb.name,
-        item: siteUrl + crumb.href,
+        item: withSlash(siteUrl + crumb.href),
       })),
     }
   : null
