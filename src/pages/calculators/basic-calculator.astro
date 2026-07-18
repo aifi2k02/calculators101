@@ -1,0 +1,227 @@
+---
+import Layout from '../../layouts/Layout.astro'
+
+const faqs = [
+  { question: 'How do I use the basic calculator?', answer: 'Click the buttons or type on your keyboard. Enter a number, choose an operation (+, −, ×, ÷), enter the next number, and press = or Enter to see the result. Press AC to clear everything, or the ± and % keys for sign change and percentages.' },
+  { question: 'Does the calculator support keyboard input?', answer: 'Yes. Use the number keys for digits, + − * / for operations, Enter or = for equals, Backspace to delete the last digit, and Escape to clear. Everything runs instantly in your browser.' },
+  { question: 'How does the percent (%) key work?', answer: 'The % key converts the current number to a percentage of the previous value. For example, 200 + 10 % gives 20 (10% of 200), so 200 + 10% = 220. Used alone, it divides the current number by 100.' },
+  { question: 'Is my calculation private?', answer: 'Completely. Every calculation runs locally in your browser — nothing you type is sent to a server, stored, or tracked.' },
+  { question: 'What is the order of operations?', answer: 'This is a standard four-function calculator that evaluates left to right as you enter each operation, like a classic desktop calculator. For full order-of-operations (PEMDAS) with parentheses and exponents, use our Scientific Calculator.' },
+]
+
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Basic Calculator',
+  description: 'A free online basic calculator for addition, subtraction, multiplication, and division with keyboard support.',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  browserRequirements: 'Requires JavaScript',
+}
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+}
+---
+<Layout
+  title="Basic Calculator — Free Online Calculator"
+  description="A free, fast online basic calculator for addition, subtraction, multiplication, and division. Full keyboard support, no ads, no sign-up — just results."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Basic Calculator', href: '/calculators/basic-calculator' },
+  ]}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Basic Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="max-w-sm mx-auto lg:mx-0">
+          <div class="bg-white rounded-3xl shadow-xl shadow-blue-100/60 border border-gray-200/80 overflow-hidden">
+            <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-6 py-5">
+              <h1 class="text-xl font-bold text-white">Basic Calculator</h1>
+              <p class="text-blue-100/90 text-sm mt-1">Add, subtract, multiply &amp; divide — click or type</p>
+            </div>
+            <div class="p-5">
+              <!-- Display -->
+              <div class="bg-gray-900 rounded-2xl px-5 py-6 mb-4 text-right">
+                <div id="calc-history" class="text-gray-400 text-sm h-5 truncate font-mono">&nbsp;</div>
+                <div id="calc-display" class="text-white text-4xl font-semibold font-mono truncate leading-tight">0</div>
+              </div>
+              <!-- Keypad -->
+              <div class="grid grid-cols-4 gap-2.5" id="calc-keypad">
+                <button data-key="AC" class="ck bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl py-4 text-lg transition-colors">AC</button>
+                <button data-key="+/-" class="ck bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl py-4 text-lg transition-colors">±</button>
+                <button data-key="%" class="ck bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl py-4 text-lg transition-colors">%</button>
+                <button data-key="/" class="ck op bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-4 text-lg transition-colors">÷</button>
+
+                <button data-key="7" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">7</button>
+                <button data-key="8" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">8</button>
+                <button data-key="9" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">9</button>
+                <button data-key="*" class="ck op bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-4 text-lg transition-colors">×</button>
+
+                <button data-key="4" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">4</button>
+                <button data-key="5" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">5</button>
+                <button data-key="6" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">6</button>
+                <button data-key="-" class="ck op bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-4 text-lg transition-colors">−</button>
+
+                <button data-key="1" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">1</button>
+                <button data-key="2" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">2</button>
+                <button data-key="3" class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">3</button>
+                <button data-key="+" class="ck op bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-4 text-lg transition-colors">+</button>
+
+                <button data-key="0" class="ck col-span-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">0</button>
+                <button data-key="." class="ck bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-xl py-4 text-lg transition-colors">.</button>
+                <button data-key="=" class="ck bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl py-4 text-lg transition-colors">=</button>
+              </div>
+              <p class="text-center text-xs text-gray-400 mt-4">Tip: use your keyboard — digits, + − * /, Enter, Backspace, Esc</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rich content -->
+        <div class="mt-10 max-w-2xl">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Frequently Asked Questions</h2>
+          <div class="space-y-3">
+            {faqs.map(faq => (
+              <details class="bg-white border border-gray-200 rounded-lg px-4 py-3 group">
+                <summary class="text-sm font-medium text-gray-800 cursor-pointer list-none flex justify-between items-center gap-3">
+                  {faq.question}
+                  <svg class="w-4 h-4 text-gray-400 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <p class="mt-2 text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm text-gray-700 leading-relaxed">
+          <p>A fast, free online calculator for everyday arithmetic — addition, subtraction, multiplication, and division. It works instantly in your browser with full keyboard support and no sign-up.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-semibold text-gray-900 text-sm mb-3">Keyboard shortcuts</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Digits &amp; .</span><span class="font-mono">0–9 .</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Operators</span><span class="font-mono">+ − * /</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Equals</span><span class="font-mono">Enter / =</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Delete digit</span><span class="font-mono">Backspace</span></div>
+            <div class="flex justify-between"><span>Clear all</span><span class="font-mono">Esc</span></div>
+          </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4">
+          <h3 class="font-semibold text-gray-900 text-sm mb-3">Need more?</h3>
+          <div class="grid grid-cols-2 gap-2">
+            {[['Scientific','/calculators/scientific-notation-calculator'],['Percentage','/calculators/percentage-calculator'],['Fraction','/calculators/fraction-calculator'],['Average','/calculators/average-calculator']].map(([n,h]) => (
+              <a href={h} class="bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg px-3 py-2 text-xs text-gray-700 hover:text-blue-700 transition-colors font-medium text-center">{n}</a>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const display = document.getElementById('calc-display')!
+  const history = document.getElementById('calc-history')!
+  let current = '0'      // string being entered
+  let previous: number | null = null
+  let op: string | null = null
+  let resetNext = false  // next digit starts a fresh entry
+
+  const OPSYM: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' }
+
+  function fmt(n: number): string {
+    if (!isFinite(n)) return 'Error'
+    // round to avoid float noise, keep up to 10 sig digits
+    const r = Math.round((n + Number.EPSILON) * 1e10) / 1e10
+    let s = r.toString()
+    if (s.length > 12 && s.includes('.')) s = r.toPrecision(10).replace(/\.?0+$/, '')
+    return s
+  }
+  function render() {
+    display.textContent = current
+    history.innerHTML = previous !== null && op ? `${fmt(previous)} ${OPSYM[op]}` : '&nbsp;'
+  }
+  function inputDigit(d: string) {
+    if (resetNext) { current = d === '.' ? '0.' : d; resetNext = false; return }
+    if (d === '.') { if (!current.includes('.')) current += '.'; return }
+    current = current === '0' ? d : current + d
+  }
+  function compute(a: number, b: number, o: string): number {
+    if (o === '+') return a + b
+    if (o === '-') return a - b
+    if (o === '*') return a * b
+    if (o === '/') return b === 0 ? NaN : a / b
+    return b
+  }
+  function chooseOp(nextOp: string) {
+    const val = parseFloat(current)
+    if (previous === null) { previous = val }
+    else if (!resetNext) { previous = compute(previous, val, op!) }
+    op = nextOp
+    current = fmt(previous)
+    resetNext = true
+    render()
+    // keep current as previous display but flag reset
+    current = fmt(previous)
+  }
+  function equals() {
+    if (op === null || previous === null) return
+    const val = parseFloat(current)
+    const res = compute(previous, val, op)
+    history.innerHTML = `${fmt(previous)} ${OPSYM[op]} ${fmt(val)} =`
+    current = fmt(res)
+    previous = null; op = null; resetNext = true
+    display.textContent = current
+  }
+  function clearAll() { current = '0'; previous = null; op = null; resetNext = false; render() }
+  function negate() { current = fmt(parseFloat(current) * -1) }
+  function percent() {
+    const val = parseFloat(current)
+    current = fmt(previous !== null ? previous * (val / 100) : val / 100)
+  }
+  function backspace() {
+    if (resetNext) return
+    current = current.length > 1 ? current.slice(0, -1) : '0'
+  }
+
+  function handle(key: string) {
+    if (/^[0-9.]$/.test(key)) inputDigit(key)
+    else if (key === 'AC') return clearAll()
+    else if (key === '+/-') negate()
+    else if (key === '%') percent()
+    else if (key === '=') return equals()
+    else if (['+', '-', '*', '/'].includes(key)) return chooseOp(key)
+    render()
+  }
+
+  document.getElementById('calc-keypad')!.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('button')
+    if (btn?.dataset.key) handle(btn.dataset.key)
+  })
+
+  document.addEventListener('keydown', (e) => {
+    const k = e.key
+    if (/^[0-9.]$/.test(k)) { handle(k); e.preventDefault() }
+    else if (['+', '-', '*', '/'].includes(k)) { handle(k); e.preventDefault() }
+    else if (k === 'Enter' || k === '=') { handle('='); e.preventDefault() }
+    else if (k === 'Backspace') { backspace(); render(); e.preventDefault() }
+    else if (k === 'Escape') { clearAll(); e.preventDefault() }
+    else if (k === '%') { handle('%'); e.preventDefault() }
+  })
+
+  render()
+</script>

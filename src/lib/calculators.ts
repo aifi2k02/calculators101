@@ -141,6 +141,7 @@ export const categories: Category[] = [
       { name: 'Body Surface Area Calculator', href: '/calculators/body-surface-area-calculator', description: 'BSA in m² using 4 validated medical formulas', icon: '📏', live: true },
       { name: 'Running Calorie Calculator', href: '/calculators/running-calorie-calculator', description: 'Calories burned running by weight and distance', icon: '🏃', live: true },
       { name: 'Intermittent Fasting Calculator', href: '/calculators/intermittent-fasting-calculator', description: 'Eating window, fasting window, and meal schedule', icon: '⏱️', live: true },
+      { name: 'Army Body Fat Calculator', href: '/calculators/army-body-fat-calculator', description: 'Military tape-test body fat and AR 600-9 pass limits', icon: '🎖️', live: true },
     ],
   },
   {
@@ -191,6 +192,7 @@ export const categories: Category[] = [
       { name: 'Distance Formula Calculator', href: '/calculators/distance-calculator', description: 'Distance and midpoint between two points in 2D or 3D', icon: '📏', live: true },
       { name: 'Number Base Converter', href: '/calculators/number-base-calculator', description: 'Convert between binary, decimal, hex, octal, and any base 2–36', icon: '🔢', live: true },
       { name: 'Tank Volume Calculator', href: '/calculators/tank-volume-calculator', description: 'Capacity of cylinder, rectangular, and oval tanks in gallons or liters', icon: '🛢️', live: true },
+      { name: 'Basic Calculator', href: '/calculators/basic-calculator', description: 'Fast online calculator for add, subtract, multiply, divide', icon: '🧮', live: true },
     ],
   },
   {

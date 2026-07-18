@@ -173,6 +173,9 @@ const pages = [
   { url: '/calculators/quarterly-tax-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/self-employment-tax-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/creator-tax-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Gap-fill from Search Console query report
+  { url: '/calculators/army-body-fat-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/basic-calculator', priority: '0.8', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {
