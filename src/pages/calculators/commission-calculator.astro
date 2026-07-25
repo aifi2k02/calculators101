@@ -1,0 +1,125 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const sales = parseFloat(inputs.sales) || 0
+  const rate = parseFloat(inputs.rate) || 0
+  const base = parseFloat(inputs.base) || 0
+  const quota = parseFloat(inputs.quota) || 0
+  if (sales <= 0) throw new Error('Enter your total sales amount.')
+  if (rate < 0) throw new Error('Commission rate cannot be negative.')
+  const commissionable = Math.max(0, sales - quota)
+  const commission = commissionable * (rate / 100)
+  const totalPay = base + commission
+  const effRate = sales > 0 ? (commission / sales * 100) : 0
+  return {
+    value: '$' + Math.round(commission).toLocaleString(),
+    gaugeValue: Math.min(rate, 30),
+    stats: [
+      { label: 'Commission', value: '$' + Math.round(commission).toLocaleString() },
+      { label: 'Total Pay', value: '$' + Math.round(totalPay).toLocaleString() },
+      { label: 'Commissionable Sales', value: '$' + Math.round(commissionable).toLocaleString() },
+      { label: 'Effective Rate', value: effRate.toFixed(1) + '%' }
+    ],
+    breakdown: [
+      'Total sales: $' + Math.round(sales).toLocaleString(),
+      quota > 0 ? 'Quota / threshold (no commission below this): $' + Math.round(quota).toLocaleString() : '',
+      quota > 0 ? 'Commissionable sales: $' + Math.round(commissionable).toLocaleString() : '',
+      'Commission rate: ' + rate + '%',
+      '—',
+      'Commission earned: $' + Math.round(commission).toLocaleString(),
+      base > 0 ? 'Base salary/pay: $' + Math.round(base).toLocaleString() : '',
+      base > 0 ? 'Total pay (base + commission): $' + Math.round(totalPay).toLocaleString() : '',
+      effRate > 0 ? 'Effective commission on total sales: ' + effRate.toFixed(2) + '%' : ''
+    ].filter(Boolean),
+    share: {
+      kicker: 'Commission earned',
+      heroNumber: '$' + Math.round(commission).toLocaleString(),
+      heroSub: 'commission on $' + Math.round(sales).toLocaleString() + ' in sales at ' + rate + '%',
+      hook: base > 0 ? 'Plus a $' + Math.round(base).toLocaleString() + ' base = $' + Math.round(totalPay).toLocaleString() + ' total pay.' : 'A straight ' + rate + '% commission on every sale.',
+      chips: ['Comm $' + Math.round(commission).toLocaleString(), base > 0 ? 'Total $' + Math.round(totalPay).toLocaleString() : rate + '% rate', effRate.toFixed(1) + '% eff.']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 30, unit: '%',
+  zones: [
+    { label: 'Low', color: '#94a3b8', from: 0, to: 5 },
+    { label: 'Standard', color: '#3b82f6', from: 5, to: 15 },
+    { label: 'High', color: '#22c55e', from: 15, to: 30 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I calculate commission?', answer: 'Multiply your total sales by the commission rate (as a decimal). For example, $50,000 in sales at a 6% commission rate is $50,000 × 0.06 = $3,000. If your plan only pays commission on sales above a quota, subtract the quota from your sales first, then apply the rate.' },
+  { question: 'What is a typical commission rate?', answer: 'It varies widely by industry: retail and inside sales often run 3–10%, real estate is around 5–6% (usually split between agents), SaaS and B2B sales commonly pay 8–15% of the deal, and independent reps can earn 15–30%. Many roles combine a base salary with a lower commission rate.' },
+  { question: 'What is a base plus commission plan?', answer: 'You receive a fixed base salary plus commission on your sales. It gives income stability while rewarding performance. Enter your base pay to see your total earnings. A "commission-only" plan has no base — your entire pay is the commission.' },
+  { question: 'What is a sales quota or threshold?', answer: 'A quota is a sales target you must exceed before commission kicks in (or before a higher rate applies). If your plan pays commission only on sales above a threshold, enter it here — the calculator applies your rate only to the amount above the quota.' },
+  { question: 'Is commission taxed differently?', answer: 'Commission is ordinary income. If paid as a separate check, employers often withhold it at the flat 22% supplemental rate like a bonus; if paid with your regular salary, it is withheld normally. Either way, your final tax is based on your total annual income.' },
+]
+---
+<Layout
+  title="Commission Calculator: Sales Commission & Total Pay"
+  description="Calculate your sales commission and total pay from your sales, commission rate, base salary, and quota. Free commission calculator with instant results."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Commission Calculator', href: '/calculators/commission-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Commission Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Commission Calculator"
+          description="Commission and total pay from sales, rate, base, and quota"
+          formulaId="commission"
+          formulaFn={formulaFn}
+          resultLabel="Commission Earned"
+          shareStyle="money"
+          inputs={[
+            { id: 'sales', label: 'Total Sales', type: 'number', placeholder: '50000', min: 0, step: 100, unit: '$', defaultValue: 50000 },
+            { id: 'rate', label: 'Commission Rate', type: 'number', placeholder: '6', min: 0, max: 100, step: 0.1, unit: '%', defaultValue: 6 },
+            { id: 'base', label: 'Base Salary / Pay (optional)', type: 'number', placeholder: '0', min: 0, step: 100, unit: '$', defaultValue: 0 },
+            { id: 'quota', label: 'Quota / Threshold (optional)', type: 'number', placeholder: '0', min: 0, step: 100, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This commission calculator works out your sales commission and total pay. Enter your total sales and commission rate, and optionally a base salary and a quota (a threshold you must exceed before commission applies). It shows your commission, total earnings, and effective commission rate."
+          disclaimer="Assumes a single flat commission rate on commissionable sales. Tiered or accelerator plans that raise the rate at higher volumes require a custom calculation."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+            { name: 'Bonus Tax Calculator', href: '/calculators/bonus-tax-calculator' },
+            { name: 'Pay Raise Calculator', href: '/calculators/pay-raise-calculator' },
+            { name: 'Markup Calculator', href: '/calculators/markup-calculator' },
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Typical commission rates</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['Retail / inside sales','3–10%'],['Real estate','5–6%'],['B2B / SaaS','8–15%'],['Independent reps','15–30%']].map(([r,v]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{r}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-2">The formula</h3>
+          <p class="text-xs text-gray-600 font-mono">commission = (sales − quota) × rate%</p>
+          <p class="text-xs text-gray-600 mt-2">Total pay = base + commission.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

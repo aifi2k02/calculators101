@@ -176,6 +176,11 @@ const pages = [
   // Gap-fill from Search Console query report
   { url: '/calculators/army-body-fat-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/basic-calculator', priority: '0.8', changefreq: 'monthly' },
+  // Phase 2 — Cluster 2: Salary Reality
+  { url: '/calculators/pay-raise-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/cost-of-living-raise-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/bonus-tax-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/commission-calculator', priority: '0.8', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

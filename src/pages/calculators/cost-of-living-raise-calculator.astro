@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const salary = parseFloat(inputs.salary) || 0
+  const inflIn = parseFloat(inputs.inflation)
+  const inflR = (isNaN(inflIn) ? 3.3 : inflIn) / 100
+  const years = Math.max(1, Math.min(parseInt(inputs.years) || 1, 50))
+  if (salary <= 0) throw new Error('Enter your current salary or income.')
+  // Raise needed THIS year just to keep pace
+  const colaRaise = salary * inflR
+  const needNextYear = salary + colaRaise
+  // Over N years if salary stays FLAT: what it will be worth in today's dollars
+  const futurePurchasingPower = salary / Math.pow(1 + inflR, years)
+  const lostValue = salary - futurePurchasingPower
+  // Salary needed in N years to keep the SAME purchasing power
+  const neededInNYears = salary * Math.pow(1 + inflR, years)
+  return {
+    value: '$' + Math.round(colaRaise).toLocaleString() + '/yr',
+    gaugeValue: Math.min(inflR * 100, 12),
+    stats: [
+      { label: 'COLA Raise Needed', value: '$' + Math.round(colaRaise).toLocaleString() },
+      { label: 'Salary to Match Next Year', value: '$' + Math.round(needNextYear).toLocaleString() },
+      { label: 'Worth in ' + years + 'y (if flat)', value: '$' + Math.round(futurePurchasingPower).toLocaleString() },
+      { label: 'Salary Needed in ' + years + 'y', value: '$' + Math.round(neededInNYears).toLocaleString() }
+    ],
+    breakdown: [
+      'Current salary: $' + Math.round(salary).toLocaleString(),
+      'Inflation rate: ' + (inflR * 100).toFixed(1) + '%',
+      '—',
+      'Cost-of-living raise needed this year: $' + Math.round(colaRaise).toLocaleString(),
+      'New salary just to break even: $' + Math.round(needNextYear).toLocaleString(),
+      '—',
+      'If your salary stays flat for ' + years + ' year(s):',
+      '  • It will buy what $' + Math.round(futurePurchasingPower).toLocaleString() + ' buys today',
+      '  • Lost purchasing power: $' + Math.round(lostValue).toLocaleString(),
+      '  • Salary needed to keep pace: $' + Math.round(neededInNYears).toLocaleString()
+    ],
+    share: {
+      kicker: 'To keep up with inflation',
+      heroNumber: '$' + Math.round(colaRaise).toLocaleString(),
+      heroSub: 'raise I need this year just to break even at ' + (inflR*100).toFixed(1) + '% inflation',
+      hook: 'No raise for ' + years + ' years? My $' + Math.round(salary).toLocaleString() + ' would buy only $' + Math.round(futurePurchasingPower).toLocaleString() + ' worth.',
+      chips: ['+$' + Math.round(colaRaise).toLocaleString() + ' to break even', (inflR*100).toFixed(1) + '% inflation', '−$' + Math.round(lostValue).toLocaleString() + ' in ' + years + 'y']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 12, unit: '%',
+  zones: [
+    { label: 'Low', color: '#22c55e', from: 0, to: 3 },
+    { label: 'Typical', color: '#3b82f6', from: 3, to: 5 },
+    { label: 'High', color: '#f59e0b', from: 5, to: 8 },
+    { label: 'Severe', color: '#ef4444', from: 8, to: 12 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is a cost-of-living raise (COLA)?', answer: 'A cost-of-living adjustment is a pay increase meant to offset inflation so your purchasing power stays flat. If prices rise 3.3%, a 3.3% COLA keeps you even — it is not a real raise, just standing still. Anything above the inflation rate is a genuine raise.' },
+  { question: 'How much raise do I need to keep up with inflation?', answer: 'Multiply your salary by the inflation rate. At 3.3% inflation, a $60,000 earner needs about $1,980 just to break even. A raise smaller than inflation is effectively a pay cut, because your money buys less than it did last year.' },
+  { question: 'What happens to my salary if I never get a raise?', answer: 'Inflation quietly erodes it. At 3.3% inflation, a flat $60,000 salary buys only about $51,000 worth of goods after 5 years and roughly $43,000 worth after 10 years. This calculator shows exactly how much purchasing power you lose over time.' },
+  { question: 'Is inflation the same as my personal cost of living?', answer: 'Not exactly. The headline inflation rate (CPI) is a national average across a basket of goods. Your personal inflation depends on where you live and what you buy — housing, healthcare, and childcare often rise faster. Adjust the rate to match your situation.' },
+  { question: 'What inflation rate should I use?', answer: 'This calculator defaults to about 3.3%, the approximate 2026 U.S. rate. For long-term planning, many people use the Federal Reserve\'s 2% target or a 2.5–3% historical average. Enter whatever rate best reflects your outlook.' },
+]
+---
+<Layout
+  title="Cost of Living Raise Calculator: Keep Up With Inflation"
+  description="Find the raise you need to keep up with inflation and see how much purchasing power you lose without one. Free cost-of-living (COLA) raise calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Cost of Living Raise Calculator', href: '/calculators/cost-of-living-raise-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Cost of Living Raise</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Cost of Living Raise Calculator"
+          description="The raise you need to keep up with inflation — and the cost of not getting one"
+          formulaId="cola-raise"
+          formulaFn={formulaFn}
+          resultLabel="COLA Raise Needed This Year"
+          shareStyle="money"
+          inputs={[
+            { id: 'salary', label: 'Current Annual Salary', type: 'number', placeholder: '60000', min: 0, step: 100, unit: '$', defaultValue: 60000 },
+            { id: 'inflation', label: 'Inflation Rate', type: 'number', placeholder: '3.3', min: 0, max: 30, step: 0.1, unit: '%', defaultValue: 3.3 },
+            { id: 'years', label: 'Years to Project', type: 'number', placeholder: '5', min: 1, max: 50, unit: 'yrs', defaultValue: 5 },
+          ]}
+          gauge={gauge}
+          intro="This cost-of-living raise calculator shows the raise you need just to keep pace with inflation, and how much purchasing power your salary loses if it stays flat. Enter your salary and an inflation rate to see the break-even raise, and project how much your money will be worth years from now without one."
+          disclaimer="Uses a constant annual inflation rate you provide (default ~3.3% for 2026). Real inflation varies year to year and by personal spending. This is a planning estimate, not a guarantee."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Pay Raise Calculator', href: '/calculators/pay-raise-calculator' },
+            { name: 'Inflation Calculator', href: '/calculators/inflation-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+            { name: 'Retirement Calculator', href: '/calculators/retirement-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">$60k with no raise (3.3%)</h3>
+          <table class="w-full text-xs text-blue-800">
+            <thead><tr class="text-blue-500"><th class="text-left pb-1">Years</th><th class="text-right pb-1">Buys like</th></tr></thead>
+            <tbody>
+              {[['1 yr','$58,080'],['3 yrs','$54,400'],['5 yrs','$50,970'],['10 yrs','$43,300']].map(([y,v]) => (
+                <tr class="border-t border-blue-100"><td class="py-1 font-medium">{y}</td><td class="py-1 text-right">{v}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+          <h3 class="font-semibold text-gray-900 text-sm mb-1">COLA ≠ raise</h3>
+          <p class="text-xs text-gray-600">A cost-of-living adjustment keeps you even. A real raise is anything above the inflation rate.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

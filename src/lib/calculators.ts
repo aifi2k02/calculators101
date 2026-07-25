@@ -95,6 +95,10 @@ export const categories: Category[] = [
       { name: 'Quarterly Estimated Tax Calculator', href: '/calculators/quarterly-tax-calculator', description: 'Per-quarter payments and all four IRS due dates', icon: '📆', live: true },
       { name: 'Self-Employment Tax Calculator', href: '/calculators/self-employment-tax-calculator', description: 'Social Security + Medicare on freelance earnings', icon: '🧮', live: true },
       { name: 'Content Creator Tax Calculator', href: '/calculators/creator-tax-calculator', description: 'Taxes on sponsorships, ads, affiliate, and merch', icon: '🎥', live: true },
+      { name: 'Pay Raise Calculator', href: '/calculators/pay-raise-calculator', description: 'What your raise is really worth after tax and inflation', icon: '📈', live: true },
+      { name: 'Cost of Living Raise Calculator', href: '/calculators/cost-of-living-raise-calculator', description: 'The raise you need to keep up with inflation', icon: '🛒', live: true },
+      { name: 'Bonus Tax Calculator', href: '/calculators/bonus-tax-calculator', description: 'Take-home bonus after 22% withholding, FICA, and state tax', icon: '🎉', live: true },
+      { name: 'Commission Calculator', href: '/calculators/commission-calculator', description: 'Sales commission and total pay from rate, base, and quota', icon: '🤝', live: true },
     ],
   },
   {

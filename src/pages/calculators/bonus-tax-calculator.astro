@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const bonus = parseFloat(inputs.bonus) || 0
+  const stateRate = (parseFloat(inputs.state) || 0) / 100
+  const ytdSS = parseFloat(inputs.ytd) || 0
+  if (bonus <= 0) throw new Error('Enter your bonus amount.')
+  // Federal supplemental withholding: 22% up to $1M, 37% on the portion above $1M
+  const fedFlat = Math.min(bonus, 1000000) * 0.22 + Math.max(0, bonus - 1000000) * 0.37
+  // FICA: Social Security 6.2% up to the 2026 wage base ($184,500), Medicare 1.45% (no cap)
+  const ssRemaining = Math.max(0, 184500 - ytdSS)
+  const ss = Math.min(bonus, ssRemaining) * 0.062
+  const medicare = bonus * 0.0145
+  const state = bonus * stateRate
+  const totalWithheld = fedFlat + ss + medicare + state
+  const takeHome = bonus - totalWithheld
+  const keepPct = bonus > 0 ? (takeHome / bonus * 100) : 0
+  return {
+    value: '$' + Math.round(takeHome).toLocaleString(),
+    gaugeValue: Math.min(keepPct, 100),
+    stats: [
+      { label: 'Take-Home', value: '$' + Math.round(takeHome).toLocaleString() },
+      { label: 'Federal (22%)', value: '$' + Math.round(fedFlat).toLocaleString() },
+      { label: 'FICA', value: '$' + Math.round(ss + medicare).toLocaleString() },
+      { label: 'You Keep', value: keepPct.toFixed(0) + '%' }
+    ],
+    breakdown: [
+      'Gross bonus: $' + Math.round(bonus).toLocaleString(),
+      '—',
+      'Federal supplemental withholding (22%): -$' + Math.round(fedFlat).toLocaleString(),
+      'Social Security (6.2%): -$' + Math.round(ss).toLocaleString(),
+      'Medicare (1.45%): -$' + Math.round(medicare).toLocaleString(),
+      state > 0 ? 'State tax (' + (stateRate * 100).toFixed(1) + '%): -$' + Math.round(state).toLocaleString() : '',
+      '—',
+      'Total withheld: -$' + Math.round(totalWithheld).toLocaleString(),
+      'Take-home bonus: $' + Math.round(takeHome).toLocaleString() + ' (' + keepPct.toFixed(1) + '% kept)'
+    ].filter(Boolean),
+    share: {
+      kicker: 'What I actually keep',
+      heroNumber: '$' + Math.round(takeHome).toLocaleString(),
+      heroSub: 'take-home from a $' + Math.round(bonus).toLocaleString() + ' bonus',
+      hook: 'The IRS withholds bonuses at a flat 22% federal — plus FICA' + (state > 0 ? ' and state' : '') + ' — so you pocket about ' + keepPct.toFixed(0) + '%.',
+      chips: ['Keep $' + Math.round(takeHome).toLocaleString(), 'Fed $' + Math.round(fedFlat).toLocaleString(), keepPct.toFixed(0) + '% kept']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '% kept',
+  zones: [
+    { label: 'Heavily taxed', color: '#ef4444', from: 0, to: 55 },
+    { label: 'Typical', color: '#f59e0b', from: 55, to: 68 },
+    { label: 'Lightly taxed', color: '#22c55e', from: 68, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How much is a bonus taxed?', answer: 'Employers withhold bonuses using the IRS "supplemental wage" rules: a flat 22% for federal income tax (37% on any portion above $1 million), plus 7.65% for Social Security and Medicare (FICA), plus any state tax. So most people see roughly 30–40% withheld and keep about 60–70%.' },
+  { question: 'Is the 22% the actual tax on my bonus?', answer: 'No — 22% is the withholding rate, not your final tax. Your bonus is ordinary income taxed at your real marginal rate when you file. If your bracket is below 22%, you may get some back as a refund; if it is above 22%, you may owe more at tax time.' },
+  { question: 'Why does my bonus feel taxed so heavily?', answer: 'Because the flat 22% federal withholding is often higher than the rate withheld from your regular paychecks, and FICA and state tax stack on top. The money is not gone — the withholding is reconciled against your actual tax when you file your return.' },
+  { question: 'What is the aggregate method?', answer: 'Some employers use the "aggregate" method instead of the flat 22%: they add your bonus to your regular paycheck and withhold as if that were your normal pay, which can push withholding even higher temporarily. This calculator uses the more common flat 22% percentage method.' },
+  { question: 'Can I reduce the tax on my bonus?', answer: 'You cannot change the withholding, but you can lower your overall taxable income by directing the bonus into a 401(k) or HSA (if your employer allows), which defers the income tax. Any over-withholding comes back as a refund when you file.' },
+]
+---
+<Layout
+  title="Bonus Tax Calculator: How Much Is My Bonus Taxed?"
+  description="See your take-home bonus after the flat 22% federal withholding, FICA, and state tax. Free bonus tax calculator — find out how much of your bonus you keep."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Bonus Tax Calculator', href: '/calculators/bonus-tax-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Bonus Tax Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Bonus Tax Calculator"
+          description="Your take-home bonus after federal withholding, FICA, and state tax"
+          formulaId="bonus-tax"
+          formulaFn={formulaFn}
+          resultLabel="Take-Home Bonus"
+          shareStyle="money"
+          inputs={[
+            { id: 'bonus', label: 'Bonus Amount', type: 'number', placeholder: '5000', min: 0, step: 100, unit: '$', defaultValue: 5000 },
+            { id: 'state', label: 'State Tax Rate (optional)', type: 'number', placeholder: '0', min: 0, max: 15, step: 0.1, unit: '%', defaultValue: 0 },
+            { id: 'ytd', label: 'YTD Wages Already Taxed for Social Security (optional)', type: 'number', placeholder: '0', min: 0, step: 1000, unit: '$', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This bonus tax calculator shows how much of your bonus you actually take home. Employers withhold bonuses at a flat 22% federal rate (the IRS supplemental-wage method), plus 7.65% for Social Security and Medicare, plus any state tax. Enter your bonus to see the withholding breakdown and your net amount."
+          disclaimer="Shows federal WITHHOLDING (flat 22% supplemental method) + FICA + optional state — not your final tax. Your real tax is settled when you file; over-withholding comes back as a refund. 2026 Social Security wage base $184,500."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+            { name: 'Pay Raise Calculator', href: '/calculators/pay-raise-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
+            { name: 'Commission Calculator', href: '/calculators/commission-calculator' },
+            { name: 'Overtime Calculator', href: '/calculators/overtime-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">What's withheld from a bonus</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Federal (flat)</span><span class="font-medium">22%</span></div>
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Over $1M portion</span><span class="font-medium">37%</span></div>
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Social Security</span><span class="font-medium">6.2%</span></div>
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Medicare</span><span class="font-medium">1.45%</span></div>
+            <div class="flex justify-between"><span>State</span><span class="font-medium">Varies</span></div>
+          </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-3">$5,000 bonus, no state tax</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between"><span>Federal 22%</span><span>−$1,100</span></div>
+            <div class="flex justify-between"><span>FICA 7.65%</span><span>−$383</span></div>
+            <div class="flex justify-between font-semibold text-gray-900 border-t border-gray-100 pt-1"><span>Take-home</span><span>$3,518</span></div>
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Withholding ≠ final tax</h3>
+          <p class="text-xs text-amber-800">If your real bracket is under 22%, you get part of it back at tax time.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
