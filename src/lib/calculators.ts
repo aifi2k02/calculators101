@@ -146,6 +146,7 @@ export const categories: Category[] = [
       { name: 'Running Calorie Calculator', href: '/calculators/running-calorie-calculator', description: 'Calories burned running by weight and distance', icon: '🏃', live: true },
       { name: 'Intermittent Fasting Calculator', href: '/calculators/intermittent-fasting-calculator', description: 'Eating window, fasting window, and meal schedule', icon: '⏱️', live: true },
       { name: 'Army Body Fat Calculator', href: '/calculators/army-body-fat-calculator', description: 'Military tape-test body fat and AR 600-9 pass limits', icon: '🎖️', live: true },
+      { name: 'Life Expectancy Calculator', href: '/calculators/life-expectancy-calculator', description: 'Estimate your lifespan from age, sex, and lifestyle', icon: '⏳', live: true },
     ],
   },
   {

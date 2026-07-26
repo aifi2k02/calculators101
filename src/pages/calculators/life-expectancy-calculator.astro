@@ -1,0 +1,160 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const sex = inputs.sex || 'male'
+  const age = parseInt(inputs.age) || 0
+  const smoke = inputs.smoke || 'never'
+  const exercise = inputs.exercise || 'some'
+  const diet = inputs.diet || 'average'
+  const alcohol = inputs.alcohol || 'moderate'
+  if (age <= 0 || age >= 120) throw new Error('Enter a valid age between 1 and 119.')
+  const base = sex === 'female' ? 81.4 : 76.5
+  let adj = 0
+  adj += smoke === 'current' ? -9 : smoke === 'former' ? -1 : 0
+  adj += exercise === 'regular' ? 3 : exercise === 'none' ? -2 : 0
+  adj += diet === 'healthy' ? 2 : diet === 'poor' ? -2 : 0
+  adj += alcohol === 'heavy' ? -3 : 0
+  let est = base + adj
+  if (est < age + 0.5) est = age + 0.5
+  const remaining = Math.max(0, est - age)
+  const adjTxt = (adj >= 0 ? '+' : '') + adj
+  return {
+    value: Math.round(est) + ' years',
+    gaugeValue: Math.min(Math.max(est, 60), 100),
+    stats: [
+      { label: 'Estimated Lifespan', value: Math.round(est) + ' yrs' },
+      { label: 'Years Remaining', value: remaining.toFixed(0) },
+      { label: 'Lifestyle Impact', value: adjTxt + ' yrs' },
+      { label: 'Base (' + (sex === 'female' ? 'F' : 'M') + ')', value: base + ' yrs' }
+    ],
+    breakdown: [
+      'Base U.S. life expectancy (' + (sex === 'female' ? 'female' : 'male') + ', 2024 CDC): ' + base + ' years',
+      '—',
+      'Smoking: ' + (smoke === 'current' ? '-9 (current smoker)' : smoke === 'former' ? '-1 (former smoker)' : '0 (never)'),
+      'Exercise: ' + (exercise === 'regular' ? '+3 (regular)' : exercise === 'none' ? '-2 (sedentary)' : '0 (some)'),
+      'Diet: ' + (diet === 'healthy' ? '+2 (healthy)' : diet === 'poor' ? '-2 (poor)' : '0 (average)'),
+      'Alcohol: ' + (alcohol === 'heavy' ? '-3 (heavy)' : '0 (none/moderate)'),
+      '—',
+      'Lifestyle adjustment: ' + adjTxt + ' years',
+      'Estimated life expectancy: ' + Math.round(est) + ' years',
+      'Estimated years remaining: ' + remaining.toFixed(0)
+    ],
+    share: {
+      kicker: 'My estimated life expectancy',
+      heroNumber: Math.round(est) + ' years',
+      heroSub: 'based on my age, sex, and lifestyle',
+      hook: adj > 0 ? 'Healthy habits are adding about ' + adj + ' years above the U.S. average.' : adj < 0 ? 'Better habits could add back about ' + Math.abs(adj) + ' years.' : 'Right around the U.S. average — small habit changes shift it either way.',
+      chips: ['Age ' + age, remaining.toFixed(0) + ' yrs left', adjTxt + ' from habits']
+    }
+  }
+`
+
+const gauge = {
+  min: 60, max: 100, unit: '',
+  zones: [
+    { label: 'Below avg', color: '#ef4444', from: 60, to: 74 },
+    { label: 'Average', color: '#f59e0b', from: 74, to: 82 },
+    { label: 'Above avg', color: '#22c55e', from: 82, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How is life expectancy calculated?', answer: 'This calculator starts from the current U.S. average life expectancy for your sex (2024 CDC data: 76.5 years for men, 81.4 for women), then adjusts up or down based on well-documented lifestyle factors — smoking, exercise, diet, and alcohol. The result is a rough personalized estimate, not a prediction.' },
+  { question: 'How much does smoking affect life expectancy?', answer: 'A lot. Research from the U.S. Surgeon General finds that lifelong smoking reduces life expectancy by roughly 10 years on average. Quitting reverses much of that risk over time — former smokers regain years compared with those who keep smoking.' },
+  { question: 'Can lifestyle really add years to my life?', answer: 'Yes. Large studies show that not smoking, regular physical activity, a healthy diet, and moderate alcohol use are each linked to meaningful gains in life expectancy — often several years each. Combined, healthy habits can add a decade or more versus an unhealthy lifestyle.' },
+  { question: 'Is this an accurate prediction of how long I will live?', answer: 'No — it is an educational estimate based on population averages and a few lifestyle factors. It cannot account for genetics, medical history, accidents, income, or where you live. Treat it as motivation to build healthy habits, not a forecast.' },
+  { question: 'Why do women live longer than men?', answer: 'On average women outlive men by about 5 years in the U.S. The reasons are a mix of biological factors (hormonal and genetic differences) and behavioral ones (men historically smoke more, take more physical risks, and see doctors less often). The gap has been slowly narrowing.' },
+]
+---
+<Layout
+  title="Life Expectancy Calculator: How Long Will You Live?"
+  description="Estimate your life expectancy from your age, sex, and lifestyle — and see how many years healthy habits add or cost. Free life expectancy calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Fitness & Health', href: '/calculators/fitness' },
+    { name: 'Life Expectancy Calculator', href: '/calculators/life-expectancy-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <span class="text-gray-900">Life Expectancy Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Life Expectancy Calculator"
+          description="Estimate your lifespan from age, sex, and lifestyle habits"
+          formulaId="life-expectancy"
+          formulaFn={formulaFn}
+          resultLabel="Estimated Life Expectancy"
+          shareStyle="money"
+          inputs={[
+            { id: 'sex', label: 'Sex', type: 'select', options: [
+              { value: 'male', label: 'Male' },
+              { value: 'female', label: 'Female' },
+            ], defaultValue: 'male' },
+            { id: 'age', label: 'Current Age', type: 'number', placeholder: '35', min: 1, max: 119, unit: 'yrs', defaultValue: 35 },
+            { id: 'smoke', label: 'Smoking', type: 'select', options: [
+              { value: 'never', label: 'Never smoked' },
+              { value: 'former', label: 'Former smoker' },
+              { value: 'current', label: 'Current smoker' },
+            ], defaultValue: 'never' },
+            { id: 'exercise', label: 'Exercise', type: 'select', options: [
+              { value: 'regular', label: 'Regular (3+ times/week)' },
+              { value: 'some', label: 'Some / occasional' },
+              { value: 'none', label: 'Sedentary' },
+            ], defaultValue: 'some' },
+            { id: 'diet', label: 'Diet', type: 'select', options: [
+              { value: 'healthy', label: 'Healthy' },
+              { value: 'average', label: 'Average' },
+              { value: 'poor', label: 'Poor' },
+            ], defaultValue: 'average' },
+            { id: 'alcohol', label: 'Alcohol', type: 'select', options: [
+              { value: 'moderate', label: 'None or moderate' },
+              { value: 'heavy', label: 'Heavy' },
+            ], defaultValue: 'moderate' },
+          ]}
+          gauge={gauge}
+          intro="This life expectancy calculator estimates how long you might live based on the current U.S. average for your sex and a handful of well-studied lifestyle factors — smoking, exercise, diet, and alcohol. It shows your estimated lifespan, years remaining, and exactly how many years your habits add or subtract."
+          disclaimer="Educational estimate only — based on population averages and a few lifestyle factors. It cannot predict any individual's lifespan and does not account for genetics, medical history, or environment. Not medical advice."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
+            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
+            { name: 'Age Calculator', href: '/calculators/age-calculator' },
+            { name: 'Screen Time Calculator', href: '/calculators/screen-time-calculator' },
+            { name: 'Sleep Calculator', href: '/calculators/sleep-calculator' },
+            { name: 'BAC Calculator', href: '/calculators/bac-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">U.S. life expectancy (2024)</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['Overall','79.0 yrs'],['Male','76.5 yrs'],['Female','81.4 yrs']].map(([k,v]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{k}</span><span class="font-medium">{v}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-3">Years at stake</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between"><span>Quit / never smoke</span><span class="font-medium text-green-700">+9</span></div>
+            <div class="flex justify-between"><span>Exercise regularly</span><span class="font-medium text-green-700">+3</span></div>
+            <div class="flex justify-between"><span>Healthy diet</span><span class="font-medium text-green-700">+2</span></div>
+            <div class="flex justify-between"><span>Avoid heavy drinking</span><span class="font-medium text-green-700">+3</span></div>
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <p class="text-xs text-amber-800">An estimate for motivation, not a prediction. Habits are the part you control.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

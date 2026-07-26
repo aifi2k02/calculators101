@@ -184,6 +184,7 @@ const pages = [
   // Phase 2 — Cluster 3: Viral
   { url: '/calculators/subscription-cost-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/screen-time-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/life-expectancy-calculator', priority: '0.85', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {
