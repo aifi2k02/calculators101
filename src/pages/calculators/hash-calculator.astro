@@ -1,0 +1,265 @@
+---
+import Layout from '../../layouts/Layout.astro'
+
+const faqs = [
+  { question: 'What is an MD5 hash?', answer: 'MD5 is a hashing algorithm that turns any text into a fixed 32-character hexadecimal fingerprint. The same input always produces the same hash, and even a one-character change produces a completely different result — which makes it useful for verifying that data has not changed.' },
+  { question: 'How do I use this to record a change?', answer: 'Paste the text, note, or record you want to fingerprint, and the calculator instantly produces its hash. Save that hash. Later, if you re-hash the same text and get an identical hash, the content is unchanged; if the hash differs, something was edited.' },
+  { question: 'Why does it show only the first two and last two characters?', answer: 'The masked view keeps a full 32-character hash compact and readable — you see the start and end for a quick eyeball check while the middle stays hidden. The Copy button always copies the complete hash, and the Reveal button shows all of it.' },
+  { question: 'Is my text sent anywhere?', answer: 'No. All hashing runs entirely in your browser using JavaScript — nothing you type is uploaded, stored, or logged. It is completely private.' },
+  { question: 'Is MD5 secure for passwords?', answer: 'No. MD5 is fast and fine for checksums and change-detection, but it is cryptographically broken and must not be used to store passwords or for security-critical signatures. For those, use SHA-256 or a dedicated password hash like bcrypt. This tool also offers SHA-1, SHA-256, and SHA-512.' },
+]
+
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Hash Calculator (MD5 Generator)',
+  description: 'Free online hash calculator that generates MD5, SHA-1, SHA-256, and SHA-512 hashes from any text, entirely in your browser.',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  browserRequirements: 'Requires JavaScript',
+}
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+}
+---
+<Layout
+  title="Hash Calculator: MD5, SHA-256 & SHA-512 Generator"
+  description="Free online hash calculator and MD5 generator. Turn any text into an MD5, SHA-1, SHA-256, or SHA-512 hash instantly in your browser — private, no signup."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Hash Calculator', href: '/calculators/hash-calculator' },
+  ]}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Hash Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-3xl shadow-xl shadow-blue-100/60 border border-gray-200/80 overflow-hidden">
+          <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-6 py-5">
+            <h1 class="text-xl font-bold text-white">Hash Calculator</h1>
+            <p class="text-blue-100/90 text-sm mt-1">MD5, SHA-1, SHA-256 &amp; SHA-512 — generate a fingerprint of any text</p>
+          </div>
+          <div class="p-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5" for="hash-input">Text to hash</label>
+            <textarea
+              id="hash-input"
+              rows="5"
+              placeholder="Paste the text, note, or change you want to fingerprint…"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y shadow-sm"
+            ></textarea>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1" for="hash-algo">Algorithm</label>
+                <select id="hash-algo" class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="MD5">MD5 (32 chars)</option>
+                  <option value="SHA-1">SHA-1 (40 chars)</option>
+                  <option value="SHA-256">SHA-256 (64 chars)</option>
+                  <option value="SHA-512">SHA-512 (128 chars)</option>
+                </select>
+              </div>
+              <label class="flex items-center gap-2 text-sm text-gray-700 mt-5 cursor-pointer select-none">
+                <input type="checkbox" id="hash-upper" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                Uppercase
+              </label>
+            </div>
+
+            <!-- Result -->
+            <div id="hash-result" class="hidden mt-6">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-sm font-medium text-blue-700">Hash <span id="hash-algo-label" class="text-gray-400 font-normal"></span></span>
+                <span id="hash-count" class="text-xs text-gray-400"></span>
+              </div>
+              <div class="bg-gray-900 rounded-2xl px-5 py-4 flex items-center gap-3">
+                <code id="hash-output" class="text-green-400 text-base sm:text-lg font-mono break-all flex-1 tracking-wider">—</code>
+              </div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button id="hash-copy" class="flex-1 min-w-[8rem] text-xs border border-blue-200 hover:border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 py-2 px-3 rounded-lg text-blue-700 font-semibold transition-colors flex items-center justify-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                  Copy full hash
+                </button>
+                <button id="hash-reveal" class="flex-1 min-w-[8rem] text-xs border border-gray-200 hover:border-gray-300 bg-white py-2 px-3 rounded-lg text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  Reveal full
+                </button>
+              </div>
+              <p class="mt-2 text-xs text-gray-400">Masked view shows the first 2 and last 2 characters. Copy always copies the full hash.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQs -->
+        <div class="mt-10 max-w-2xl">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Frequently Asked Questions</h2>
+          <div class="space-y-3">
+            {faqs.map(faq => (
+              <details class="bg-white border border-gray-200 rounded-lg px-4 py-3 group">
+                <summary class="text-sm font-medium text-gray-800 cursor-pointer list-none flex justify-between items-center gap-3">
+                  {faq.question}
+                  <svg class="w-4 h-4 text-gray-400 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <p class="mt-2 text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm text-gray-700 leading-relaxed">
+          <p>A free online hash calculator and MD5 generator. Turn any text into a fixed-length fingerprint to verify it has not changed — the same input always gives the same hash, and any edit changes it completely. Everything runs privately in your browser.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-semibold text-gray-900 text-sm mb-3">Hash lengths</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>MD5</span><span class="font-mono">32 chars</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>SHA-1</span><span class="font-mono">40 chars</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>SHA-256</span><span class="font-mono">64 chars</span></div>
+            <div class="flex justify-between"><span>SHA-512</span><span class="font-mono">128 chars</span></div>
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Not for passwords</h3>
+          <p class="text-xs text-amber-800">MD5 is great for change-detection and checksums, but never use it to store passwords.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // ---- MD5 (JKM / blueimp public-domain implementation) ----
+  function md5(str: string): string {
+    function rl(x: number, c: number) { return (x << c) | (x >>> (32 - c)); }
+    function au(x: number, y: number) {
+      const x4 = x & 0x40000000, y4 = y & 0x40000000, x8 = x & 0x80000000, y8 = y & 0x80000000;
+      const r = (x & 0x3FFFFFFF) + (y & 0x3FFFFFFF);
+      if (x4 & y4) return r ^ 0x80000000 ^ x8 ^ y8;
+      if (x4 | y4) return (r & 0x40000000) ? (r ^ 0xC0000000 ^ x8 ^ y8) : (r ^ 0x40000000 ^ x8 ^ y8);
+      return r ^ x8 ^ y8;
+    }
+    const F = (x: number, y: number, z: number) => (x & y) | (~x & z);
+    const G = (x: number, y: number, z: number) => (x & z) | (y & ~z);
+    const H = (x: number, y: number, z: number) => x ^ y ^ z;
+    const I = (x: number, y: number, z: number) => y ^ (x | ~z);
+    function FF(a: number, b: number, c: number, d: number, x: number, s: number, ac: number) { return au(rl(au(a, au(au(F(b, c, d), x), ac)), s), b); }
+    function GG(a: number, b: number, c: number, d: number, x: number, s: number, ac: number) { return au(rl(au(a, au(au(G(b, c, d), x), ac)), s), b); }
+    function HH(a: number, b: number, c: number, d: number, x: number, s: number, ac: number) { return au(rl(au(a, au(au(H(b, c, d), x), ac)), s), b); }
+    function II(a: number, b: number, c: number, d: number, x: number, s: number, ac: number) { return au(rl(au(a, au(au(I(b, c, d), x), ac)), s), b); }
+    function toWords(s: string) {
+      const len = s.length;
+      const nWords = ((((len + 8) - ((len + 8) % 64)) / 64) + 1) * 16;
+      const wa = Array(nWords - 1).fill(0);
+      let bc = 0;
+      while (bc < len) { const wc = (bc - (bc % 4)) / 4; wa[wc] = wa[wc] | (s.charCodeAt(bc) << ((bc % 4) * 8)); bc++; }
+      const wc = (bc - (bc % 4)) / 4; wa[wc] = wa[wc] | (0x80 << ((bc % 4) * 8));
+      wa[nWords - 2] = len << 3; wa[nWords - 1] = len >>> 29;
+      return wa;
+    }
+    function wh(v: number) { let s = ''; for (let i = 0; i <= 3; i++) { const b = (v >>> (i * 8)) & 255; s += ('0' + b.toString(16)).slice(-2); } return s; }
+    function utf8(s: string) {
+      s = s.replace(/\r\n/g, '\n'); let o = '';
+      for (let n = 0; n < s.length; n++) { const c = s.charCodeAt(n);
+        if (c < 128) o += String.fromCharCode(c);
+        else if (c < 2048) { o += String.fromCharCode((c >> 6) | 192); o += String.fromCharCode((c & 63) | 128); }
+        else { o += String.fromCharCode((c >> 12) | 224); o += String.fromCharCode(((c >> 6) & 63) | 128); o += String.fromCharCode((c & 63) | 128); }
+      }
+      return o;
+    }
+    const x = toWords(utf8(str));
+    let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+    const S11=7,S12=12,S13=17,S14=22,S21=5,S22=9,S23=14,S24=20,S31=4,S32=11,S33=16,S34=23,S41=6,S42=10,S43=15,S44=21;
+    for (let k = 0; k < x.length; k += 16) {
+      const AA=a, BB=b, CC=c, DD=d;
+      a=FF(a,b,c,d,x[k],S11,0xD76AA478); d=FF(d,a,b,c,x[k+1],S12,0xE8C7B756); c=FF(c,d,a,b,x[k+2],S13,0x242070DB); b=FF(b,c,d,a,x[k+3],S14,0xC1BDCEEE);
+      a=FF(a,b,c,d,x[k+4],S11,0xF57C0FAF); d=FF(d,a,b,c,x[k+5],S12,0x4787C62A); c=FF(c,d,a,b,x[k+6],S13,0xA8304613); b=FF(b,c,d,a,x[k+7],S14,0xFD469501);
+      a=FF(a,b,c,d,x[k+8],S11,0x698098D8); d=FF(d,a,b,c,x[k+9],S12,0x8B44F7AF); c=FF(c,d,a,b,x[k+10],S13,0xFFFF5BB1); b=FF(b,c,d,a,x[k+11],S14,0x895CD7BE);
+      a=FF(a,b,c,d,x[k+12],S11,0x6B901122); d=FF(d,a,b,c,x[k+13],S12,0xFD987193); c=FF(c,d,a,b,x[k+14],S13,0xA679438E); b=FF(b,c,d,a,x[k+15],S14,0x49B40821);
+      a=GG(a,b,c,d,x[k+1],S21,0xF61E2562); d=GG(d,a,b,c,x[k+6],S22,0xC040B340); c=GG(c,d,a,b,x[k+11],S23,0x265E5A51); b=GG(b,c,d,a,x[k],S24,0xE9B6C7AA);
+      a=GG(a,b,c,d,x[k+5],S21,0xD62F105D); d=GG(d,a,b,c,x[k+10],S22,0x02441453); c=GG(c,d,a,b,x[k+15],S23,0xD8A1E681); b=GG(b,c,d,a,x[k+4],S24,0xE7D3FBC8);
+      a=GG(a,b,c,d,x[k+9],S21,0x21E1CDE6); d=GG(d,a,b,c,x[k+14],S22,0xC33707D6); c=GG(c,d,a,b,x[k+3],S23,0xF4D50D87); b=GG(b,c,d,a,x[k+8],S24,0x455A14ED);
+      a=GG(a,b,c,d,x[k+13],S21,0xA9E3E905); d=GG(d,a,b,c,x[k+2],S22,0xFCEFA3F8); c=GG(c,d,a,b,x[k+7],S23,0x676F02D9); b=GG(b,c,d,a,x[k+12],S24,0x8D2A4C8A);
+      a=HH(a,b,c,d,x[k+5],S31,0xFFFA3942); d=HH(d,a,b,c,x[k+8],S32,0x8771F681); c=HH(c,d,a,b,x[k+11],S33,0x6D9D6122); b=HH(b,c,d,a,x[k+14],S34,0xFDE5380C);
+      a=HH(a,b,c,d,x[k+1],S31,0xA4BEEA44); d=HH(d,a,b,c,x[k+4],S32,0x4BDECFA9); c=HH(c,d,a,b,x[k+7],S33,0xF6BB4B60); b=HH(b,c,d,a,x[k+10],S34,0xBEBFBC70);
+      a=HH(a,b,c,d,x[k+13],S31,0x289B7EC6); d=HH(d,a,b,c,x[k],S32,0xEAA127FA); c=HH(c,d,a,b,x[k+3],S33,0xD4EF3085); b=HH(b,c,d,a,x[k+6],S34,0x04881D05);
+      a=HH(a,b,c,d,x[k+9],S31,0xD9D4D039); d=HH(d,a,b,c,x[k+12],S32,0xE6DB99E5); c=HH(c,d,a,b,x[k+15],S33,0x1FA27CF8); b=HH(b,c,d,a,x[k+2],S34,0xC4AC5665);
+      a=II(a,b,c,d,x[k],S41,0xF4292244); d=II(d,a,b,c,x[k+7],S42,0x432AFF97); c=II(c,d,a,b,x[k+14],S43,0xAB9423A7); b=II(b,c,d,a,x[k+5],S44,0xFC93A039);
+      a=II(a,b,c,d,x[k+12],S41,0x655B59C3); d=II(d,a,b,c,x[k+3],S42,0x8F0CCC92); c=II(c,d,a,b,x[k+10],S43,0xFFEFF47D); b=II(b,c,d,a,x[k+1],S44,0x85845DD1);
+      a=II(a,b,c,d,x[k+8],S41,0x6FA87E4F); d=II(d,a,b,c,x[k+15],S42,0xFE2CE6E0); c=II(c,d,a,b,x[k+6],S43,0xA3014314); b=II(b,c,d,a,x[k+13],S44,0x4E0811A1);
+      a=II(a,b,c,d,x[k+4],S41,0xF7537E82); d=II(d,a,b,c,x[k+11],S42,0xBD3AF235); c=II(c,d,a,b,x[k+2],S43,0x2AD7D2BB); b=II(b,c,d,a,x[k+9],S44,0xEB86D391);
+      a=au(a,AA); b=au(b,BB); c=au(c,CC); d=au(d,DD);
+    }
+    return (wh(a) + wh(b) + wh(c) + wh(d)).toLowerCase();
+  }
+
+  async function shaHash(algo: string, text: string): Promise<string> {
+    const buf = await crypto.subtle.digest(algo, new TextEncoder().encode(text));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  const input = document.getElementById('hash-input') as HTMLTextAreaElement
+  const algoSel = document.getElementById('hash-algo') as HTMLSelectElement
+  const upper = document.getElementById('hash-upper') as HTMLInputElement
+  const resultBox = document.getElementById('hash-result')!
+  const output = document.getElementById('hash-output')!
+  const countEl = document.getElementById('hash-count')!
+  const algoLabel = document.getElementById('hash-algo-label')!
+  const copyBtn = document.getElementById('hash-copy')!
+  const revealBtn = document.getElementById('hash-reveal')!
+
+  let fullHash = ''
+  let revealed = false
+
+  function masked(h: string) {
+    if (h.length <= 4) return h
+    const dots = '•'.repeat(Math.min(h.length - 4, 60))
+    return h.slice(0, 2) + dots + h.slice(-2)
+  }
+  function render() {
+    output.textContent = revealed ? fullHash : masked(fullHash)
+    countEl.textContent = fullHash.length + ' characters'
+    algoLabel.textContent = '· ' + algoSel.value
+  }
+
+  async function generate() {
+    const text = input.value
+    if (text.length === 0) { resultBox.classList.add('hidden'); fullHash = ''; return }
+    const algo = algoSel.value
+    let h = algo === 'MD5' ? md5(text) : await shaHash(algo, text)
+    if (upper.checked) h = h.toUpperCase()
+    fullHash = h
+    resultBox.classList.remove('hidden')
+    render()
+  }
+
+  input.addEventListener('input', generate)
+  algoSel.addEventListener('change', generate)
+  upper.addEventListener('change', generate)
+
+  revealBtn.addEventListener('click', () => {
+    revealed = !revealed
+    render()
+    revealBtn.querySelector('svg')!.nextSibling!.textContent = revealed ? ' Hide' : ' Reveal full'
+  })
+
+  copyBtn.addEventListener('click', () => {
+    if (!fullHash) return
+    navigator.clipboard.writeText(fullHash).then(() => {
+      const label = copyBtn.childNodes[copyBtn.childNodes.length - 1]
+      label.textContent = ' ✓ Copied full hash!'
+      setTimeout(() => { label.textContent = ' Copy full hash' }, 2000)
+    })
+  })
+</script>

@@ -191,6 +191,7 @@ const pages = [
   { url: '/calculators/side-hustle-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/coast-fire-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/nurse-pay-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/hash-calculator', priority: '0.8', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

@@ -260,6 +260,7 @@ export const categories: Category[] = [
       { name: 'Pizza Calculator', href: '/calculators/pizza-calculator', description: 'How many pizzas to order for any party size', icon: '🍕', live: true },
       { name: 'Subscription Cost Calculator', href: '/calculators/subscription-cost-calculator', description: 'The true lifetime cost of your subscriptions', icon: '💸', live: true },
       { name: 'Screen Time Calculator', href: '/calculators/screen-time-calculator', description: 'How many years of your life you spend on screens', icon: '📱', live: true },
+      { name: 'Hash Calculator', href: '/calculators/hash-calculator', description: 'Generate MD5, SHA-1, SHA-256 & SHA-512 hashes from text', icon: '🔐', live: true },
     ],
   },
 ]
