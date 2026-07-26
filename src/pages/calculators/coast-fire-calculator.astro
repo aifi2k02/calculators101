@@ -1,0 +1,132 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const age = parseInt(inputs.age) || 0
+  const retAge = parseInt(inputs.retage) || 65
+  const expenses = parseFloat(inputs.expenses) || 0
+  const current = parseFloat(inputs.current) || 0
+  const retIn = parseFloat(inputs.return)
+  const realReturn = (isNaN(retIn) ? 7 : retIn) / 100
+  const wr = parseFloat(inputs.withdrawal) || 4
+  if (age <= 0) throw new Error('Enter your current age.')
+  if (retAge <= age) throw new Error('Retirement age must be greater than your current age.')
+  if (expenses <= 0) throw new Error('Enter your expected annual retirement spending.')
+  const fireNumber = expenses * (100 / wr)
+  const years = retAge - age
+  const coastNumber = fireNumber / Math.pow(1 + realReturn, years)
+  const progress = coastNumber > 0 ? (current / coastNumber * 100) : 0
+  const hitCoast = current >= coastNumber
+  const projected = current * Math.pow(1 + realReturn, years)
+  return {
+    value: hitCoast ? 'Coast FIRE reached!' : progress.toFixed(0) + '% of Coast FIRE',
+    gaugeValue: Math.min(progress, 100),
+    stats: [
+      { label: 'Coast FIRE Number', value: '$' + Math.round(coastNumber).toLocaleString() },
+      { label: 'Your Progress', value: progress.toFixed(0) + '%' },
+      { label: 'FIRE Number', value: '$' + Math.round(fireNumber).toLocaleString() },
+      { label: 'Projected at ' + retAge, value: '$' + Math.round(projected).toLocaleString() }
+    ],
+    breakdown: [
+      'Annual retirement spending: $' + Math.round(expenses).toLocaleString(),
+      'FIRE number (' + wr + '% rule): $' + Math.round(fireNumber).toLocaleString(),
+      'Years until retirement: ' + years + ' (age ' + age + ' → ' + retAge + ')',
+      'Assumed real return: ' + (realReturn * 100).toFixed(1) + '%',
+      '—',
+      'Coast FIRE number (invest once, never add): $' + Math.round(coastNumber).toLocaleString(),
+      'You have invested: $' + Math.round(current).toLocaleString(),
+      hitCoast ? 'You have REACHED Coast FIRE — your investments alone should grow to your FIRE number.' : 'You are ' + progress.toFixed(0) + '% of the way — $' + Math.round(coastNumber - current).toLocaleString() + ' to go.',
+      'If you never invest another dollar, $' + Math.round(current).toLocaleString() + ' grows to ~$' + Math.round(projected).toLocaleString() + ' by ' + retAge
+    ],
+    share: {
+      kicker: hitCoast ? 'I reached Coast FIRE' : 'My Coast FIRE progress',
+      heroNumber: hitCoast ? '100%' : progress.toFixed(0) + '%',
+      heroSub: hitCoast ? 'my investments alone should grow to my FIRE number' : 'of the way to Coast FIRE at age ' + age,
+      hook: hitCoast ? 'I never have to invest another dollar for retirement — compounding does the rest.' : 'I need $' + Math.round(coastNumber).toLocaleString() + ' invested now to coast to a $' + Math.round(fireNumber).toLocaleString() + ' retirement.',
+      chips: ['Coast $' + Math.round(coastNumber).toLocaleString(), progress.toFixed(0) + '% there', years + ' yrs to ' + retAge]
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '%',
+  zones: [
+    { label: 'Building', color: '#ef4444', from: 0, to: 50 },
+    { label: 'Close', color: '#f59e0b', from: 50, to: 100 },
+    { label: 'Coasting', color: '#22c55e', from: 100, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is Coast FIRE?', answer: 'Coast FIRE is the point where you have enough invested that, without adding another dollar, compound growth alone will carry your portfolio to your full FIRE (retirement) number by the time you retire. Once you hit it, you only need to earn enough to cover current expenses — retirement is already handled.' },
+  { question: 'How is the Coast FIRE number calculated?', answer: 'First find your FIRE number (annual retirement spending divided by your withdrawal rate — 4% means 25× expenses). Then discount that back to today using your expected real return and years to retirement. The result is the amount you would need invested right now to coast the rest of the way.' },
+  { question: 'How is Coast FIRE different from regular FIRE?', answer: 'Regular FIRE means having the full nest egg now so you can stop working entirely. Coast FIRE is a milestone along the way: your retirement is funded by future growth, but you still work to pay today\'s bills. It removes the pressure to keep saving aggressively for retirement.' },
+  { question: 'What return and withdrawal rate should I use?', answer: 'A common assumption is a 7% real (inflation-adjusted) return for a stock-heavy portfolio, and the 4% safe withdrawal rate (25× annual expenses) for the FIRE number. Conservative planners use 5–6% returns or a 3.5% withdrawal rate. Adjust both to match your own risk tolerance.' },
+  { question: 'What happens after I reach Coast FIRE?', answer: 'You can downshift — work part-time, switch to a lower-paying but more enjoyable job, or simply stop contributing to retirement accounts — as long as you cover your living costs. Your existing investments keep compounding toward your FIRE number on their own.' },
+]
+---
+<Layout
+  title="Coast FIRE Calculator: Are You Done Saving for Retirement?"
+  description="Find your Coast FIRE number — the amount you need invested now to coast to retirement without saving another dollar. Free Coast FIRE calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Coast FIRE Calculator', href: '/calculators/coast-fire-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Coast FIRE Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Coast FIRE Calculator"
+          description="The amount to invest now so compounding funds your retirement — no more saving required"
+          formulaId="coast-fire"
+          formulaFn={formulaFn}
+          resultLabel="Coast FIRE Progress"
+          shareStyle="money"
+          inputs={[
+            { id: 'age', label: 'Current Age', type: 'number', placeholder: '30', min: 1, max: 90, unit: 'yrs', defaultValue: 30 },
+            { id: 'retage', label: 'Retirement Age', type: 'number', placeholder: '65', min: 2, max: 100, unit: 'yrs', defaultValue: 65 },
+            { id: 'expenses', label: 'Annual Retirement Spending', type: 'number', placeholder: '50000', min: 0, step: 1000, unit: '$', defaultValue: 50000 },
+            { id: 'current', label: 'Current Investments', type: 'number', placeholder: '120000', min: 0, step: 1000, unit: '$', defaultValue: 120000 },
+            { id: 'return', label: 'Expected Real Return', type: 'number', placeholder: '7', min: 0, max: 15, step: 0.1, unit: '%', defaultValue: 7 },
+            { id: 'withdrawal', label: 'Withdrawal Rate', type: 'number', placeholder: '4', min: 2, max: 8, step: 0.1, unit: '%', defaultValue: 4 },
+          ]}
+          gauge={gauge}
+          intro="This Coast FIRE calculator finds the amount you need invested today so that, without contributing another dollar, compound growth alone reaches your full retirement number by your target age. It shows your Coast FIRE number, how close you are, and what your current investments will grow to."
+          disclaimer="A planning estimate using constant real-return and withdrawal-rate assumptions. Real markets are volatile and sequence-of-returns risk applies. Not investment advice — consult a financial planner for personal decisions."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'FIRE Calculator', href: '/calculators/fire-calculator' },
+            { name: 'Retirement Calculator', href: '/calculators/retirement-calculator' },
+            { name: 'Compound Interest', href: '/calculators/compound-interest-calculator' },
+            { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
+            { name: '401k Calculator', href: '/calculators/401k-calculator' },
+            { name: 'Net Worth Calculator', href: '/calculators/net-worth-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">What Coast FIRE means</h3>
+          <p class="text-xs text-blue-800">Retirement is <strong>already funded by growth</strong>. You only work to cover today's expenses — no more retirement saving needed.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-3">FIRE milestones</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Coast FIRE</span><span>Growth funds retirement</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Barista FIRE</span><span>Part-time covers gaps</span></div>
+            <div class="flex justify-between"><span>Full FIRE</span><span>25× expenses, quit fully</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

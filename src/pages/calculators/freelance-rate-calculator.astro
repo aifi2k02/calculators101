@@ -1,0 +1,129 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const takeHome = parseFloat(inputs.takehome) || 0
+  const expenses = parseFloat(inputs.expenses) || 0
+  const billable = parseFloat(inputs.billable) || 0
+  const weeks = parseFloat(inputs.weeks) || 48
+  const taxIn = parseFloat(inputs.tax)
+  const taxR = (isNaN(taxIn) ? 30 : taxIn) / 100
+  if (takeHome <= 0) throw new Error('Enter your desired take-home income.')
+  if (billable <= 0) throw new Error('Enter your billable hours per week.')
+  const preTaxProfit = takeHome / (1 - taxR)
+  const revenueNeeded = preTaxProfit + expenses
+  const billableHours = billable * weeks
+  const hourly = billableHours > 0 ? revenueNeeded / billableHours : 0
+  const dayRate = hourly * 8
+  const taxSetAside = preTaxProfit - takeHome
+  return {
+    value: '$' + Math.round(hourly).toLocaleString() + '/hr',
+    gaugeValue: Math.min(hourly, 300),
+    stats: [
+      { label: 'Hourly Rate', value: '$' + Math.round(hourly).toLocaleString() },
+      { label: 'Day Rate (8h)', value: '$' + Math.round(dayRate).toLocaleString() },
+      { label: 'Revenue Needed', value: '$' + Math.round(revenueNeeded).toLocaleString() },
+      { label: 'Billable Hours/yr', value: Math.round(billableHours).toLocaleString() }
+    ],
+    breakdown: [
+      'Desired take-home: $' + Math.round(takeHome).toLocaleString(),
+      'Tax set-aside (' + (taxR * 100).toFixed(0) + '%): $' + Math.round(taxSetAside).toLocaleString(),
+      'Pre-tax profit needed: $' + Math.round(preTaxProfit).toLocaleString(),
+      'Business expenses: $' + Math.round(expenses).toLocaleString(),
+      'Total revenue needed: $' + Math.round(revenueNeeded).toLocaleString(),
+      '—',
+      'Billable hours: ' + billable + '/week × ' + weeks + ' weeks = ' + Math.round(billableHours).toLocaleString() + ' hrs',
+      'Required hourly rate: $' + Math.round(hourly).toLocaleString(),
+      'Equivalent day rate (8h): $' + Math.round(dayRate).toLocaleString()
+    ],
+    share: {
+      kicker: 'What I need to charge',
+      heroNumber: '$' + Math.round(hourly).toLocaleString() + '/hr',
+      heroSub: 'to take home $' + Math.round(takeHome).toLocaleString() + ' as a freelancer',
+      hook: 'After ' + (taxR*100).toFixed(0) + '% tax, expenses, and only ' + Math.round(billableHours).toLocaleString() + ' billable hours a year — your rate is not your salary.',
+      chips: ['$' + Math.round(hourly).toLocaleString() + '/hr', '$' + Math.round(dayRate).toLocaleString() + '/day', Math.round(billableHours).toLocaleString() + ' hrs/yr']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 300, unit: '$/hr',
+  zones: [
+    { label: 'Entry', color: '#94a3b8', from: 0, to: 50 },
+    { label: 'Mid', color: '#3b82f6', from: 50, to: 120 },
+    { label: 'Senior', color: '#22c55e', from: 120, to: 300 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I calculate my freelance hourly rate?', answer: 'Work backwards from what you want to keep. Take your desired take-home income, gross it up for taxes, add your business expenses to get total revenue needed, then divide by your realistic billable hours for the year. Your rate has to cover far more than a salaried wage does.' },
+  { question: 'Why is my freelance rate higher than my old salary?', answer: 'Because as a freelancer you pay both halves of Social Security and Medicare (self-employment tax), cover your own health insurance, equipment, software, and time off, and you cannot bill 40 hours every week — admin, sales, and gaps eat into billable time. A rate that matches your old salary would leave you earning far less.' },
+  { question: 'How many hours can I actually bill?', answer: 'Most full-time freelancers bill 20–30 hours a week, not 40 — the rest goes to finding clients, invoicing, email, and unpaid admin. This calculator lets you enter realistic billable hours and weeks (accounting for vacation and slow periods) so your rate is not based on a fantasy 2,080-hour year.' },
+  { question: 'How much should I set aside for taxes?', answer: 'A common rule for U.S. freelancers is 25–35% of profit, depending on your bracket and state. This calculator defaults to 30%. Setting the money aside as you earn — ideally paid quarterly — avoids a painful surprise at tax time.' },
+  { question: 'Should I charge hourly or per project?', answer: 'Many experienced freelancers move to project or value-based pricing, which rewards efficiency and expertise rather than hours. But knowing your true hourly floor — what this calculator gives you — is essential for pricing any project so you never accidentally work below cost.' },
+]
+---
+<Layout
+  title="Freelance Rate Calculator: What Hourly Rate to Charge"
+  description="Calculate the freelance hourly rate you need to charge to hit your target income after taxes, expenses, and realistic billable hours. Free freelance rate calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Freelance Rate Calculator', href: '/calculators/freelance-rate-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Freelance Rate Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Freelance Rate Calculator"
+          description="The hourly rate you need to hit your income goal — after tax, expenses, and real billable hours"
+          formulaId="freelance-rate"
+          formulaFn={formulaFn}
+          resultLabel="Required Hourly Rate"
+          shareStyle="money"
+          inputs={[
+            { id: 'takehome', label: 'Desired Take-Home Income', type: 'number', placeholder: '70000', min: 0, step: 1000, unit: '$', defaultValue: 70000 },
+            { id: 'expenses', label: 'Annual Business Expenses', type: 'number', placeholder: '8000', min: 0, step: 500, unit: '$', defaultValue: 8000 },
+            { id: 'billable', label: 'Billable Hours per Week', type: 'number', placeholder: '25', min: 1, max: 80, unit: 'hrs', defaultValue: 25 },
+            { id: 'weeks', label: 'Working Weeks per Year', type: 'number', placeholder: '48', min: 1, max: 52, unit: 'wks', defaultValue: 48 },
+            { id: 'tax', label: 'Tax Set-Aside', type: 'number', placeholder: '30', min: 0, max: 60, step: 1, unit: '%', defaultValue: 30 },
+          ]}
+          gauge={gauge}
+          intro="This freelance rate calculator tells you the hourly rate to charge to actually hit your income goal. It grosses up your desired take-home for taxes, adds business expenses, and divides by your realistic billable hours — so your rate covers everything a salaried job used to, not just your take-home pay."
+          disclaimer="An estimate to find your rate floor. Tax set-aside is a simplified percentage — your real self-employment plus income tax depends on your income and state. Consult a tax professional for exact figures."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
+            { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
+            { name: 'Side Hustle Profit', href: '/calculators/side-hustle-calculator' },
+            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
+            { name: 'Influencer Earnings', href: '/calculators/creator-earnings-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Your rate ≠ your salary</h3>
+          <p class="text-xs text-blue-800">A $70k salaried worker who goes freelance often needs to bill <strong>$60–80/hr+</strong> to match it — after taxes, benefits, and unbillable time.</p>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-2">The formula</h3>
+          <p class="text-xs text-gray-600 font-mono leading-relaxed">rate = (take-home ÷ (1−tax) + expenses) ÷ billable hours</p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Bill ~60% of your time</h3>
+          <p class="text-xs text-amber-800">Full-time freelancers rarely bill 40 hrs/week. Sales and admin eat the rest.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const platform = inputs.platform || 'instagram'
+  const followers = parseFloat(inputs.followers) || 0
+  const engIn = parseFloat(inputs.engagement)
+  const engR = isNaN(engIn) ? 2 : engIn
+  const posts = parseInt(inputs.posts) || 0
+  if (followers <= 0) throw new Error('Enter your follower or subscriber count.')
+  const basePer1k = { instagram: 10, tiktok: 12, youtube: 20, twitter: 8 }[platform] || 10
+  const engMult = Math.min(3, Math.max(0.5, engR / 2))
+  const perPost = followers / 1000 * basePer1k * engMult
+  const monthly = perPost * posts
+  const annual = monthly * 12
+  const tier = followers >= 1000000 ? 'Mega' : followers >= 500000 ? 'Macro' : followers >= 100000 ? 'Mid-tier' : followers >= 10000 ? 'Micro' : 'Nano'
+  return {
+    value: '$' + Math.round(perPost).toLocaleString() + ' / post',
+    gaugeValue: Math.min(followers / 10000, 100),
+    stats: [
+      { label: 'Per Sponsored Post', value: '$' + Math.round(perPost).toLocaleString() },
+      { label: 'Monthly (est.)', value: '$' + Math.round(monthly).toLocaleString() },
+      { label: 'Annual (est.)', value: '$' + Math.round(annual).toLocaleString() },
+      { label: 'Creator Tier', value: tier }
+    ],
+    breakdown: [
+      'Platform: ' + platform.charAt(0).toUpperCase() + platform.slice(1),
+      'Followers: ' + Math.round(followers).toLocaleString() + ' (' + tier + ')',
+      'Engagement rate: ' + engR + '% (multiplier ' + engMult.toFixed(2) + '×)',
+      '—',
+      'Base rate: ~$' + basePer1k + ' per 1,000 followers per post',
+      'Estimated per sponsored post: $' + Math.round(perPost).toLocaleString(),
+      posts > 0 ? 'At ' + posts + ' sponsored posts/month: $' + Math.round(monthly).toLocaleString() + '/mo' : '',
+      posts > 0 ? 'Annual: $' + Math.round(annual).toLocaleString() : ''
+    ].filter(Boolean),
+    share: {
+      kicker: 'What my audience is worth',
+      heroNumber: '$' + Math.round(perPost).toLocaleString(),
+      heroSub: 'per sponsored post with ' + Math.round(followers).toLocaleString() + ' followers',
+      hook: 'A ' + tier + '-tier creator' + (posts > 0 ? ' doing ' + posts + ' deals a month earns ~$' + Math.round(monthly).toLocaleString() + '/mo.' : ' at ~$' + basePer1k + ' per 1k followers.'),
+      chips: ['$' + Math.round(perPost).toLocaleString() + '/post', posts > 0 ? '$' + Math.round(monthly).toLocaleString() + '/mo' : tier, engR + '% eng.']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Nano/Micro', color: '#94a3b8', from: 0, to: 10 },
+    { label: 'Micro/Mid', color: '#3b82f6', from: 10, to: 50 },
+    { label: 'Macro/Mega', color: '#8b5cf6', from: 50, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How much do influencers make per post?', answer: 'A widely used industry rule of thumb is about $100 per 10,000 followers per sponsored post — roughly $10 per 1,000 followers. Rates vary a lot by platform, niche, and engagement: high-engagement or high-value niches (finance, tech) command more, while low-engagement accounts earn less.' },
+  { question: 'Does engagement rate matter more than follower count?', answer: 'Often yes. Brands increasingly pay for engagement and conversions, not raw follower numbers. A micro-influencer with a 6% engagement rate can out-earn a larger account with 1% engagement, because their audience actually acts on recommendations. This calculator scales the estimate by your engagement rate.' },
+  { question: 'What are the creator tiers?', answer: 'Nano (under 10K followers), Micro (10K–100K), Mid-tier (100K–500K), Macro (500K–1M), and Mega/celebrity (1M+). Nano and micro creators usually have the highest engagement and best value for brands, even though their per-post rates are lower.' },
+  { question: 'How do creators actually get paid?', answer: 'Sponsored posts and brand deals are the biggest source for most, but income also comes from platform ad revenue (YouTube, TikTok Creator Fund), affiliate commissions, merchandise, memberships (Patreon), and digital products. This calculator estimates the sponsored-post portion.' },
+  { question: 'Is this an exact quote of what I will earn?', answer: 'No — it is a benchmark estimate. Real rates are negotiated per deal and depend on your niche, content quality, exclusivity, usage rights, and the brand budget. Use it as a starting point for pricing conversations, not a guaranteed figure.' },
+]
+---
+<Layout
+  title="Influencer Earnings Calculator: What Creators Make Per Post"
+  description="Estimate creator earnings per sponsored post and per month from your followers, platform, and engagement rate. Free influencer earnings calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Influencer Earnings Calculator', href: '/calculators/creator-earnings-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Influencer Earnings Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Influencer Earnings Calculator"
+          description="Estimated sponsored-post and monthly earnings from your audience"
+          formulaId="creator-earnings"
+          formulaFn={formulaFn}
+          resultLabel="Estimated Per Post"
+          shareStyle="viral"
+          inputs={[
+            { id: 'platform', label: 'Platform', type: 'select', options: [
+              { value: 'instagram', label: 'Instagram' },
+              { value: 'tiktok', label: 'TikTok' },
+              { value: 'youtube', label: 'YouTube' },
+              { value: 'twitter', label: 'X / Twitter' },
+            ], defaultValue: 'instagram' },
+            { id: 'followers', label: 'Followers / Subscribers', type: 'number', placeholder: '50000', min: 0, step: 100, unit: '', defaultValue: 50000 },
+            { id: 'engagement', label: 'Engagement Rate', type: 'number', placeholder: '3', min: 0, max: 30, step: 0.1, unit: '%', defaultValue: 3 },
+            { id: 'posts', label: 'Sponsored Posts per Month', type: 'number', placeholder: '4', min: 0, max: 100, unit: 'posts', defaultValue: 4 },
+          ]}
+          gauge={gauge}
+          intro="This influencer earnings calculator estimates what a creator can charge per sponsored post and earn per month, based on the common industry benchmark of about $10 per 1,000 followers per post, scaled by platform and engagement rate. It also shows your creator tier and annual potential."
+          disclaimer="A benchmark estimate only — real rates are negotiated per deal and vary widely by niche, engagement, content quality, and brand budget. Covers sponsored posts, not ad revenue, affiliate, or merch. Use as a pricing starting point."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Content Creator Tax', href: '/calculators/creator-tax-calculator' },
+            { name: 'Freelancer Rate', href: '/calculators/freelance-rate-calculator' },
+            { name: 'Side Hustle Profit', href: '/calculators/side-hustle-calculator' },
+            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+            { name: 'Commission Calculator', href: '/calculators/commission-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-5">
+          <h3 class="font-bold text-purple-900 mb-3">Rough per-post rates</h3>
+          <table class="w-full text-xs text-purple-800">
+            <thead><tr class="text-purple-500"><th class="text-left pb-1">Followers</th><th class="text-right pb-1">Per post</th></tr></thead>
+            <tbody>
+              {[['10K','~$100'],['50K','~$500'],['100K','~$1,000'],['500K','~$5,000'],['1M','~$10,000']].map(([f,p]) => (
+                <tr class="border-t border-purple-100"><td class="py-1 font-medium">{f}</td><td class="py-1 text-right">{p}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Engagement is king</h3>
+          <p class="text-xs text-amber-800">High engagement can 2–3× your rate. Brands pay for an audience that acts, not just follows.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

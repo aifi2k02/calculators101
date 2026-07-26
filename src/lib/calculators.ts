@@ -99,6 +99,11 @@ export const categories: Category[] = [
       { name: 'Cost of Living Raise Calculator', href: '/calculators/cost-of-living-raise-calculator', description: 'The raise you need to keep up with inflation', icon: '🛒', live: true },
       { name: 'Bonus Tax Calculator', href: '/calculators/bonus-tax-calculator', description: 'Take-home bonus after 22% withholding, FICA, and state tax', icon: '🎉', live: true },
       { name: 'Commission Calculator', href: '/calculators/commission-calculator', description: 'Sales commission and total pay from rate, base, and quota', icon: '🤝', live: true },
+      { name: 'Influencer Earnings Calculator', href: '/calculators/creator-earnings-calculator', description: 'Estimated pay per sponsored post and per month', icon: '🌟', live: true },
+      { name: 'Freelance Rate Calculator', href: '/calculators/freelance-rate-calculator', description: 'The hourly rate to charge to hit your income goal', icon: '💻', live: true },
+      { name: 'Side Hustle Calculator', href: '/calculators/side-hustle-calculator', description: 'Real profit and true hourly rate after costs and tax', icon: '🚀', live: true },
+      { name: 'Coast FIRE Calculator', href: '/calculators/coast-fire-calculator', description: 'The amount to invest now to coast to retirement', icon: '🏝️', live: true },
+      { name: 'Nurse Pay Calculator', href: '/calculators/nurse-pay-calculator', description: 'Real pay with night & weekend shift differentials', icon: '🩺', live: true },
     ],
   },
   {

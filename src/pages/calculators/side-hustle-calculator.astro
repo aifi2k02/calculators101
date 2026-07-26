@@ -1,0 +1,126 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const revenue = parseFloat(inputs.revenue) || 0
+  const expenses = parseFloat(inputs.expenses) || 0
+  const hours = parseFloat(inputs.hours) || 0
+  const taxIn = parseFloat(inputs.tax)
+  const taxR = (isNaN(taxIn) ? 25 : taxIn) / 100
+  if (revenue <= 0) throw new Error('Enter your monthly revenue.')
+  const grossProfit = revenue - expenses
+  const tax = Math.max(0, grossProfit) * taxR
+  const netProfit = grossProfit - tax
+  const hourlyNet = hours > 0 ? netProfit / hours : 0
+  const annualNet = netProfit * 12
+  const margin = revenue > 0 ? (grossProfit / revenue * 100) : 0
+  return {
+    value: '$' + Math.round(netProfit).toLocaleString() + '/mo',
+    gaugeValue: Math.min(hourlyNet, 100),
+    stats: [
+      { label: 'Net Profit / mo', value: '$' + Math.round(netProfit).toLocaleString() },
+      { label: 'Per Hour', value: '$' + Math.round(hourlyNet).toLocaleString() },
+      { label: 'Annual Net', value: '$' + Math.round(annualNet).toLocaleString() },
+      { label: 'Profit Margin', value: margin.toFixed(0) + '%' }
+    ],
+    breakdown: [
+      'Monthly revenue: $' + Math.round(revenue).toLocaleString(),
+      'Expenses: -$' + Math.round(expenses).toLocaleString(),
+      'Gross profit: $' + Math.round(grossProfit).toLocaleString() + ' (' + margin.toFixed(0) + '% margin)',
+      'Tax set-aside (' + (taxR * 100).toFixed(0) + '%): -$' + Math.round(tax).toLocaleString(),
+      'Net profit: $' + Math.round(netProfit).toLocaleString() + '/month',
+      '—',
+      hours > 0 ? 'Hours worked: ' + hours + '/month' : '',
+      hours > 0 ? 'Real hourly rate: $' + Math.round(hourlyNet).toLocaleString() + '/hr' : '',
+      'Annual net profit: $' + Math.round(annualNet).toLocaleString()
+    ].filter(Boolean),
+    share: {
+      kicker: 'My side hustle really pays',
+      heroNumber: '$' + Math.round(hourlyNet).toLocaleString() + '/hr',
+      heroSub: 'real hourly profit after expenses and taxes',
+      hook: '$' + Math.round(revenue).toLocaleString() + '/mo revenue becomes $' + Math.round(netProfit).toLocaleString() + ' net — $' + Math.round(annualNet).toLocaleString() + ' a year.',
+      chips: ['$' + Math.round(netProfit).toLocaleString() + '/mo', '$' + Math.round(hourlyNet).toLocaleString() + '/hr', margin.toFixed(0) + '% margin']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '$/hr',
+  zones: [
+    { label: 'Low', color: '#ef4444', from: 0, to: 15 },
+    { label: 'Decent', color: '#f59e0b', from: 15, to: 35 },
+    { label: 'Great', color: '#22c55e', from: 35, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I calculate side hustle profit?', answer: 'Subtract your monthly expenses from your revenue to get gross profit, set aside taxes on that profit, and what remains is your net profit. Divide net profit by the hours you put in to find your real hourly rate — the number that tells you whether the hustle is actually worth your time.' },
+  { question: 'Why is my real hourly rate lower than I thought?', answer: 'Because revenue is not profit. After supplies, fees, software, ads, and taxes, the amount you actually keep can be a fraction of what came in. And when you divide that by every hour spent — including unpaid admin and marketing — the true hourly rate is often humbling. That is exactly why this calculation matters.' },
+  { question: 'Do I have to pay taxes on side hustle income?', answer: 'Yes. Side hustle income is taxable, and if you clear $400 in net self-employment profit you also owe self-employment tax (Social Security and Medicare) on top of income tax. Set aside roughly 25–30% of profit, and pay quarterly estimated taxes if it becomes significant.' },
+  { question: 'What counts as a business expense?', answer: 'Ordinary, necessary costs of running the hustle: materials, platform and payment fees, software subscriptions, advertising, mileage, a portion of your phone and internet, and equipment. Tracking them lowers your taxable profit, so keep receipts and records.' },
+  { question: 'When is a side hustle worth it?', answer: 'Compare your real hourly rate to what your time is otherwise worth. If a hustle nets $8/hour after everything, a few extra shifts at a $20/hour job may pay more with less risk. If it nets $40/hour and can scale, it may be worth doubling down. The number decides.' },
+]
+---
+<Layout
+  title="Side Hustle Calculator: Real Profit & Hourly Rate"
+  description="Calculate your side hustle's real profit and true hourly rate after expenses and taxes. Free side hustle calculator to see if it's worth your time."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Side Hustle Calculator', href: '/calculators/side-hustle-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Side Hustle Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Side Hustle Calculator"
+          description="Your real profit and true hourly rate after expenses and taxes"
+          formulaId="side-hustle"
+          formulaFn={formulaFn}
+          resultLabel="Net Monthly Profit"
+          shareStyle="money"
+          inputs={[
+            { id: 'revenue', label: 'Monthly Revenue', type: 'number', placeholder: '2000', min: 0, step: 50, unit: '$', defaultValue: 2000 },
+            { id: 'expenses', label: 'Monthly Expenses', type: 'number', placeholder: '600', min: 0, step: 50, unit: '$', defaultValue: 600 },
+            { id: 'hours', label: 'Hours Worked per Month', type: 'number', placeholder: '40', min: 0, max: 400, unit: 'hrs', defaultValue: 40 },
+            { id: 'tax', label: 'Tax Set-Aside', type: 'number', placeholder: '25', min: 0, max: 60, step: 1, unit: '%', defaultValue: 25 },
+          ]}
+          gauge={gauge}
+          intro="This side hustle calculator shows what your side gig really earns after expenses and taxes — and, most importantly, your true hourly rate. Enter your monthly revenue, costs, and hours to find out whether the hustle is genuinely worth your time or quietly paying you less than minimum wage."
+          disclaimer="Tax set-aside is a simplified percentage of profit; actual tax depends on your total income, filing status, and state, and net self-employment profit over $400 triggers SE tax. This is a planning estimate."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
+            { name: 'Freelance Rate', href: '/calculators/freelance-rate-calculator' },
+            { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
+            { name: 'Markup Calculator', href: '/calculators/markup-calculator' },
+            { name: 'Break-Even Calculator', href: '/calculators/break-even-calculator' },
+            { name: 'Influencer Earnings', href: '/calculators/creator-earnings-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Revenue ≠ profit</h3>
+          <p class="text-xs text-blue-800">The only number that matters is what you keep <em>per hour</em>. This calculator gets you there.</p>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-2">Worth-it check</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between"><span>Under $15/hr</span><span class="text-red-600 font-medium">Rethink</span></div>
+            <div class="flex justify-between"><span>$15–35/hr</span><span class="text-amber-600 font-medium">Decent</span></div>
+            <div class="flex justify-between"><span>$35/hr+</span><span class="text-green-700 font-medium">Scale it</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

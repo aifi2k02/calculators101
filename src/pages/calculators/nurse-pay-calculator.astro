@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const base = parseFloat(inputs.base) || 0
+  const regHours = parseFloat(inputs.reghours) || 0
+  const nightHours = parseFloat(inputs.nighthours) || 0
+  const nightDiff = parseFloat(inputs.nightdiff) || 0
+  const weekendHours = parseFloat(inputs.weekendhours) || 0
+  const weekendDiff = parseFloat(inputs.weekenddiff) || 0
+  const otHours = parseFloat(inputs.othours) || 0
+  if (base <= 0) throw new Error('Enter your base hourly rate.')
+  const totalHours = regHours + nightHours + weekendHours
+  const basePay = base * totalHours
+  const nightPay = nightHours * nightDiff
+  const weekendPay = weekendHours * weekendDiff
+  const otPay = otHours * base * 1.5
+  const weekly = basePay + nightPay + weekendPay + otPay
+  const annual = weekly * 52
+  const effectiveHourly = (totalHours + otHours) > 0 ? weekly / (totalHours + otHours) : 0
+  return {
+    value: '$' + Math.round(weekly).toLocaleString() + '/wk',
+    gaugeValue: Math.min(effectiveHourly, 100),
+    stats: [
+      { label: 'Weekly Pay', value: '$' + Math.round(weekly).toLocaleString() },
+      { label: 'Annual Pay', value: '$' + Math.round(annual).toLocaleString() },
+      { label: 'Effective Rate', value: '$' + effectiveHourly.toFixed(2) + '/hr' },
+      { label: 'Differential Pay', value: '$' + Math.round(nightPay + weekendPay).toLocaleString() }
+    ],
+    breakdown: [
+      'Base rate: $' + base.toFixed(2) + '/hr on ' + totalHours + ' hrs = $' + Math.round(basePay).toLocaleString(),
+      nightHours > 0 ? 'Night differential: ' + nightHours + ' hrs × $' + nightDiff.toFixed(2) + ' = $' + Math.round(nightPay).toLocaleString() : '',
+      weekendHours > 0 ? 'Weekend differential: ' + weekendHours + ' hrs × $' + weekendDiff.toFixed(2) + ' = $' + Math.round(weekendPay).toLocaleString() : '',
+      otHours > 0 ? 'Overtime (1.5×): ' + otHours + ' hrs = $' + Math.round(otPay).toLocaleString() : '',
+      '—',
+      'Weekly gross pay: $' + Math.round(weekly).toLocaleString(),
+      'Effective hourly (all in): $' + effectiveHourly.toFixed(2),
+      'Annual (× 52 weeks): $' + Math.round(annual).toLocaleString()
+    ].filter(Boolean),
+    share: {
+      kicker: 'My real nursing pay',
+      heroNumber: '$' + effectiveHourly.toFixed(2) + '/hr',
+      heroSub: 'effective rate with shift differentials',
+      hook: 'Base $' + base.toFixed(0) + '/hr plus night & weekend diffs = $' + Math.round(annual).toLocaleString() + '/year.',
+      chips: ['$' + Math.round(weekly).toLocaleString() + '/wk', '$' + Math.round(annual).toLocaleString() + '/yr', '+$' + Math.round(nightPay + weekendPay).toLocaleString() + ' diff']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '$/hr',
+  zones: [
+    { label: 'Entry', color: '#94a3b8', from: 0, to: 35 },
+    { label: 'Experienced', color: '#3b82f6', from: 35, to: 55 },
+    { label: 'Premium', color: '#22c55e', from: 55, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is shift differential pay for nurses?', answer: 'A shift differential is extra pay for working less desirable hours — nights, evenings, weekends, or holidays. It is added on top of your base hourly rate, either as a flat dollar amount per hour (for example $4–7/hr for nights) or as a percentage of base. It can add thousands of dollars a year for nurses who work off-shifts.' },
+  { question: 'How much is a typical night differential?', answer: 'Night-shift differentials commonly run $3–8 per hour, and weekend differentials $2–5 per hour, though they vary widely by employer, region, and specialty. Some hospitals use a percentage (10–20% of base) instead of a flat rate. Enter your own figures to see your real pay.' },
+  { question: 'How do I calculate my effective hourly rate?', answer: 'Add up your base pay, all differential pay, and any overtime, then divide by total hours worked. The result — your effective rate — is usually well above your base rate once night and weekend premiums are included. It is the true number to compare between jobs.' },
+  { question: 'Is overtime calculated on base pay or base plus differential?', answer: 'It depends on the employer and jurisdiction. Federal law bases overtime on the "regular rate," which can include differentials, but many facilities calculate it on base pay alone. This calculator uses 1.5× base for simplicity — check your specific policy for exact overtime figures.' },
+  { question: 'Do shift differentials count toward retirement or taxes?', answer: 'Yes — differential pay is regular taxable wages, subject to income and payroll taxes like the rest of your paycheck, and it typically counts toward retirement contributions and Social Security earnings. It is real income, not a bonus.' },
+]
+---
+<Layout
+  title="Nurse Pay Calculator: Shift Differential & Effective Hourly Rate"
+  description="Calculate your real nursing pay with night and weekend shift differentials and overtime. Free nurse pay calculator showing weekly, annual, and effective hourly rate."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Nurse Pay Calculator', href: '/calculators/nurse-pay-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Nurse Pay Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Nurse Pay Calculator"
+          description="Your real pay with night & weekend shift differentials and overtime"
+          formulaId="nurse-pay"
+          formulaFn={formulaFn}
+          resultLabel="Weekly Pay"
+          shareStyle="money"
+          inputs={[
+            { id: 'base', label: 'Base Hourly Rate', type: 'number', placeholder: '38', min: 0, step: 0.25, unit: '$', defaultValue: 38 },
+            { id: 'reghours', label: 'Regular (Day) Hours / Week', type: 'number', placeholder: '12', min: 0, max: 80, unit: 'hrs', defaultValue: 12 },
+            { id: 'nighthours', label: 'Night Shift Hours / Week', type: 'number', placeholder: '24', min: 0, max: 80, unit: 'hrs', defaultValue: 24 },
+            { id: 'nightdiff', label: 'Night Differential', type: 'number', placeholder: '5', min: 0, step: 0.25, unit: '$/hr', defaultValue: 5 },
+            { id: 'weekendhours', label: 'Weekend Hours / Week', type: 'number', placeholder: '0', min: 0, max: 80, unit: 'hrs', defaultValue: 0 },
+            { id: 'weekenddiff', label: 'Weekend Differential', type: 'number', placeholder: '3', min: 0, step: 0.25, unit: '$/hr', defaultValue: 3 },
+            { id: 'othours', label: 'Overtime Hours / Week', type: 'number', placeholder: '0', min: 0, max: 40, unit: 'hrs', defaultValue: 0 },
+          ]}
+          gauge={gauge}
+          intro="This nurse pay calculator reveals your real earnings once night and weekend shift differentials and overtime are added to your base rate. Enter your hours and differentials to see your weekly and annual pay, plus your effective hourly rate — the true number to compare between hospital jobs and offers."
+          disclaimer="Gross-pay estimate before taxes. Overtime is calculated at 1.5× base rate; your employer's policy may differ (some include differentials in the overtime rate). Differential amounts vary by facility — enter your own."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Overtime Calculator', href: '/calculators/overtime-calculator' },
+            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
+            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
+            { name: 'Time Card Calculator', href: '/calculators/time-card-calculator' },
+            { name: 'Pay Raise Calculator', href: '/calculators/pay-raise-calculator' },
+            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Typical differentials</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Night shift</span><span class="font-medium">$3–8/hr</span></div>
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Evening shift</span><span class="font-medium">$2–4/hr</span></div>
+            <div class="flex justify-between border-b border-blue-100 pb-1"><span>Weekend</span><span class="font-medium">$2–5/hr</span></div>
+            <div class="flex justify-between"><span>Overtime</span><span class="font-medium">1.5× base</span></div>
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Compare the effective rate</h3>
+          <p class="text-xs text-amber-800">Two jobs with the same base can pay very differently once differentials are counted.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
