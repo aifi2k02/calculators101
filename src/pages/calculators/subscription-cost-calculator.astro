@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const monthly = parseFloat(inputs.monthly) || 0
+  const count = Math.max(1, parseInt(inputs.count) || 1)
+  const retIn = parseFloat(inputs.return)
+  const ret = (isNaN(retIn) ? 7 : retIn) / 100
+  if (monthly <= 0) throw new Error('Enter your monthly subscription cost.')
+  const monthlyTotal = monthly * count
+  const annual = monthlyTotal * 12
+  const fiveYr = annual * 5
+  const tenYr = annual * 10
+  // Opportunity cost: future value of investing the monthly amount for 10 years
+  const r = ret / 12
+  const n = 120
+  const invested = r > 0 ? monthlyTotal * ((Math.pow(1 + r, n) - 1) / r) : tenYr
+  return {
+    value: '$' + Math.round(tenYr).toLocaleString() + ' / 10yr',
+    gaugeValue: Math.min(annual / 50, 100),
+    stats: [
+      { label: 'Per Month', value: '$' + Math.round(monthlyTotal).toLocaleString() },
+      { label: 'Per Year', value: '$' + Math.round(annual).toLocaleString() },
+      { label: '10-Year Cost', value: '$' + Math.round(tenYr).toLocaleString() },
+      { label: 'If Invested (7%)', value: '$' + Math.round(invested).toLocaleString() }
+    ],
+    breakdown: [
+      (count > 1 ? count + ' subscriptions at $' + monthly.toFixed(2) + ' = ' : 'Subscription: ') + '$' + monthlyTotal.toFixed(2) + '/month',
+      '—',
+      'Per year: $' + Math.round(annual).toLocaleString(),
+      'Over 5 years: $' + Math.round(fiveYr).toLocaleString(),
+      'Over 10 years: $' + Math.round(tenYr).toLocaleString(),
+      '—',
+      'If invested instead at ' + (ret * 100).toFixed(0) + '%/yr for 10 years: $' + Math.round(invested).toLocaleString(),
+      'That is $' + Math.round(invested - tenYr).toLocaleString() + ' of growth you give up by subscribing'
+    ],
+    share: {
+      kicker: 'What "just $' + monthly.toFixed(2) + '" really costs',
+      heroNumber: '$' + Math.round(tenYr).toLocaleString(),
+      heroSub: 'over 10 years' + (count > 1 ? ' for ' + count + ' subscriptions' : ''),
+      hook: 'That "small" $' + Math.round(monthlyTotal).toLocaleString() + '/mo is $' + Math.round(annual).toLocaleString() + ' a year quietly leaving your account.',
+      chips: ['$' + Math.round(monthlyTotal).toLocaleString() + ' / month', '$' + Math.round(annual).toLocaleString() + ' / year', '$' + Math.round(invested).toLocaleString() + ' if invested']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Modest', color: '#22c55e', from: 0, to: 30 },
+    { label: 'Adds up', color: '#f59e0b', from: 30, to: 70 },
+    { label: 'Big leak', color: '#ef4444', from: 70, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How much do subscriptions really cost over time?', answer: 'Multiply the monthly price by 12 for the yearly cost, then by the number of years. A $14.99/month subscription is $180 a year, $900 over five years, and about $1,800 over a decade. Small monthly charges add up to large lifetime totals.' },
+  { question: 'How much does the average person spend on subscriptions?', answer: 'Surveys consistently find that people underestimate their subscription spending by a wide margin — often believing they spend around $80–90 a month while actually spending over $200. Streaming, apps, cloud storage, memberships, and auto-renewing services stack up quietly.' },
+  { question: 'What is the opportunity cost of a subscription?', answer: 'It is what that money could have grown to if invested instead. This calculator shows the future value of investing your subscription payments for 10 years at a 7% average return. Because of compounding, the invested figure is meaningfully higher than the raw cost.' },
+  { question: 'How do I cut subscription costs?', answer: 'Audit every recurring charge on your statements, cancel anything you have not used in 30 days, switch annual plans (usually 15–20% cheaper), share family plans, and rotate streaming services instead of paying for all of them at once. Even trimming $30/month saves $360 a year.' },
+  { question: 'Are annual plans cheaper than monthly?', answer: 'Almost always — annual billing typically saves 15–20% versus paying month to month. The trade-off is committing upfront, so only prepay for services you are certain you will keep for the full year.' },
+]
+---
+<Layout
+  title="Subscription Cost Calculator: What You Really Pay Over Time"
+  description="See the true lifetime cost of your subscriptions — per year, over 10 years, and what that money could have grown to if invested. Free subscription cost calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Subscription Cost Calculator', href: '/calculators/subscription-cost-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Subscription Cost Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Subscription Cost Calculator"
+          description="The real lifetime cost of your subscriptions — and what investing it instead would grow to"
+          formulaId="subscription-cost"
+          formulaFn={formulaFn}
+          resultLabel="10-Year True Cost"
+          shareStyle="viral"
+          inputs={[
+            { id: 'monthly', label: 'Monthly Cost (per subscription)', type: 'number', placeholder: '14.99', min: 0, step: 0.01, unit: '$', defaultValue: 14.99 },
+            { id: 'count', label: 'Number of Subscriptions', type: 'number', placeholder: '1', min: 1, max: 100, unit: 'subs', defaultValue: 1 },
+            { id: 'return', label: 'Investment Return (for opportunity cost)', type: 'number', placeholder: '7', min: 0, max: 20, step: 0.1, unit: '%', defaultValue: 7 },
+          ]}
+          gauge={gauge}
+          intro="This subscription cost calculator reveals the true lifetime cost of a recurring charge. A subscription that feels like 'just $14.99 a month' is $180 a year, $900 over five years, and about $1,800 over a decade. It also shows what that money could have grown to if invested instead — the real opportunity cost."
+          disclaimer="The invested figure assumes a constant annual return (default 7%) compounded monthly for 10 years; actual returns vary. This is an illustration of opportunity cost, not investment advice."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
+            { name: 'Compound Interest', href: '/calculators/compound-interest-calculator' },
+            { name: 'Savings Calculator', href: '/calculators/savings-calculator' },
+            { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
+            { name: 'Inflation Calculator', href: '/calculators/inflation-calculator' },
+            { name: 'Emergency Fund', href: '/calculators/emergency-fund-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-5">
+          <h3 class="font-bold text-purple-900 mb-3">"Just $14.99" over time</h3>
+          <table class="w-full text-xs text-purple-800">
+            <thead><tr class="text-purple-500"><th class="text-left pb-1">Period</th><th class="text-right pb-1">Total</th></tr></thead>
+            <tbody>
+              {[['1 year','$180'],['5 years','$899'],['10 years','$1,799'],['If invested','$2,594']].map(([p,v]) => (
+                <tr class="border-t border-purple-100"><td class="py-1 font-medium">{p}</td><td class="py-1 text-right">{v}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">The awareness gap</h3>
+          <p class="text-xs text-amber-800">Most people think they spend ~$86/mo on subscriptions but actually spend ~$219 — a $1,600/yr blind spot.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

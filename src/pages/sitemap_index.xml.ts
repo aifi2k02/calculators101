@@ -181,6 +181,9 @@ const pages = [
   { url: '/calculators/cost-of-living-raise-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/bonus-tax-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/commission-calculator', priority: '0.8', changefreq: 'monthly' },
+  // Phase 2 — Cluster 3: Viral
+  { url: '/calculators/subscription-cost-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/screen-time-calculator', priority: '0.85', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

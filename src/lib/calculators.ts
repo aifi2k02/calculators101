@@ -252,6 +252,8 @@ export const categories: Category[] = [
       { name: 'Mulch Calculator', href: '/calculators/mulch-calculator', description: 'Cubic yards and bags of mulch for any bed', icon: '🌱', live: true },
       { name: 'Carbon Footprint Calculator', href: '/calculators/carbon-footprint-calculator', description: 'Estimate your annual CO₂ emissions in tons', icon: '🌍', live: true },
       { name: 'Pizza Calculator', href: '/calculators/pizza-calculator', description: 'How many pizzas to order for any party size', icon: '🍕', live: true },
+      { name: 'Subscription Cost Calculator', href: '/calculators/subscription-cost-calculator', description: 'The true lifetime cost of your subscriptions', icon: '💸', live: true },
+      { name: 'Screen Time Calculator', href: '/calculators/screen-time-calculator', description: 'How many years of your life you spend on screens', icon: '📱', live: true },
     ],
   },
 ]

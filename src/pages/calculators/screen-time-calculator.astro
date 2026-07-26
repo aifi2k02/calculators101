@@ -1,0 +1,126 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const hours = parseFloat(inputs.hours) || 0
+  const age = Math.max(0, parseInt(inputs.age) || 0)
+  const lifeExp = Math.max(age + 1, parseInt(inputs.life) || 80)
+  if (hours <= 0) throw new Error('Enter your average daily screen time.')
+  if (hours > 24) throw new Error('Screen time cannot exceed 24 hours a day.')
+  const remainingYears = lifeExp - age
+  const hrsPerWeek = hours * 7
+  const daysPerYear = hours * 365 / 24
+  const screenYearsRemaining = hours * remainingYears / 24
+  const wakingPct = Math.min(100, hours / 16 * 100)
+  return {
+    value: screenYearsRemaining.toFixed(1) + ' years',
+    gaugeValue: Math.min(wakingPct, 100),
+    stats: [
+      { label: 'Hours / Week', value: hrsPerWeek.toFixed(0) },
+      { label: 'Days / Year', value: daysPerYear.toFixed(0) },
+      { label: 'Years (rest of life)', value: screenYearsRemaining.toFixed(1) },
+      { label: '% of Waking Life', value: wakingPct.toFixed(0) + '%' }
+    ],
+    breakdown: [
+      'Daily screen time: ' + hours + ' hours',
+      'Current age: ' + age + ', life expectancy: ' + lifeExp,
+      '—',
+      'Per week: ' + hrsPerWeek.toFixed(0) + ' hours',
+      'Per year: ' + daysPerYear.toFixed(0) + ' full days (24h)',
+      'Over your remaining ' + remainingYears + ' years: ' + screenYearsRemaining.toFixed(1) + ' years of 24-hour days',
+      '—',
+      'That is about ' + wakingPct.toFixed(0) + '% of your waking hours (assuming 16 waking hours/day)'
+    ],
+    share: {
+      kicker: 'At ' + hours + ' hrs/day of screen time',
+      heroNumber: screenYearsRemaining.toFixed(1) + ' years',
+      heroSub: 'of the rest of your life will be spent looking at screens',
+      hook: "That's " + daysPerYear.toFixed(0) + ' full days every year — about ' + wakingPct.toFixed(0) + '% of your waking time.',
+      chips: [hrsPerWeek.toFixed(0) + ' hrs/week', daysPerYear.toFixed(0) + ' days/year', screenYearsRemaining.toFixed(1) + ' yrs of life']
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '% waking',
+  zones: [
+    { label: 'Light', color: '#22c55e', from: 0, to: 25 },
+    { label: 'Average', color: '#3b82f6', from: 25, to: 45 },
+    { label: 'Heavy', color: '#f59e0b', from: 45, to: 65 },
+    { label: 'Extreme', color: '#ef4444', from: 65, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How much of my life will I spend looking at screens?', answer: 'Multiply your daily screen hours by your remaining years, then divide by 24 to convert to full days. At 7 hours a day over 55 remaining years, that is about 16 years of 24-hour days — a large share of your waking life. This calculator does the math for you.' },
+  { question: 'How much screen time is average?', answer: 'The average adult spends around 7 hours a day looking at screens across phones, computers, and TVs — more waking time than many people spend on anything except work and sleep. Heavy users routinely exceed 9–10 hours a day.' },
+  { question: 'How is the "years of your life" figure calculated?', answer: 'It totals your daily screen hours across your remaining years of life and expresses that as equivalent 24-hour days. It is a way to visualize cumulative time — you are not literally awake for all of it, so the calculator also shows the percentage of your waking hours it represents.' },
+  { question: 'How much screen time is healthy?', answer: 'Experts generally suggest limiting recreational (non-work) screen time to under 2 hours a day for adults, and much less for children. Quality matters too — active, intentional use is different from passive endless scrolling.' },
+  { question: 'How do I reduce my screen time?', answer: 'Set app timers, turn off non-essential notifications, keep your phone out of the bedroom, use grayscale mode, and schedule screen-free blocks. Tracking your usage — as this calculator helps you visualize — is often the wake-up call that drives change.' },
+]
+---
+<Layout
+  title="Screen Time Calculator: Years of Your Life on Screens"
+  description="See how much of your life you'll spend looking at screens — days per year and years of your life. Free screen time calculator that reframes your daily hours."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Screen Time Calculator', href: '/calculators/screen-time-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Screen Time Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Screen Time Calculator"
+          description="How much of your life your daily screen hours add up to"
+          formulaId="screen-time"
+          formulaFn={formulaFn}
+          resultLabel="Years of Life on Screens"
+          shareStyle="time"
+          inputs={[
+            { id: 'hours', label: 'Daily Screen Time', type: 'number', placeholder: '7', min: 0, max: 24, step: 0.5, unit: 'hrs', defaultValue: 7 },
+            { id: 'age', label: 'Your Age', type: 'number', placeholder: '25', min: 0, max: 100, unit: 'yrs', defaultValue: 25 },
+            { id: 'life', label: 'Life Expectancy', type: 'number', placeholder: '80', min: 1, max: 120, unit: 'yrs', defaultValue: 80 },
+          ]}
+          gauge={gauge}
+          intro="This screen time calculator reframes your daily hours into the big picture: how many days per year and years of your life you spend looking at screens. Enter your average daily screen time to see the cumulative total across the rest of your life — a number that often surprises people."
+          disclaimer="A cumulative time visualization based on a constant daily average and your life expectancy. It expresses total hours as equivalent 24-hour days — you are not awake for all of it, so the waking-hours percentage is also shown."
+          lastUpdated="2026-07-25"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Sleep Calculator', href: '/calculators/sleep-calculator' },
+            { name: 'Age Calculator', href: '/calculators/age-calculator' },
+            { name: 'Time Calculator', href: '/calculators/time-calculator' },
+            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
+            { name: 'Subscription Cost', href: '/calculators/subscription-cost-calculator' },
+            { name: 'Date Calculator', href: '/calculators/date-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Screen hours → days/year</h3>
+          <table class="w-full text-xs text-blue-800">
+            <thead><tr class="text-blue-500"><th class="text-left pb-1">Per day</th><th class="text-right pb-1">Days/year</th></tr></thead>
+            <tbody>
+              {[['2 hrs','30 days'],['4 hrs','61 days'],['7 hrs','106 days'],['10 hrs','152 days']].map(([h,d]) => (
+                <tr class="border-t border-blue-100"><td class="py-1 font-medium">{h}</td><td class="py-1 text-right">{d}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+          <h3 class="font-semibold text-gray-900 text-sm mb-1">The average is ~7 hrs</h3>
+          <p class="text-xs text-gray-600">That's more waking time than most people spend on anything but work.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
