@@ -265,6 +265,8 @@ export const categories: Category[] = [
       { name: 'Day of the Week Calculator', href: '/calculators/day-of-week-calculator', description: 'What day of the week any date falls on', icon: '🗓️', live: true },
       { name: 'Week Number Calculator', href: '/calculators/week-number-calculator', description: 'The ISO week number for any date', icon: '📅', live: true },
       { name: 'Time Zone Converter', href: '/calculators/time-zone-converter', description: 'Convert time between world time zones, DST-accurate', icon: '🌐', live: true },
+      { name: 'Sunrise & Sunset Calculator', href: '/calculators/sunrise-sunset-calculator', description: 'Sunrise, sunset, and day length for any location', icon: '🌅', live: true },
+      { name: 'Moon Phase Calculator', href: '/calculators/moon-phase-calculator', description: 'Moon phase, illumination, and next full moon', icon: '🌙', live: true },
     ],
   },
 ]

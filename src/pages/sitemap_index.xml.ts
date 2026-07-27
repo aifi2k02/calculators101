@@ -197,6 +197,9 @@ const pages = [
   { url: '/calculators/day-of-week-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/week-number-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/time-zone-converter', priority: '0.85', changefreq: 'monthly' },
+  // Astronomy
+  { url: '/calculators/sunrise-sunset-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/moon-phase-calculator', priority: '0.85', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

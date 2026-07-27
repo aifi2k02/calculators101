@@ -1,0 +1,153 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const lat = parseFloat(inputs.lat)
+  const lng = parseFloat(inputs.lng)
+  const dStr = inputs.date
+  const offset = parseFloat(inputs.offset) || 0
+  if (isNaN(lat) || lat < -90 || lat > 90) throw new Error('Enter a latitude between -90 and 90.')
+  if (isNaN(lng) || lng < -180 || lng > 180) throw new Error('Enter a longitude between -180 and 180.')
+  if (!dStr) throw new Error('Pick a date.')
+  const d = new Date(dStr + 'T00:00:00Z')
+  if (isNaN(d.getTime())) throw new Error('Enter a valid date.')
+  const rad = Math.PI / 180
+  let Y = d.getUTCFullYear(), M = d.getUTCMonth() + 1, D = d.getUTCDate()
+  let yy = Y, mm = M
+  if (mm <= 2) { yy -= 1; mm += 12 }
+  const A = Math.floor(yy / 100), B = 2 - A + Math.floor(A / 4)
+  const JD = Math.floor(365.25 * (yy + 4716)) + Math.floor(30.6001 * (mm + 1)) + D + B - 1524.5
+  const T = (JD - 2451545.0) / 36525.0
+  const L0 = ((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360 + 360) % 360
+  const Mn = 357.52911 + T * (35999.05029 - 0.0001537 * T)
+  const e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T)
+  const Mr = Mn * rad
+  const C = Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) + Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) + Math.sin(3 * Mr) * 0.000289
+  const trueLong = L0 + C
+  const omega = 125.04 - 1934.136 * T
+  const lambda = trueLong - 0.00569 - 0.00478 * Math.sin(omega * rad)
+  const eps0 = 23 + (26 + ((21.448 - T * (46.815 + T * (0.00059 - T * 0.001813)))) / 60) / 60
+  const eps = eps0 + 0.00256 * Math.cos(omega * rad)
+  const decl = Math.asin(Math.sin(eps * rad) * Math.sin(lambda * rad)) / rad
+  const yv = Math.tan(eps / 2 * rad) * Math.tan(eps / 2 * rad)
+  const eqTime = 4 * (yv * Math.sin(2 * L0 * rad) - 2 * e * Math.sin(Mr) + 4 * e * yv * Math.sin(Mr) * Math.cos(2 * L0 * rad) - 0.5 * yv * yv * Math.sin(4 * L0 * rad) - 1.25 * e * e * Math.sin(2 * Mr)) / rad
+  const zenith = 90.833
+  const cosH = (Math.cos(zenith * rad) / (Math.cos(lat * rad) * Math.cos(decl * rad)) - Math.tan(lat * rad) * Math.tan(decl * rad))
+  const solarNoon = 720 - 4 * lng - eqTime
+  function fmt(min) {
+    let m = ((min + offset * 60) % 1440 + 1440) % 1440
+    let h = Math.floor(m / 60), mi = Math.round(m % 60)
+    if (mi === 60) { mi = 0; h = (h + 1) % 24 }
+    const ap = h < 12 ? 'AM' : 'PM'; let hh = h % 12; if (hh === 0) hh = 12
+    return hh + ':' + String(mi).padStart(2, '0') + ' ' + ap
+  }
+  if (cosH > 1) {
+    return { value: 'Polar night', stats: [{ label: 'Sun', value: 'Never rises' }, { label: 'Solar Noon', value: fmt(solarNoon) }], breakdown: ['At this latitude on this date, the sun stays below the horizon all day (polar night).'] }
+  }
+  if (cosH < -1) {
+    return { value: 'Midnight sun', stats: [{ label: 'Sun', value: 'Never sets' }, { label: 'Solar Noon', value: fmt(solarNoon) }], breakdown: ['At this latitude on this date, the sun stays above the horizon all day (midnight sun).'] }
+  }
+  const H = Math.acos(cosH) / rad
+  const sunrise = solarNoon - 4 * H
+  const sunset = solarNoon + 4 * H
+  const dayMin = 8 * H
+  const dayLen = Math.floor(dayMin / 60) + 'h ' + Math.round(dayMin % 60) + 'm'
+  return {
+    value: fmt(sunrise) + ' / ' + fmt(sunset),
+    stats: [
+      { label: 'Sunrise', value: fmt(sunrise) },
+      { label: 'Sunset', value: fmt(sunset) },
+      { label: 'Day Length', value: dayLen },
+      { label: 'Solar Noon', value: fmt(solarNoon) }
+    ],
+    breakdown: [
+      'Location: ' + lat.toFixed(4) + '°, ' + lng.toFixed(4) + '°',
+      'Date: ' + d.toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' }),
+      'Times shown for UTC' + (offset >= 0 ? '+' : '') + offset,
+      '—',
+      'Sunrise: ' + fmt(sunrise),
+      'Solar noon: ' + fmt(solarNoon) + ' (sun highest)',
+      'Sunset: ' + fmt(sunset),
+      'Day length: ' + dayLen,
+      'Sun declination: ' + decl.toFixed(2) + '°'
+    ],
+    share: {
+      kicker: 'Sunrise & sunset',
+      heroNumber: fmt(sunrise),
+      heroSub: 'sunrise — sunset at ' + fmt(sunset),
+      hook: 'A ' + dayLen + ' day at ' + lat.toFixed(2) + '°, ' + lng.toFixed(2) + '°.',
+      chips: ['Rise ' + fmt(sunrise), 'Set ' + fmt(sunset), dayLen]
+    }
+  }
+`
+
+const faqs = [
+  { question: 'How does the sunrise and sunset calculator work?', answer: 'It uses the NOAA solar position algorithm to compute the sun\'s exact position for your latitude, longitude, and date, then finds the moments the sun crosses the horizon (accounting for atmospheric refraction and the sun\'s radius). The result is accurate to about a minute for most locations.' },
+  { question: 'What latitude and longitude do I enter?', answer: 'Enter the coordinates of your location in decimal degrees — positive for north and east, negative for south and west. For example, New York is 40.71, −74.01 and Sydney is −33.87, 151.21. You can find any place\'s coordinates by searching it on a map.' },
+  { question: 'Why do I need to set a UTC offset?', answer: 'The calculation produces times in Universal Time; the UTC offset converts them to the local clock at your location. Enter your standard offset (e.g. −5 for US Eastern, +1 for Central Europe) and add 1 if daylight saving time is in effect on that date.' },
+  { question: 'What is solar noon?', answer: 'Solar noon is the moment the sun is highest in the sky and due south (in the Northern Hemisphere) — the midpoint between sunrise and sunset. It rarely matches 12:00 on the clock because of your position within your time zone and the equation of time.' },
+  { question: 'What are polar night and midnight sun?', answer: 'Near the poles, the sun can stay below the horizon for a full day (polar night) in winter, or above it for a full day (midnight sun) in summer. When that happens, the calculator reports it instead of a rise or set time.' },
+]
+---
+<Layout
+  title="Sunrise & Sunset Calculator: Times for Any Location"
+  description="Calculate sunrise, sunset, solar noon, and day length for any latitude, longitude, and date using the NOAA solar algorithm. Free, accurate sunrise sunset calculator."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Sunrise & Sunset Calculator', href: '/calculators/sunrise-sunset-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Sunrise &amp; Sunset Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Sunrise & Sunset Calculator"
+          description="Sunrise, sunset, solar noon & day length for any location (NOAA algorithm)"
+          formulaId="sunrise-sunset"
+          formulaFn={formulaFn}
+          resultLabel="Sunrise / Sunset"
+          shareStyle="time"
+          inputs={[
+            { id: 'lat', label: 'Latitude (° N+ / S−)', type: 'number', placeholder: '40.71', min: -90, max: 90, step: 0.0001, unit: '°', defaultValue: 40.71 },
+            { id: 'lng', label: 'Longitude (° E+ / W−)', type: 'number', placeholder: '-74.01', min: -180, max: 180, step: 0.0001, unit: '°', defaultValue: -74.01 },
+            { id: 'date', label: 'Date', type: 'date', defaultValue: '2026-06-21' },
+            { id: 'offset', label: 'UTC Offset (hours; +1 for DST)', type: 'number', placeholder: '-5', min: -14, max: 14, step: 0.5, unit: 'h', defaultValue: -5 },
+          ]}
+          intro="This sunrise and sunset calculator uses the NOAA solar algorithm to find the sunrise, sunset, solar noon, and day length for any latitude, longitude, and date — accurate to about a minute. Enter your coordinates and UTC offset to see the sun's schedule anywhere on Earth."
+          disclaimer="Accurate to ~1 minute using the NOAA equations at sea level. Enter coordinates in decimal degrees and your UTC offset (add 1 hour if daylight saving time applies on that date). High altitude and local terrain can shift real observed times slightly."
+          lastUpdated="2026-07-26"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Moon Phase Calculator', href: '/calculators/moon-phase-calculator' },
+            { name: 'Time Zone Converter', href: '/calculators/time-zone-converter' },
+            { name: 'Day of the Week', href: '/calculators/day-of-week-calculator' },
+            { name: 'Date Calculator', href: '/calculators/date-calculator' },
+            { name: 'Time Calculator', href: '/calculators/time-calculator' },
+            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Example coordinates</h3>
+          <div class="space-y-2 text-xs text-blue-800">
+            {[['New York','40.71, −74.01'],['London','51.51, −0.13'],['Tokyo','35.68, 139.65'],['Sydney','−33.87, 151.21'],['Dubai','25.20, 55.27']].map(([c,v]) => (
+              <div class="flex justify-between border-b border-blue-100 pb-1"><span>{c}</span><span class="font-mono">{v}</span></div>
+            ))}
+          </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-semibold text-amber-900 text-sm mb-1">Daylight saving</h3>
+          <p class="text-xs text-amber-800">Add 1 hour to your UTC offset when DST is active (e.g. New York is −5 in winter, −4 in summer).</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
