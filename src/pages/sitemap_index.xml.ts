@@ -192,6 +192,11 @@ const pages = [
   { url: '/calculators/coast-fire-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/nurse-pay-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/hash-calculator', priority: '0.8', changefreq: 'monthly' },
+  // Date & Time batch (gap-fill vs timeanddate.com)
+  { url: '/calculators/business-days-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/day-of-week-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/week-number-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/time-zone-converter', priority: '0.85', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

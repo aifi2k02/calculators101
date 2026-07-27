@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const startStr = inputs.start
+  const endStr = inputs.end
+  const holidays = parseInt(inputs.holidays) || 0
+  if (!startStr || !endStr) throw new Error('Enter both a start and end date.')
+  const oneDay = 86400000
+  let a = new Date(startStr + 'T00:00:00')
+  let b = new Date(endStr + 'T00:00:00')
+  if (isNaN(a.getTime()) || isNaN(b.getTime())) throw new Error('Enter valid dates.')
+  if (b < a) { const t = a; a = b; b = t }
+  const total = Math.round((b - a) / oneDay) + 1
+  const fullWeeks = Math.floor(total / 7)
+  let bdays = fullWeeks * 5
+  const rem = total % 7
+  const dow = a.getDay()
+  for (let i = 0; i < rem; i++) { const dd = (dow + i) % 7; if (dd !== 0 && dd !== 6) bdays++ }
+  const weekendDays = total - bdays
+  const businessDays = Math.max(0, bdays - holidays)
+  const fmt = (d) => d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
+  return {
+    value: businessDays.toLocaleString() + ' business days',
+    stats: [
+      { label: 'Business Days', value: businessDays.toLocaleString() },
+      { label: 'Total Days', value: total.toLocaleString() },
+      { label: 'Weekend Days', value: weekendDays.toLocaleString() },
+      { label: 'Weeks', value: (total / 7).toFixed(1) }
+    ],
+    breakdown: [
+      'From: ' + fmt(a),
+      'To: ' + fmt(b) + ' (inclusive)',
+      '—',
+      'Total calendar days: ' + total.toLocaleString(),
+      'Weekdays (Mon–Fri): ' + bdays.toLocaleString(),
+      'Weekend days (Sat/Sun): ' + weekendDays.toLocaleString(),
+      holidays > 0 ? 'Holidays excluded: ' + holidays : '',
+      '—',
+      'Business days: ' + businessDays.toLocaleString()
+    ].filter(Boolean),
+    share: {
+      kicker: 'Business days',
+      heroNumber: businessDays.toLocaleString(),
+      heroSub: 'business days between the two dates',
+      hook: 'Out of ' + total.toLocaleString() + ' calendar days, ' + weekendDays.toLocaleString() + ' fall on weekends' + (holidays > 0 ? ' and ' + holidays + ' are holidays.' : '.'),
+      chips: [businessDays.toLocaleString() + ' business', total.toLocaleString() + ' calendar', weekendDays.toLocaleString() + ' weekend']
+    }
+  }
+`
+
+const faqs = [
+  { question: 'What are business days?', answer: 'Business days are the weekdays Monday through Friday, when most offices, banks, and government agencies are open. Saturdays, Sundays, and public holidays are not business days. This calculator counts the weekdays between two dates and lets you subtract holidays.' },
+  { question: 'How do I count business days between two dates?', answer: 'Count every day from the start date to the end date, then remove Saturdays and Sundays. This calculator does it instantly, including both the start and end date, and lets you subtract the number of public holidays that fall in the range.' },
+  { question: 'Does this include the start and end date?', answer: 'Yes — the calculation is inclusive of both the start and end dates. For example, Monday to Friday of the same week counts as 5 business days.' },
+  { question: 'How do I exclude holidays?', answer: 'Enter the number of public holidays that fall on weekdays within your date range in the "Holidays" field, and the calculator subtracts them from the business-day total. Holiday dates vary by country and state, so count the ones that apply to you.' },
+  { question: 'Why do businesses use business days?', answer: 'Shipping estimates, payment processing, legal deadlines, and service-level agreements are usually measured in business days because work does not happen on weekends and holidays. "5 business days" can span a full calendar week or more depending on when it starts.' },
+]
+---
+<Layout
+  title="Business Days Calculator: Working Days Between Two Dates"
+  description="Count the business (working) days between two dates, excluding weekends and holidays. Free business days calculator with total, weekend, and week breakdown."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Business Days Calculator', href: '/calculators/business-days-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Business Days Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Business Days Calculator"
+          description="Working days between two dates, excluding weekends and holidays"
+          formulaId="business-days"
+          formulaFn={formulaFn}
+          resultLabel="Business Days"
+          shareStyle="time"
+          inputs={[
+            { id: 'start', label: 'Start Date', type: 'date', defaultValue: '2026-01-01' },
+            { id: 'end', label: 'End Date', type: 'date', defaultValue: '2026-06-30' },
+            { id: 'holidays', label: 'Holidays to Exclude (optional)', type: 'number', placeholder: '0', min: 0, max: 260, unit: 'days', defaultValue: 0 },
+          ]}
+          intro="This business days calculator counts the working days (Monday to Friday) between two dates, automatically excluding weekends. Add the number of public holidays in your range to get the exact business-day count — useful for shipping estimates, deadlines, payroll, and service-level agreements."
+          disclaimer="Counts weekdays inclusive of the start and end date. Public holidays vary by country and state — enter the number that applies to you to exclude them."
+          lastUpdated="2026-07-26"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Date Calculator', href: '/calculators/date-calculator' },
+            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
+            { name: 'Day of the Week', href: '/calculators/day-of-week-calculator' },
+            { name: 'Week Number', href: '/calculators/week-number-calculator' },
+            { name: 'Age Calculator', href: '/calculators/age-calculator' },
+            { name: 'Time Calculator', href: '/calculators/time-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Business days ≠ calendar days</h3>
+          <p class="text-xs text-blue-800">"5 business days" from a Wednesday lands on the next Wednesday — a full calendar week later.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-3">Business days per period</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>1 week</span><span>5 days</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>1 month (avg)</span><span>~21–22 days</span></div>
+            <div class="flex justify-between"><span>1 year</span><span>~260 days</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

@@ -261,6 +261,10 @@ export const categories: Category[] = [
       { name: 'Subscription Cost Calculator', href: '/calculators/subscription-cost-calculator', description: 'The true lifetime cost of your subscriptions', icon: '💸', live: true },
       { name: 'Screen Time Calculator', href: '/calculators/screen-time-calculator', description: 'How many years of your life you spend on screens', icon: '📱', live: true },
       { name: 'Hash Calculator', href: '/calculators/hash-calculator', description: 'Generate MD5, SHA-1, SHA-256 & SHA-512 hashes from text', icon: '🔐', live: true },
+      { name: 'Business Days Calculator', href: '/calculators/business-days-calculator', description: 'Working days between two dates, excluding weekends', icon: '📆', live: true },
+      { name: 'Day of the Week Calculator', href: '/calculators/day-of-week-calculator', description: 'What day of the week any date falls on', icon: '🗓️', live: true },
+      { name: 'Week Number Calculator', href: '/calculators/week-number-calculator', description: 'The ISO week number for any date', icon: '📅', live: true },
+      { name: 'Time Zone Converter', href: '/calculators/time-zone-converter', description: 'Convert time between world time zones, DST-accurate', icon: '🌐', live: true },
     ],
   },
 ]

@@ -1,0 +1,104 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const dStr = inputs.date
+  if (!dStr) throw new Error('Enter a date.')
+  const d = new Date(dStr + 'T00:00:00')
+  if (isNaN(d.getTime())) throw new Error('Enter a valid date.')
+  const names = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+  const dayName = names[d.getDay()]
+  const isWeekend = d.getDay() === 0 || d.getDay() === 6
+  const yearStart = new Date(d.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((d - yearStart) / 86400000)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const diff = Math.round((d - today) / 86400000)
+  const rel = diff === 0 ? 'today' : diff > 0 ? diff.toLocaleString() + ' days from now' : Math.abs(diff).toLocaleString() + ' days ago'
+  return {
+    value: dayName,
+    stats: [
+      { label: 'Day of Week', value: dayName },
+      { label: 'Weekend?', value: isWeekend ? 'Yes' : 'No' },
+      { label: 'Day of Year', value: dayOfYear + ' of ' + (((d.getFullYear() % 4 === 0 && d.getFullYear() % 100 !== 0) || d.getFullYear() % 400 === 0) ? 366 : 365) },
+      { label: 'From Today', value: diff === 0 ? 'Today' : (diff > 0 ? '+' : '') + diff.toLocaleString() + 'd' }
+    ],
+    breakdown: [
+      'Date: ' + d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      'Day of the week: ' + dayName,
+      isWeekend ? 'This is a weekend.' : 'This is a weekday.',
+      'Day ' + dayOfYear + ' of the year',
+      'That is ' + rel
+    ],
+    share: {
+      kicker: 'That date is a',
+      heroNumber: dayName,
+      heroSub: d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      hook: 'It was ' + rel + ' — day ' + dayOfYear + ' of the year.',
+      chips: [dayName, isWeekend ? 'Weekend' : 'Weekday', 'Day ' + dayOfYear]
+    }
+  }
+`
+
+const faqs = [
+  { question: 'How do I find what day of the week a date falls on?', answer: 'Enter any date — past or future — and this calculator instantly tells you the day of the week. It works for your birthday, a historical event, a future deadline, or any date you are curious about, using the standard Gregorian calendar.' },
+  { question: 'What day of the week was I born?', answer: 'Enter your date of birth and the calculator returns the exact weekday you were born on, plus whether it was a weekend and which day of the year it was. Many people are surprised to learn they were born on a weekend.' },
+  { question: 'Is this accurate for old and future dates?', answer: 'Yes, for dates in the Gregorian calendar (used worldwide since 1582, and in most English-speaking countries since 1752). It correctly handles leap years, so weekdays for dates decades in the past or future are accurate.' },
+  { question: 'What is the day of the year?', answer: 'It is the count of days from January 1 to your date — January 1 is day 1 and December 31 is day 365 (or 366 in a leap year). It is handy for scheduling, data logging, and understanding how far into the year a date falls.' },
+  { question: 'How is the weekday actually calculated?', answer: 'Calendars follow a fixed 7-day cycle, so the weekday of any date can be computed from the number of days since a known reference date, accounting for leap years. This tool uses your device\'s built-in date engine, which implements those rules precisely.' },
+]
+---
+<Layout
+  title="Day of the Week Calculator: What Day Was Any Date?"
+  description="Find what day of the week any date falls on — past or future. Discover the weekday you were born on. Free day of the week calculator with day-of-year."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Day of the Week Calculator', href: '/calculators/day-of-week-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Day of the Week Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Day of the Week Calculator"
+          description="What day of the week any date falls on — past or future"
+          formulaId="day-of-week"
+          formulaFn={formulaFn}
+          resultLabel="Day of the Week"
+          shareStyle="time"
+          inputs={[
+            { id: 'date', label: 'Pick a Date', type: 'date', defaultValue: '2000-01-01' },
+          ]}
+          intro="This day of the week calculator tells you which weekday any date falls on — your birthday, a wedding, a historical event, or a future deadline. Just pick a date and it instantly shows the day of the week, whether it is a weekend, and which day of the year it is."
+          disclaimer="Uses the standard Gregorian calendar with correct leap-year handling. Weekdays are accurate for dates from 1583 onward in regions using the Gregorian system."
+          lastUpdated="2026-07-26"
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Age Calculator', href: '/calculators/age-calculator' },
+            { name: 'Date Calculator', href: '/calculators/date-calculator' },
+            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
+            { name: 'Week Number', href: '/calculators/week-number-calculator' },
+            { name: 'Business Days', href: '/calculators/business-days-calculator' },
+            { name: 'Zodiac Calculator', href: '/calculators/zodiac-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">"What day was I born?"</h3>
+          <p class="text-xs text-blue-800">Enter your birth date to find your birth weekday — and whether you're a weekend baby.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-900 text-sm mb-2">Doomsday fun fact</h3>
+          <p class="text-xs text-gray-600">The 4th of the 4th, 6th of the 6th, 8/8, 10/10 and 12/12 always fall on the same weekday in any given year.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
