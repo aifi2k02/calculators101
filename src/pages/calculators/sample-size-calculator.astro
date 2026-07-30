@@ -1,0 +1,106 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const level = inputs.level || '95'
+  const moe = parseFloat(inputs.moe)
+  const p = parseFloat(inputs.p)
+  const N = inputs.pop === '' || inputs.pop == null ? null : parseFloat(inputs.pop)
+  if (isNaN(moe) || moe <= 0 || moe >= 50) throw new Error('Enter a margin of error between 0 and 50%.')
+  if (isNaN(p) || p < 0 || p > 100) throw new Error('Enter an expected proportion between 0 and 100%.')
+  const Z = { '80': 1.2816, '85': 1.4395, '90': 1.6449, '95': 1.9600, '98': 2.3263, '99': 2.5758, '99.9': 3.2905 }
+  const z = Z[level]
+  const e = moe / 100
+  const pr = p / 100
+  const n0 = (z * z * pr * (1 - pr)) / (e * e)
+  let n = n0
+  let note = 'Infinite / very large population assumed.'
+  if (N && N > 0) {
+    n = n0 / (1 + (n0 - 1) / N)
+    note = 'Adjusted for a finite population of ' + N.toLocaleString('en-US') + '.'
+  }
+  const needed = Math.ceil(n)
+  return {
+    value: needed.toLocaleString('en-US') + ' people',
+    stats: [
+      { label: 'Required sample size', value: needed.toLocaleString('en-US') },
+      { label: 'Confidence level', value: level + '%' },
+      { label: 'Margin of error', value: '± ' + moe + '%' },
+      { label: 'z-value', value: String(z) }
+    ],
+    breakdown: [
+      'Confidence level: ' + level + '%  →  z = ' + z,
+      'Margin of error (e): ' + moe + '% = ' + e,
+      'Expected proportion (p): ' + p + '% = ' + pr,
+      'Base sample size = z²·p(1−p) / e² = ' + Math.ceil(n0).toLocaleString('en-US'),
+      note,
+      'Required sample size (rounded up): ' + needed.toLocaleString('en-US')
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'How do I calculate the sample size for a survey?', answer: 'Use n = z² × p(1 − p) ÷ e², where z is the critical value for your confidence level, p is the expected proportion (use 0.5 for the most conservative, largest sample), and e is your margin of error as a decimal. Always round the result up, since you cannot survey a fraction of a person.' },
+  { question: 'Why is 50% the default expected proportion?', answer: 'The term p(1 − p) is largest when p = 0.5, which produces the maximum required sample size. Using 50% is the safe, conservative choice when you have no prior estimate of the proportion — it guarantees your sample is big enough no matter what the true value turns out to be.' },
+  { question: 'What is the finite population correction?', answer: 'When your total population is small, you do not need as large a sample. The correction n = n₀ ÷ (1 + (n₀ − 1)/N) reduces the required size based on the population N. For very large or unknown populations, the correction has almost no effect, so you can leave the population field blank.' },
+  { question: 'How does margin of error affect sample size?', answer: 'Sample size grows with the square of the inverse of the margin of error. Halving the margin of error (say from 5% to 2.5%) quadruples the required sample. That is why very precise surveys need dramatically more respondents than rough ones.' },
+  { question: 'How does confidence level affect sample size?', answer: 'A higher confidence level uses a larger z-value, which increases the required sample size. Going from 95% (z = 1.96) to 99% (z = 2.576) roughly increases the needed sample by about 73%, because the z-value is squared in the formula.' },
+]
+---
+<Layout
+  title="Sample Size Calculator: How Many People to Survey"
+  description="Calculate the survey sample size you need for a given confidence level and margin of error, with optional finite population correction. Free and accurate."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Sample Size Calculator', href: '/calculators/sample-size-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Sample Size Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Sample Size Calculator"
+          description="How many respondents you need for a reliable survey"
+          formulaId="sample-size"
+          formulaFn={formulaFn}
+          resultLabel="Sample Size"
+          inputs={[
+            { id: 'level', label: 'Confidence level', type: 'select', defaultValue: '95', options: [
+              { value: '80', label: '80%' },
+              { value: '85', label: '85%' },
+              { value: '90', label: '90%' },
+              { value: '95', label: '95%' },
+              { value: '98', label: '98%' },
+              { value: '99', label: '99%' },
+              { value: '99.9', label: '99.9%' },
+            ] },
+            { id: 'moe', label: 'Margin of error (± %)', type: 'number', placeholder: '5', min: 0, step: 'any', defaultValue: 5 },
+            { id: 'p', label: 'Expected proportion (%)', type: 'number', placeholder: '50', min: 0, max: 100, step: 'any', defaultValue: 50 },
+            { id: 'pop', label: 'Population size (optional)', type: 'number', placeholder: 'leave blank if very large', min: 1, step: 1 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Confidence Interval Calculator', href: '/calculators/confidence-interval-calculator' },
+            { name: 'Z-Score Calculator', href: '/calculators/z-score-calculator' },
+            { name: 'Standard Deviation Calculator', href: '/calculators/standard-deviation-calculator' },
+            { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">The formula</h3>
+          <p class="font-mono text-xs mb-2">n = z² · p(1−p) / e²</p>
+          <p class="text-xs">Finite population: n = n₀ / (1 + (n₀−1)/N). Always round up.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

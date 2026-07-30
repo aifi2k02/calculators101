@@ -215,6 +215,16 @@ const pages = [
   { url: '/calculators/future-value-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/simple-interest-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/percent-off-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Math/stats batch 2
+  { url: '/calculators/number-sequence-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/confidence-interval-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/sample-size-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/half-life-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Dev/web utilities
+  { url: '/calculators/base64-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/url-encode-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/ohms-law-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/square-footage-calculator', priority: '0.85', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

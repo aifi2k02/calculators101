@@ -1,0 +1,94 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const text = inputs.text || ''
+  const mode = inputs.mode || 'encode'
+  if (!text.trim()) throw new Error('Enter some text to ' + mode + '.')
+  let out
+  try {
+    if (mode === 'encode') {
+      out = btoa(unescape(encodeURIComponent(text)))
+    } else {
+      const cleaned = text.trim().replace(/\\s+/g, '')
+      out = decodeURIComponent(escape(atob(cleaned)))
+    }
+  } catch (e) {
+    throw new Error(mode === 'decode' ? 'That is not valid Base64 text.' : 'Could not encode that input.')
+  }
+  return {
+    value: out,
+    stats: [
+      { label: mode === 'encode' ? 'Encoded length' : 'Decoded length', value: out.length + ' chars' },
+      { label: 'Input length', value: text.length + ' chars' },
+      { label: 'Mode', value: mode === 'encode' ? 'Text → Base64' : 'Base64 → Text' }
+    ],
+    breakdown: [
+      'Mode: ' + (mode === 'encode' ? 'Encode (text to Base64)' : 'Decode (Base64 to text)'),
+      'Input: ' + (text.length > 80 ? text.slice(0, 80) + '…' : text),
+      'Output: ' + (out.length > 80 ? out.slice(0, 80) + '…' : out),
+      'UTF-8 safe — handles accents, emoji, and non-Latin scripts.'
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is Base64 encoding?', answer: 'Base64 is a way of representing binary or text data using only 64 printable ASCII characters (A–Z, a–z, 0–9, + and /). It is used to safely transmit data through systems that only handle text, such as email attachments, data URLs, JSON, and HTTP basic authentication. It is an encoding, not encryption — anyone can decode it.' },
+  { question: 'Is Base64 the same as encryption?', answer: 'No. Base64 is reversible encoding with no secret key, so it provides no security or privacy — anyone can decode it instantly. It is only used to make data safe to store or transmit as plain text. Never use Base64 to protect passwords or sensitive information; use real encryption for that.' },
+  { question: 'Why does Base64 make text longer?', answer: 'Base64 represents every 3 bytes of input as 4 characters of output, so encoded data is about 33% larger than the original. Padding with = signs may add one or two more characters. This size increase is the trade-off for making arbitrary data safe to transmit as text.' },
+  { question: 'Does this handle emoji and non-English characters?', answer: 'Yes. This calculator encodes text as UTF-8 before converting to Base64, so accents, emoji, and non-Latin scripts (Arabic, Chinese, Cyrillic, and more) all round-trip correctly. Decoding reverses the process to give you back the exact original text.' },
+  { question: 'What are the = signs at the end of Base64?', answer: 'They are padding. Base64 works in blocks of 4 characters representing 3 bytes. When the input length is not a multiple of 3, one or two = characters are added so the output length stays a multiple of 4. The padding is required for the data to decode correctly.' },
+]
+---
+<Layout
+  title="Base64 Encode & Decode Calculator (UTF-8 Safe)"
+  description="Encode text to Base64 or decode Base64 back to text, instantly and privately in your browser. UTF-8 safe — handles emoji and non-English characters. Free."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Base64 Calculator', href: '/calculators/base64-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Base64 Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Base64 Encode / Decode"
+          description="Convert text to Base64 and back — private, in your browser"
+          formulaId="base64"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            { id: 'mode', label: 'Direction', type: 'select', defaultValue: 'encode', options: [
+              { value: 'encode', label: 'Encode — text → Base64' },
+              { value: 'decode', label: 'Decode — Base64 → text' },
+            ] },
+            { id: 'text', label: 'Text', type: 'textarea', placeholder: 'Type or paste text here…', rows: 5, defaultValue: 'Hello, world!' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'URL Encode / Decode', href: '/calculators/url-encode-calculator' },
+            { name: 'Hash Calculator', href: '/calculators/hash-calculator' },
+            { name: 'Number Base Converter', href: '/calculators/number-base-calculator' },
+            { name: 'Word Count Calculator', href: '/calculators/word-count-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900 leading-relaxed">
+          <h3 class="font-bold mb-2">⚠️ Not encryption</h3>
+          <p class="text-xs">Base64 is reversible with no key — anyone can decode it. Never use it to protect passwords or sensitive data.</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm text-gray-700 leading-relaxed">
+          <p>Everything runs locally in your browser. Nothing you type is sent to a server, stored, or logged.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

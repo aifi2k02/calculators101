@@ -1,0 +1,107 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const mean = parseFloat(inputs.mean)
+  const sd = parseFloat(inputs.sd)
+  const n = parseFloat(inputs.n)
+  const level = inputs.level || '95'
+  if (isNaN(mean)) throw new Error('Enter the sample mean.')
+  if (isNaN(sd) || sd < 0) throw new Error('Enter the standard deviation.')
+  if (isNaN(n) || n < 2 || Math.floor(n) !== n) throw new Error('Enter a whole sample size of at least 2.')
+  const Z = { '80': 1.2816, '85': 1.4395, '90': 1.6449, '95': 1.9600, '98': 2.3263, '99': 2.5758, '99.9': 3.2905 }
+  const z = Z[level]
+  const se = sd / Math.sqrt(n)
+  const moe = z * se
+  const lower = mean - moe
+  const upper = mean + moe
+  const round = x => Math.round(x * 1e6) / 1e6
+  return {
+    value: '[' + round(lower) + ', ' + round(upper) + ']',
+    stats: [
+      { label: level + '% interval', value: round(lower) + ' to ' + round(upper) },
+      { label: 'Margin of error', value: '± ' + round(moe) },
+      { label: 'Standard error', value: String(round(se)) },
+      { label: 'z-value', value: String(z) }
+    ],
+    breakdown: [
+      'Sample mean (x̄): ' + mean,
+      'Standard deviation (σ): ' + sd,
+      'Sample size (n): ' + n,
+      'Confidence level: ' + level + '%  →  z = ' + z,
+      'Standard error = σ / √n = ' + sd + ' / ' + round(Math.sqrt(n)) + ' = ' + round(se),
+      'Margin of error = z × SE = ' + z + ' × ' + round(se) + ' = ' + round(moe),
+      'Confidence interval = x̄ ± MoE = ' + round(lower) + ' to ' + round(upper),
+      'We are ' + level + '% confident the true population mean lies in this range.'
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is a confidence interval?', answer: 'A confidence interval is a range of values, built from sample data, that is likely to contain the true population value. A 95% confidence interval means that if you repeated the sampling many times, about 95% of the intervals produced would capture the real population mean. It expresses the precision of an estimate.' },
+  { question: 'How is a confidence interval calculated?', answer: 'For a mean, it is x̄ ± z × (σ / √n), where x̄ is the sample mean, σ is the standard deviation, n is the sample size, and z is the critical value for your confidence level (1.96 for 95%). The z × (σ/√n) part is the margin of error, which is added to and subtracted from the mean.' },
+  { question: 'What does a 95% confidence level mean?', answer: 'It means the method used will produce an interval containing the true population value 95% of the time over repeated sampling. It does not mean there is a 95% probability the true value is in your one specific interval — the true value is fixed; it is the interval that varies from sample to sample.' },
+  { question: 'What is the margin of error?', answer: 'The margin of error is the half-width of the confidence interval: z × (σ / √n). A larger sample size shrinks it (more precision), while a higher confidence level widens it (more certainty). It is the plus-or-minus value you often see quoted with poll results.' },
+  { question: 'When should I use z instead of t?', answer: 'The z-value is appropriate when the population standard deviation is known or the sample is large (roughly n ≥ 30). For small samples with an unknown population standard deviation, statisticians use the t-distribution, which has slightly wider intervals. This calculator uses z, which is standard for large samples.' },
+]
+---
+<Layout
+  title="Confidence Interval Calculator: Mean, Margin & Range"
+  description="Calculate the confidence interval for a mean at 80–99.9% confidence. Get the margin of error, standard error, and z-value. Free, with step-by-step working."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Confidence Interval Calculator', href: '/calculators/confidence-interval-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Confidence Interval Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Confidence Interval Calculator"
+          description="The confidence interval and margin of error for a sample mean"
+          formulaId="confidence-interval"
+          formulaFn={formulaFn}
+          resultLabel="Confidence Interval"
+          inputs={[
+            { id: 'mean', label: 'Sample mean (x̄)', type: 'number', placeholder: '100', step: 'any', defaultValue: 100 },
+            { id: 'sd', label: 'Standard deviation (σ)', type: 'number', placeholder: '15', min: 0, step: 'any', defaultValue: 15 },
+            { id: 'n', label: 'Sample size (n)', type: 'number', placeholder: '50', min: 2, step: 1, defaultValue: 50 },
+            { id: 'level', label: 'Confidence level', type: 'select', defaultValue: '95', options: [
+              { value: '80', label: '80%' },
+              { value: '85', label: '85%' },
+              { value: '90', label: '90%' },
+              { value: '95', label: '95%' },
+              { value: '98', label: '98%' },
+              { value: '99', label: '99%' },
+              { value: '99.9', label: '99.9%' },
+            ] },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Sample Size Calculator', href: '/calculators/sample-size-calculator' },
+            { name: 'Standard Deviation Calculator', href: '/calculators/standard-deviation-calculator' },
+            { name: 'Z-Score Calculator', href: '/calculators/z-score-calculator' },
+            { name: 'Mean, Median, Mode Calculator', href: '/calculators/mean-median-mode-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">z-values by confidence</h3>
+          <div class="grid grid-cols-2 gap-1 font-mono text-xs">
+            <span>90% → 1.645</span><span>95% → 1.960</span>
+            <span>98% → 2.326</span><span>99% → 2.576</span>
+          </div>
+          <p class="text-xs mt-3">Uses z (known σ or large n). For small samples, a t-interval is slightly wider.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

@@ -212,6 +212,10 @@ export const categories: Category[] = [
       { name: 'Mean, Median, Mode Calculator', href: '/calculators/mean-median-mode-calculator', description: 'Mean, median, mode, and range for any data set', icon: '📈', live: true },
       { name: 'Probability Calculator', href: '/calculators/probability-calculator', description: 'Single and two-event probability with and/or/not', icon: '🎲', live: true },
       { name: 'Pythagorean Theorem Calculator', href: '/calculators/pythagorean-theorem-calculator', description: 'Solve a² + b² = c² for any right-triangle side', icon: '📐', live: true },
+      { name: 'Number Sequence Calculator', href: '/calculators/number-sequence-calculator', description: 'nth term & sum of arithmetic or geometric sequences', icon: '🔢', live: true },
+      { name: 'Confidence Interval Calculator', href: '/calculators/confidence-interval-calculator', description: 'Confidence interval & margin of error for a mean', icon: '📏', live: true },
+      { name: 'Sample Size Calculator', href: '/calculators/sample-size-calculator', description: 'How many people to survey for a reliable result', icon: '👥', live: true },
+      { name: 'Half-Life Calculator', href: '/calculators/half-life-calculator', description: 'Remaining amount, decay constant & mean lifetime', icon: '☢️', live: true },
     ],
   },
   {
@@ -279,6 +283,10 @@ export const categories: Category[] = [
       { name: 'Wind Chill Calculator', href: '/calculators/wind-chill-calculator', description: 'How cold it really feels, via the official NWS formula', icon: '🥶', live: true },
       { name: 'Heat Index Calculator', href: '/calculators/heat-index-calculator', description: 'How hot it really feels, from temperature and humidity', icon: '🥵', live: true },
       { name: 'Dew Point Calculator', href: '/calculators/dew-point-calculator', description: 'Dew point and comfort level from temp and humidity', icon: '💧', live: true },
+      { name: 'Base64 Calculator', href: '/calculators/base64-calculator', description: 'Encode text to Base64 or decode it back (UTF-8 safe)', icon: '🔤', live: true },
+      { name: 'URL Encode Calculator', href: '/calculators/url-encode-calculator', description: 'Percent-encode text for URLs or decode it back', icon: '🔗', live: true },
+      { name: 'Ohm’s Law Calculator', href: '/calculators/ohms-law-calculator', description: 'Solve volts, amps, ohms & watts from any two', icon: '⚡', live: true },
+      { name: 'Square Footage Calculator', href: '/calculators/square-footage-calculator', description: 'Area from length × width, plus material cost', icon: '📐', live: true },
     ],
   },
 ]

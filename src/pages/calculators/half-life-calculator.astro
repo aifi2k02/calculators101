@@ -1,0 +1,107 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const n0 = parseFloat(inputs.n0)
+  const half = parseFloat(inputs.half)
+  const t = parseFloat(inputs.t)
+  const unit = inputs.unit || 'units'
+  if (isNaN(n0) || n0 < 0) throw new Error('Enter the initial quantity.')
+  if (isNaN(half) || half <= 0) throw new Error('Enter a half-life greater than zero.')
+  if (isNaN(t) || t < 0) throw new Error('Enter the elapsed time.')
+  const round = x => Math.round(x * 1e6) / 1e6
+  const halves = t / half
+  const remaining = n0 * Math.pow(0.5, halves)
+  const decayed = n0 - remaining
+  const pctRemaining = Math.pow(0.5, halves) * 100
+  const lambda = Math.LN2 / half
+  const meanLife = 1 / lambda
+  return {
+    value: round(remaining) + ' remaining',
+    stats: [
+      { label: 'Amount remaining', value: String(round(remaining)) },
+      { label: '% remaining', value: round(pctRemaining) + '%' },
+      { label: 'Half-lives elapsed', value: String(round(halves)) },
+      { label: 'Amount decayed', value: String(round(decayed)) }
+    ],
+    breakdown: [
+      'Initial quantity (N₀): ' + n0,
+      'Half-life (t½): ' + half + ' ' + unit,
+      'Elapsed time (t): ' + t + ' ' + unit,
+      'Half-lives elapsed = t ÷ t½ = ' + round(halves),
+      'Remaining = N₀ × (½)^(t/t½) = ' + round(remaining) + ' (' + round(pctRemaining) + '%)',
+      'Decayed = ' + round(decayed),
+      'Decay constant λ = ln(2) / t½ = ' + round(lambda) + ' per ' + unit,
+      'Mean lifetime (τ) = 1/λ = ' + round(meanLife) + ' ' + unit
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is a half-life?', answer: 'A half-life is the time it takes for a quantity to fall to half its starting value. After one half-life, 50% remains; after two, 25%; after three, 12.5%, and so on. It applies to radioactive decay, drug elimination in the body, and any process of exponential decay.' },
+  { question: 'How do I calculate how much remains after a given time?', answer: 'Use N = N₀ × (½)^(t / t½), where N₀ is the initial amount, t is the elapsed time, and t½ is the half-life. Divide the elapsed time by the half-life to get the number of half-lives, then multiply the starting amount by one-half raised to that power.' },
+  { question: 'What is the decay constant?', answer: 'The decay constant (λ) is the probability per unit time that a given particle decays, related to the half-life by λ = ln(2) ÷ t½ ≈ 0.693 ÷ t½. It appears in the continuous decay formula N = N₀ × e^(−λt), which is mathematically identical to the half-life formula.' },
+  { question: 'What is the mean lifetime?', answer: 'The mean lifetime (τ) is the average time a particle survives before decaying, equal to 1 ÷ λ, or about 1.44 times the half-life. It is longer than the half-life because a few long-lived particles pull the average up.' },
+  { question: 'Does this work for medication half-life?', answer: 'Yes. Enter the drug half-life and the time since the dose to estimate how much remains in the body. For example, a drug with a 6-hour half-life will have about 25% left after 12 hours (two half-lives). Most drugs are considered cleared after about 4–5 half-lives.' },
+]
+---
+<Layout
+  title="Half-Life Calculator: Radioactive & Drug Decay"
+  description="Calculate how much of a substance remains after any elapsed time from its half-life. Get percent remaining, decay constant, and mean lifetime. Free and accurate."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Half-Life Calculator', href: '/calculators/half-life-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Half-Life Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Half-Life Calculator"
+          description="How much remains after any elapsed time"
+          formulaId="half-life"
+          formulaFn={formulaFn}
+          resultLabel="Remaining"
+          inputs={[
+            { id: 'n0', label: 'Initial quantity (N₀)', type: 'number', placeholder: '100', min: 0, step: 'any', defaultValue: 100 },
+            { id: 'half', label: 'Half-life', type: 'number', placeholder: '6', min: 0, step: 'any', defaultValue: 6 },
+            { id: 't', label: 'Elapsed time', type: 'number', placeholder: '12', min: 0, step: 'any', defaultValue: 12 },
+            { id: 'unit', label: 'Time unit (label only)', type: 'select', defaultValue: 'hours', options: [
+              { value: 'seconds', label: 'Seconds' },
+              { value: 'minutes', label: 'Minutes' },
+              { value: 'hours', label: 'Hours' },
+              { value: 'days', label: 'Days' },
+              { value: 'years', label: 'Years' },
+            ] },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Exponent Calculator', href: '/calculators/exponent-calculator' },
+            { name: 'Logarithm Calculator', href: '/calculators/logarithm-calculator' },
+            { name: 'Scientific Calculator', href: '/calculators/scientific-calculator' },
+            { name: 'Compound Interest Calculator', href: '/calculators/compound-interest-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Decay by half-lives</h3>
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between"><span>1 half-life</span><span>50% left</span></div>
+            <div class="flex justify-between"><span>2 half-lives</span><span>25% left</span></div>
+            <div class="flex justify-between"><span>3 half-lives</span><span>12.5% left</span></div>
+            <div class="flex justify-between"><span>5 half-lives</span><span>~3% left</span></div>
+          </div>
+          <p class="font-mono text-xs mt-3">N = N₀ · (½)^(t/t½)</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

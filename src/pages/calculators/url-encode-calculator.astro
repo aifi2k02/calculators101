@@ -1,0 +1,90 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const text = inputs.text || ''
+  const mode = inputs.mode || 'encode'
+  if (!text.trim()) throw new Error('Enter some text to ' + mode + '.')
+  let out
+  try {
+    out = mode === 'encode' ? encodeURIComponent(text) : decodeURIComponent(text.trim())
+  } catch (e) {
+    throw new Error(mode === 'decode' ? 'That is not valid percent-encoded text.' : 'Could not encode that input.')
+  }
+  return {
+    value: out,
+    stats: [
+      { label: 'Output length', value: out.length + ' chars' },
+      { label: 'Input length', value: text.length + ' chars' },
+      { label: 'Mode', value: mode === 'encode' ? 'Text → URL-encoded' : 'URL-encoded → Text' }
+    ],
+    breakdown: [
+      'Mode: ' + (mode === 'encode' ? 'Encode (percent-encode special characters)' : 'Decode (percent-decode back to text)'),
+      'Input: ' + (text.length > 80 ? text.slice(0, 80) + '…' : text),
+      'Output: ' + (out.length > 80 ? out.slice(0, 80) + '…' : out),
+      'Uses encodeURIComponent / decodeURIComponent — UTF-8 safe.'
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is URL encoding?', answer: 'URL encoding, also called percent-encoding, replaces characters that are not allowed in a URL with a % sign followed by their hexadecimal code. For example, a space becomes %20 and an ampersand becomes %26. It lets you safely include spaces, symbols, and non-English characters in web addresses and query strings.' },
+  { question: 'Why do spaces become %20 or +?', answer: 'A raw space is not permitted inside a URL. In the path and query, percent-encoding turns a space into %20. In older HTML form submissions (application/x-www-form-urlencoded), spaces become a plus sign instead. This calculator uses %20, the standard for encodeURIComponent.' },
+  { question: 'What is the difference between encodeURI and encodeURIComponent?', answer: 'encodeURI is meant for a full URL and leaves characters like / ? & = intact so the address still works. encodeURIComponent is for a single piece of data — a query parameter value, for instance — and escapes those reserved characters too. This tool uses encodeURIComponent, which is what you usually want for form and query values.' },
+  { question: 'Which characters get encoded?', answer: 'Letters, digits, and a few safe symbols (- _ . ! ~ * and parentheses) are left as-is. Everything else — spaces, &, =, ?, /, #, +, non-Latin letters, emoji — is percent-encoded. Non-ASCII characters are first converted to UTF-8 bytes, each shown as its own %XX sequence.' },
+  { question: 'Is URL encoding secure?', answer: 'No. Like Base64, URL encoding is fully reversible and provides no security — it is purely about making data safe to transmit in a URL. It does not hide, encrypt, or protect the content in any way. Anyone can decode a percent-encoded string instantly.' },
+]
+---
+<Layout
+  title="URL Encode & Decode Calculator (Percent-Encoding)"
+  description="Percent-encode text for URLs or decode it back, instantly and privately in your browser. UTF-8 safe, handles spaces and special characters. Free URL encoder."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'URL Encode Calculator', href: '/calculators/url-encode-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">URL Encode Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="URL Encode / Decode"
+          description="Percent-encode text for URLs and back — private, in your browser"
+          formulaId="url-encode"
+          formulaFn={formulaFn}
+          resultLabel="Result"
+          inputs={[
+            { id: 'mode', label: 'Direction', type: 'select', defaultValue: 'encode', options: [
+              { value: 'encode', label: 'Encode — text → URL' },
+              { value: 'decode', label: 'Decode — URL → text' },
+            ] },
+            { id: 'text', label: 'Text', type: 'textarea', placeholder: 'Type or paste text here…', rows: 5, defaultValue: 'name=John Doe & city=São Paulo' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Base64 Encode / Decode', href: '/calculators/base64-calculator' },
+            { name: 'Hash Calculator', href: '/calculators/hash-calculator' },
+            { name: 'Number Base Converter', href: '/calculators/number-base-calculator' },
+            { name: 'Word Count Calculator', href: '/calculators/word-count-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Common encodings</h3>
+          <div class="grid grid-cols-2 gap-1 font-mono text-xs">
+            <span>space → %20</span><span>&amp; → %26</span>
+            <span>? → %3F</span><span>= → %3D</span>
+            <span>/ → %2F</span><span># → %23</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

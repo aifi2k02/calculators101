@@ -1,0 +1,95 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const g = k => (inputs[k] === '' || inputs[k] == null || isNaN(parseFloat(inputs[k]))) ? null : parseFloat(inputs[k])
+  let V = g('v'), I = g('i'), R = g('r'), P = g('p')
+  const given = [V, I, R, P].filter(x => x !== null)
+  if (given.length < 2) throw new Error('Enter any two values — the other two are calculated.')
+  if (given.length > 2) throw new Error('Enter exactly two values; leave the other two blank.')
+  if ([V, I, R, P].some(x => x !== null && x < 0)) throw new Error('Values cannot be negative.')
+  // Resolve all four from the two knowns
+  if (V !== null && I !== null) { R = I === 0 ? null : V / I; P = V * I }
+  else if (V !== null && R !== null) { if (R === 0) throw new Error('Resistance cannot be zero.'); I = V / R; P = V * V / R }
+  else if (V !== null && P !== null) { if (V === 0) throw new Error('Voltage cannot be zero here.'); I = P / V; R = V * V / P }
+  else if (I !== null && R !== null) { V = I * R; P = I * I * R }
+  else if (I !== null && P !== null) { if (I === 0) throw new Error('Current cannot be zero here.'); V = P / I; R = P / (I * I) }
+  else if (R !== null && P !== null) { V = Math.sqrt(P * R); I = R === 0 ? null : Math.sqrt(P / R) }
+  const round = x => x === null ? '—' : String(Math.round(x * 1e6) / 1e6)
+  return {
+    value: round(V) + ' V',
+    stats: [
+      { label: 'Voltage (V)', value: round(V) + ' V' },
+      { label: 'Current (I)', value: round(I) + ' A' },
+      { label: 'Resistance (R)', value: round(R) + ' Ω' },
+      { label: 'Power (P)', value: round(P) + ' W' }
+    ],
+    breakdown: [
+      'Ohm’s law: V = I × R',
+      'Power: P = V × I = I²R = V²/R',
+      'Voltage (V): ' + round(V) + ' volts',
+      'Current (I): ' + round(I) + ' amperes',
+      'Resistance (R): ' + round(R) + ' ohms',
+      'Power (P): ' + round(P) + ' watts'
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is Ohm’s law?', answer: 'Ohm’s law states that the voltage across a resistor equals the current through it times its resistance: V = I × R. Rearranged, it also gives I = V ÷ R and R = V ÷ I. It is the fundamental relationship linking voltage, current, and resistance in an electrical circuit.' },
+  { question: 'How do I calculate electrical power?', answer: 'Power is voltage times current: P = V × I, measured in watts. Using Ohm’s law you can also write it as P = I² × R or P = V² ÷ R. This calculator gives you the power automatically once you enter any two of voltage, current, resistance, or power.' },
+  { question: 'What are the units — volts, amps, ohms, and watts?', answer: 'Voltage (V) is measured in volts and is the electrical "pressure." Current (I) is measured in amperes (amps) and is the rate of charge flow. Resistance (R) is measured in ohms (Ω) and opposes current. Power (P) is measured in watts and is the rate of energy use.' },
+  { question: 'How many values do I need to enter?', answer: 'Exactly two. Ohm’s law and the power equation let you derive the other two from any pair. Enter, for example, voltage and resistance, and the calculator finds the current and power. Leave the two unknown fields blank.' },
+  { question: 'What is a real-world example of Ohm’s law?', answer: 'A 12-volt car circuit with a 4-ohm resistor draws I = V ÷ R = 12 ÷ 4 = 3 amps, and dissipates P = V × I = 12 × 3 = 36 watts. Ohm’s law is used constantly in electronics to choose resistors, size wires, and stay within power limits.' },
+]
+---
+<Layout
+  title="Ohm’s Law Calculator: Volts, Amps, Ohms & Watts"
+  description="Solve any two of voltage, current, resistance, and power with Ohm’s law (V = IR) and the power equation. Free electrical calculator with a full breakdown."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Ohm’s Law Calculator', href: '/calculators/ohms-law-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Ohm’s Law Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Ohm’s Law Calculator"
+          description="Enter any two of V, I, R, P — the other two are solved"
+          formulaId="ohms-law"
+          formulaFn={formulaFn}
+          resultLabel="Solved Values"
+          inputs={[
+            { id: 'v', label: 'Voltage — V (volts)', type: 'number', placeholder: '12', min: 0, step: 'any', defaultValue: 12 },
+            { id: 'i', label: 'Current — I (amps)', type: 'number', placeholder: 'leave blank', min: 0, step: 'any' },
+            { id: 'r', label: 'Resistance — R (ohms)', type: 'number', placeholder: '4', min: 0, step: 'any', defaultValue: 4 },
+            { id: 'p', label: 'Power — P (watts)', type: 'number', placeholder: 'leave blank', min: 0, step: 'any' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Electricity Cost Calculator', href: '/calculators/electricity-calculator' },
+            { name: 'Scientific Calculator', href: '/calculators/scientific-calculator' },
+            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">The equations</h3>
+          <p class="font-mono text-xs mb-1">V = I × R</p>
+          <p class="font-mono text-xs mb-1">P = V × I</p>
+          <p class="font-mono text-xs mb-1">P = I² × R</p>
+          <p class="font-mono text-xs">P = V² / R</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
