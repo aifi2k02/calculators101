@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const raw = (inputs.data || '').trim()
+  if (!raw) throw new Error('Enter at least two numbers, separated by commas or spaces.')
+  const nums = raw.split(/[\\s,]+/).filter(s => s.length).map(Number)
+  if (nums.some(n => isNaN(n))) throw new Error('All entries must be valid numbers.')
+  const n = nums.length
+  if (n < 2) throw new Error('Enter at least two numbers.')
+  const type = inputs.type || 'sample'
+  const sum = nums.reduce((a, b) => a + b, 0)
+  const mean = sum / n
+  const sqDiff = nums.reduce((a, b) => a + (b - mean) * (b - mean), 0)
+  const divisor = type === 'population' ? n : n - 1
+  const variance = sqDiff / divisor
+  const sd = Math.sqrt(variance)
+  const sorted = [...nums].sort((a, b) => a - b)
+  const round = x => Math.round(x * 1e6) / 1e6
+  return {
+    value: 'σ = ' + round(sd),
+    stats: [
+      { label: type === 'population' ? 'Std Dev (σ)' : 'Std Dev (s)', value: String(round(sd)) },
+      { label: 'Variance', value: String(round(variance)) },
+      { label: 'Mean', value: String(round(mean)) },
+      { label: 'Count', value: String(n) }
+    ],
+    breakdown: [
+      'Count (n): ' + n,
+      'Sum: ' + round(sum),
+      'Mean: ' + round(mean),
+      'Sum of squared deviations: ' + round(sqDiff),
+      (type === 'population' ? 'Population variance = Σ(x−μ)² / n = ' : 'Sample variance = Σ(x−x̄)² / (n−1) = ') + round(variance),
+      'Standard deviation = √variance = ' + round(sd),
+      'Range: ' + round(sorted[0]) + ' to ' + round(sorted[n - 1])
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is standard deviation?', answer: 'Standard deviation measures how spread out a set of numbers is around their mean (average). A small standard deviation means the values cluster close to the mean; a large one means they are widely scattered. It is the square root of the variance.' },
+  { question: 'What is the difference between sample and population standard deviation?', answer: 'Population standard deviation divides the sum of squared deviations by n (the full count) and is used when you have every member of the group. Sample standard deviation divides by n−1 (Bessel’s correction) and is used when your data is a sample drawn from a larger population — it gives an unbiased estimate. When in doubt with real-world data, use sample.' },
+  { question: 'How do you calculate standard deviation step by step?', answer: 'First find the mean. Then subtract the mean from each value and square the result. Add up all those squared differences. Divide by n (population) or n−1 (sample) to get the variance. Finally, take the square root of the variance to get the standard deviation.' },
+  { question: 'What is variance versus standard deviation?', answer: 'Variance is the average of the squared deviations from the mean. Standard deviation is the square root of the variance, which returns the measure to the original units of the data. Standard deviation is usually easier to interpret because it is in the same units as the values themselves.' },
+  { question: 'What does a standard deviation of 0 mean?', answer: 'A standard deviation of 0 means every value in the data set is identical — there is no spread at all. Standard deviation can never be negative.' },
+]
+---
+<Layout
+  title="Standard Deviation Calculator: Sample & Population"
+  description="Calculate standard deviation, variance, and mean for any data set. Supports both sample (n−1) and population (n) standard deviation. Free, step-by-step."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Standard Deviation Calculator', href: '/calculators/standard-deviation-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Standard Deviation Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Standard Deviation Calculator"
+          description="Standard deviation, variance, and mean for any list of numbers"
+          formulaId="standard-deviation"
+          formulaFn={formulaFn}
+          resultLabel="Standard Deviation"
+          inputs={[
+            { id: 'data', label: 'Numbers (comma or space separated)', type: 'textarea', placeholder: '10, 12, 23, 23, 16, 23, 21, 16', rows: 4, defaultValue: '10, 12, 23, 23, 16, 23, 21, 16' },
+            { id: 'type', label: 'Data set type', type: 'select', defaultValue: 'sample', options: [
+              { value: 'sample', label: 'Sample (n−1) — data is a sample' },
+              { value: 'population', label: 'Population (n) — data is everything' },
+            ] },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Mean, Median, Mode Calculator', href: '/calculators/mean-median-mode-calculator' },
+            { name: 'Z-Score Calculator', href: '/calculators/z-score-calculator' },
+            { name: 'Average Calculator', href: '/calculators/average-calculator' },
+            { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Sample or population?</h3>
+          <p class="mb-2"><strong>Sample (n−1):</strong> your numbers are a subset drawn from a bigger group. Most common for surveys and experiments.</p>
+          <p><strong>Population (n):</strong> your numbers are the entire group with nothing left out.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5 text-sm">
+          <h3 class="font-semibold text-gray-900 mb-3">The formula</h3>
+          <p class="text-gray-600 font-mono text-xs leading-relaxed">s = √[ Σ(x−x̄)² / (n−1) ]</p>
+          <p class="text-gray-500 text-xs mt-2">Population uses μ and divides by n instead of n−1.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

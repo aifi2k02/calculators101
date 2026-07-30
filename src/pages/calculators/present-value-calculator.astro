@@ -1,0 +1,99 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const fv = parseFloat(inputs.fv)
+  const rate = parseFloat(inputs.rate)
+  const years = parseFloat(inputs.years)
+  const freq = parseFloat(inputs.freq) || 1
+  if (isNaN(fv)) throw new Error('Enter the future value.')
+  if (isNaN(rate)) throw new Error('Enter the annual interest rate.')
+  if (isNaN(years) || years < 0) throw new Error('Enter the number of years.')
+  const r = rate / 100 / freq
+  const n = years * freq
+  const pv = fv / Math.pow(1 + r, n)
+  const money = x => '$' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const discount = fv - pv
+  return {
+    value: money(pv),
+    stats: [
+      { label: 'Present value', value: money(pv) },
+      { label: 'Future value', value: money(fv) },
+      { label: 'Total discount', value: money(discount) },
+      { label: 'Periods', value: n + ' × ' + rate + '%/yr' }
+    ],
+    breakdown: [
+      'Future value: ' + money(fv),
+      'Annual rate: ' + rate + '% compounded ' + freq + '×/year',
+      'Periods (n): ' + years + ' years × ' + freq + ' = ' + n,
+      'Rate per period: ' + rate + '% ÷ ' + freq + ' = ' + (r * 100).toFixed(4) + '%',
+      'PV = FV ÷ (1 + r)^n = ' + money(fv) + ' ÷ ' + Math.pow(1 + r, n).toFixed(4),
+      'Present value: ' + money(pv),
+      'You would need ' + money(pv) + ' today to have ' + money(fv) + ' in ' + years + ' years.'
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is present value?', answer: 'Present value (PV) is what a future sum of money is worth today, given a specific interest or discount rate. Because money can earn a return over time, a dollar today is worth more than a dollar in the future. Present value reverses that growth to tell you the equivalent amount right now.' },
+  { question: 'What is the present value formula?', answer: 'PV = FV ÷ (1 + r)^n, where FV is the future value, r is the interest rate per period, and n is the number of periods. If interest compounds more than once a year, divide the annual rate by the number of periods and multiply the years by that same number.' },
+  { question: 'Why is a future dollar worth less than a dollar today?', answer: 'This is the time value of money. A dollar you have now can be invested to earn interest, so it grows into more than a dollar later. It also loses buying power to inflation over time. Present value quantifies exactly how much less a future payment is worth in today\'s terms.' },
+  { question: 'What discount rate should I use?', answer: 'The discount rate reflects your opportunity cost — the return you could reasonably earn elsewhere, or your required rate of return. Common choices are a savings or bond yield for low-risk cash, or an expected investment return (often 6–10%) for longer-term decisions. A higher discount rate lowers the present value.' },
+  { question: 'What is the difference between present value and future value?', answer: 'Present value discounts a future amount back to today, while future value grows a present amount forward in time. They are two sides of the same equation: FV = PV × (1 + r)^n and PV = FV ÷ (1 + r)^n.' },
+]
+---
+<Layout
+  title="Present Value Calculator: What Future Money Is Worth Today"
+  description="Calculate the present value of a future sum with any interest rate and compounding frequency. Free PV calculator using the time value of money formula."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Present Value Calculator', href: '/calculators/present-value-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Present Value Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Present Value Calculator"
+          description="What a future amount of money is worth in today's dollars"
+          formulaId="present-value"
+          formulaFn={formulaFn}
+          resultLabel="Present Value"
+          inputs={[
+            { id: 'fv', label: 'Future value ($)', type: 'number', placeholder: '10000', min: 0, step: 'any', defaultValue: 10000 },
+            { id: 'rate', label: 'Annual interest / discount rate (%)', type: 'number', placeholder: '5', step: 'any', defaultValue: 5 },
+            { id: 'years', label: 'Number of years', type: 'number', placeholder: '10', min: 0, step: 'any', defaultValue: 10 },
+            { id: 'freq', label: 'Compounding frequency', type: 'select', defaultValue: '1', options: [
+              { value: '1', label: 'Annually' },
+              { value: '2', label: 'Semi-annually' },
+              { value: '4', label: 'Quarterly' },
+              { value: '12', label: 'Monthly' },
+              { value: '365', label: 'Daily' },
+            ] },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Future Value Calculator', href: '/calculators/future-value-calculator' },
+            { name: 'Compound Interest Calculator', href: '/calculators/compound-interest-calculator' },
+            { name: 'NPV Calculator', href: '/calculators/npv-calculator' },
+            { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">The formula</h3>
+          <p class="font-mono text-xs mb-2">PV = FV ÷ (1 + r)^n</p>
+          <p class="text-xs">A higher rate or a longer time horizon both push today's value lower.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

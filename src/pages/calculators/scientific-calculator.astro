@@ -1,0 +1,376 @@
+---
+import Layout from '../../layouts/Layout.astro'
+
+const faqs = [
+  { question: 'How do I use the scientific calculator?', answer: 'Build an expression using the buttons or your keyboard, then press = or Enter to evaluate it. It follows the correct order of operations (PEMDAS), supports parentheses, exponents, roots, logarithms, and trigonometric functions, and shows your running expression above the result. Press AC to clear or the backspace key to delete the last entry.' },
+  { question: 'Does the calculator use degrees or radians?', answer: 'Both. Use the DEG / RAD toggle at the top left to switch modes. In DEG mode, trigonometric functions like sin, cos, and tan interpret their input as degrees; in RAD mode they use radians. The inverse functions (sin⁻¹, cos⁻¹, tan⁻¹) return their answer in the selected mode as well.' },
+  { question: 'What order of operations does it follow?', answer: 'It follows standard mathematical order of operations (PEMDAS/BODMAS): parentheses first, then exponents and roots, then multiplication and division, then addition and subtraction. Exponents are evaluated right to left, so 2^3^2 = 2^9 = 512. Use parentheses whenever you want to force a different order.' },
+  { question: 'What functions and constants are supported?', answer: 'Trigonometry (sin, cos, tan and their inverses), natural log (ln), base-10 log (log), square root (√), exponent (x^y), factorial (x!), percentage (%), the constants π and e, and Euler exponential (eˣ). It also keeps the previous result in the ANS key so you can chain calculations.' },
+  { question: 'Is my calculation private?', answer: 'Yes. Everything runs entirely in your browser using a built-in math parser — no calculation is ever sent to a server, stored, or tracked. It works offline once the page has loaded.' },
+]
+
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Scientific Calculator',
+  description: 'A free online scientific calculator with trigonometry, logarithms, exponents, roots, factorials, and constants — full order of operations and keyboard support.',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  browserRequirements: 'Requires JavaScript',
+}
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+}
+---
+<Layout
+  title="Scientific Calculator — Free Online with Trig, Log & Exponents"
+  description="A free online scientific calculator with trigonometry, logarithms, exponents, roots, factorials, π and e. Full order of operations, DEG/RAD, keyboard support — no ads."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Scientific Calculator', href: '/calculators/scientific-calculator' },
+  ]}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Scientific Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="max-w-md mx-auto lg:mx-0">
+          <div class="bg-white rounded-3xl shadow-xl shadow-blue-100/60 border border-gray-200/80 overflow-hidden">
+            <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-6 py-5">
+              <h1 class="text-xl font-bold text-white">Scientific Calculator</h1>
+              <p class="text-blue-100/90 text-sm mt-1">Trig, logs, exponents &amp; roots — click or type</p>
+            </div>
+            <div class="p-5">
+              <!-- Display -->
+              <div class="bg-gray-900 rounded-2xl px-5 py-5 mb-4 text-right">
+                <div id="sci-expr" class="text-gray-400 text-sm h-6 overflow-x-auto whitespace-nowrap font-mono">&nbsp;</div>
+                <div id="sci-display" class="text-white text-3xl font-semibold font-mono truncate leading-tight">0</div>
+              </div>
+              <!-- Keypad -->
+              <div class="grid grid-cols-5 gap-2 text-sm" id="sci-keypad">
+                <button data-key="mode" id="sci-mode" class="sk bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold rounded-lg py-3 transition-colors">DEG</button>
+                <button data-ins="(" class="sk fn">(</button>
+                <button data-ins=")" class="sk fn">)</button>
+                <button data-key="back" class="sk fn">⌫</button>
+                <button data-key="AC" class="sk bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg py-3 transition-colors">AC</button>
+
+                <button data-ins="sin(" class="sk fn">sin</button>
+                <button data-ins="cos(" class="sk fn">cos</button>
+                <button data-ins="tan(" class="sk fn">tan</button>
+                <button data-ins="^" class="sk fn">x^y</button>
+                <button data-key="div" class="sk op">÷</button>
+
+                <button data-ins="asin(" class="sk fn">sin⁻¹</button>
+                <button data-ins="acos(" class="sk fn">cos⁻¹</button>
+                <button data-ins="atan(" class="sk fn">tan⁻¹</button>
+                <button data-ins="sqrt(" class="sk fn">√</button>
+                <button data-key="mul" class="sk op">×</button>
+
+                <button data-ins="ln(" class="sk fn">ln</button>
+                <button data-ins="log(" class="sk fn">log</button>
+                <button data-ins="!" class="sk fn">x!</button>
+                <button data-ins="pi" class="sk fn">π</button>
+                <button data-key="sub" class="sk op">−</button>
+
+                <button data-ins="7" class="sk num">7</button>
+                <button data-ins="8" class="sk num">8</button>
+                <button data-ins="9" class="sk num">9</button>
+                <button data-ins="e" class="sk fn">e</button>
+                <button data-key="add" class="sk op">+</button>
+
+                <button data-ins="4" class="sk num">4</button>
+                <button data-ins="5" class="sk num">5</button>
+                <button data-ins="6" class="sk num">6</button>
+                <button data-ins="%" class="sk fn">%</button>
+                <button data-key="ans" class="sk fn">ANS</button>
+
+                <button data-ins="1" class="sk num">1</button>
+                <button data-ins="2" class="sk num">2</button>
+                <button data-ins="3" class="sk num">3</button>
+                <button data-ins="0" class="sk num">0</button>
+                <button data-ins="." class="sk num">.</button>
+
+                <button data-key="equals" class="sk col-span-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg py-3.5 text-lg transition-colors">=</button>
+              </div>
+              <p class="text-center text-xs text-gray-400 mt-4">Tip: type digits, + − * / ^ ( ), Enter to evaluate, Backspace to delete.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 max-w-2xl">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Frequently Asked Questions</h2>
+          <div class="space-y-3">
+            {faqs.map(faq => (
+              <details class="bg-white border border-gray-200 rounded-lg px-4 py-3 group">
+                <summary class="text-sm font-medium text-gray-800 cursor-pointer list-none flex justify-between items-center gap-3">
+                  {faq.question}
+                  <svg class="w-4 h-4 text-gray-400 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <p class="mt-2 text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm text-gray-700 leading-relaxed">
+          <p>A full scientific calculator that runs in your browser with correct order of operations, trigonometry, logarithms, exponents, roots, and constants. No ads, no sign-up, works offline.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-semibold text-gray-900 text-sm mb-3">Function reference</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Power / root</span><span class="font-mono">x^y · √</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Logarithms</span><span class="font-mono">ln · log</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Trig (DEG/RAD)</span><span class="font-mono">sin cos tan</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Factorial</span><span class="font-mono">x!</span></div>
+            <div class="flex justify-between"><span>Constants</span><span class="font-mono">π · e</span></div>
+          </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-4">
+          <h3 class="font-semibold text-gray-900 text-sm mb-3">More math tools</h3>
+          <div class="grid grid-cols-2 gap-2">
+            {[['Basic','/calculators/basic-calculator'],['Percentage','/calculators/percentage-calculator'],['Std Deviation','/calculators/standard-deviation-calculator'],['Quadratic','/calculators/quadratic-calculator']].map(([n,h]) => (
+              <a href={h} class="bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg px-3 py-2 text-xs text-gray-700 hover:text-blue-700 transition-colors font-medium text-center">{n}</a>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .sk { border-radius: 0.5rem; padding-top: 0.75rem; padding-bottom: 0.75rem; font-weight: 600; transition: background-color .15s; }
+  .sk.num { background:#f3f4f6; color:#111827; }
+  .sk.num:hover { background:#e5e7eb; }
+  .sk.fn { background:#eef2ff; color:#3730a3; font-size:0.8rem; }
+  .sk.fn:hover { background:#e0e7ff; }
+  .sk.op { background:#3b82f6; color:#fff; }
+  .sk.op:hover { background:#2563eb; }
+</style>
+
+<script>
+  const displayEl = document.getElementById('sci-display')!
+  const exprEl = document.getElementById('sci-expr')!
+  const modeBtn = document.getElementById('sci-mode')!
+  let expr = ''
+  let ans = 0
+  let degrees = true
+  let justEvaluated = false
+
+  const OPS: Record<string, string> = { add: '+', sub: '-', mul: '*', div: '/' }
+
+  function pretty(s: string): string {
+    return s
+      .replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−')
+      .replace(/pi/g, 'π').replace(/\bsqrt\(/g, '√(')
+      .replace(/\basin\(/g, 'sin⁻¹(').replace(/\bacos\(/g, 'cos⁻¹(').replace(/\batan\(/g, 'tan⁻¹(')
+  }
+  function render() {
+    exprEl.textContent = expr ? pretty(expr) : ' '
+    exprEl.scrollLeft = exprEl.scrollWidth
+  }
+
+  // ---- Tokenizer ----
+  type Tok = { t: string; v?: number | string }
+  const FUNCS = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', 'sqrt', 'exp', 'abs']
+  function tokenize(s: string): Tok[] {
+    const toks: Tok[] = []
+    let i = 0
+    while (i < s.length) {
+      const c = s[i]
+      if (c === ' ') { i++; continue }
+      if ((c >= '0' && c <= '9') || c === '.') {
+        let j = i
+        while (j < s.length && ((s[j] >= '0' && s[j] <= '9') || s[j] === '.')) j++
+        const num = parseFloat(s.slice(i, j))
+        if (isNaN(num)) throw new Error('bad number')
+        toks.push({ t: 'num', v: num }); i = j; continue
+      }
+      if (c >= 'a' && c <= 'z') {
+        let j = i
+        while (j < s.length && s[j] >= 'a' && s[j] <= 'z') j++
+        const word = s.slice(i, j)
+        if (word === 'pi') toks.push({ t: 'num', v: Math.PI })
+        else if (word === 'e') toks.push({ t: 'num', v: Math.E })
+        else if (FUNCS.includes(word)) toks.push({ t: 'func', v: word })
+        else throw new Error('unknown: ' + word)
+        i = j; continue
+      }
+      if ('+-*/^()!%'.includes(c)) { toks.push({ t: c }); i++; continue }
+      throw new Error('bad char: ' + c)
+    }
+    return toks
+  }
+
+  // ---- Recursive-descent parser/evaluator ----
+  function evaluate(s: string): number {
+    const toks = tokenize(s)
+    let p = 0
+    const peek = () => toks[p]
+    const next = () => toks[p++]
+    const toRad = (x: number) => degrees ? x * Math.PI / 180 : x
+    const fromRad = (x: number) => degrees ? x * 180 / Math.PI : x
+    function factorial(n: number): number {
+      if (n < 0 || Math.floor(n) !== n) throw new Error('factorial needs a non-negative integer')
+      if (n > 170) return Infinity
+      let r = 1
+      for (let k = 2; k <= n; k++) r *= k
+      return r
+    }
+    function parseExpr(): number {
+      let v = parseTerm()
+      while (peek() && (peek().t === '+' || peek().t === '-')) {
+        const op = next().t
+        const rhs = parseTerm()
+        v = op === '+' ? v + rhs : v - rhs
+      }
+      return v
+    }
+    function parseTerm(): number {
+      let v = parseUnary()
+      while (peek() && (peek().t === '*' || peek().t === '/')) {
+        const op = next().t
+        const rhs = parseUnary()
+        if (op === '*') v *= rhs
+        else { if (rhs === 0) throw new Error('divide by zero'); v /= rhs }
+      }
+      return v
+    }
+    function parseUnary(): number {
+      if (peek() && peek().t === '-') { next(); return -parseUnary() }
+      if (peek() && peek().t === '+') { next(); return parseUnary() }
+      return parsePower()
+    }
+    function parsePower(): number {
+      const base = parsePostfix()
+      if (peek() && peek().t === '^') { next(); const exp = parseUnary(); return Math.pow(base, exp) }
+      return base
+    }
+    function parsePostfix(): number {
+      let v = parsePrimary()
+      while (peek() && (peek().t === '!' || peek().t === '%')) {
+        const op = next().t
+        v = op === '!' ? factorial(v) : v / 100
+      }
+      return v
+    }
+    function parsePrimary(): number {
+      const tk = peek()
+      if (!tk) throw new Error('unexpected end')
+      if (tk.t === 'num') { next(); return tk.v as number }
+      if (tk.t === '(') {
+        next(); const v = parseExpr()
+        if (!peek() || peek().t !== ')') throw new Error('missing )')
+        next(); return v
+      }
+      if (tk.t === 'func') {
+        next()
+        if (!peek() || peek().t !== '(') throw new Error('missing ( after ' + tk.v)
+        next(); const arg = parseExpr()
+        if (!peek() || peek().t !== ')') throw new Error('missing )')
+        next()
+        switch (tk.v) {
+          case 'sin': return Math.sin(toRad(arg))
+          case 'cos': return Math.cos(toRad(arg))
+          case 'tan': return Math.tan(toRad(arg))
+          case 'asin': return fromRad(Math.asin(arg))
+          case 'acos': return fromRad(Math.acos(arg))
+          case 'atan': return fromRad(Math.atan(arg))
+          case 'ln': if (arg <= 0) throw new Error('ln needs a positive number'); return Math.log(arg)
+          case 'log': if (arg <= 0) throw new Error('log needs a positive number'); return Math.log10(arg)
+          case 'sqrt': if (arg < 0) throw new Error('cannot root a negative'); return Math.sqrt(arg)
+          case 'exp': return Math.exp(arg)
+          case 'abs': return Math.abs(arg)
+        }
+      }
+      throw new Error('unexpected: ' + tk.t)
+    }
+    const result = parseExpr()
+    if (p < toks.length) throw new Error('unexpected: ' + toks[p].t)
+    return result
+  }
+
+  function fmt(n: number): string {
+    if (!isFinite(n)) return n > 0 ? '∞' : (n < 0 ? '−∞' : 'Error')
+    if (Object.is(n, -0)) n = 0
+    const r = Math.round((n + Number.EPSILON) * 1e12) / 1e12
+    let s = String(r)
+    if (Math.abs(r) >= 1e15 || (Math.abs(r) < 1e-6 && r !== 0)) s = r.toExponential(8).replace(/\.?0+e/, 'e')
+    else if (s.includes('.') && s.length > 14) s = parseFloat(r.toPrecision(12)).toString()
+    return s
+  }
+
+  function insert(token: string) {
+    if (justEvaluated) {
+      // Continue from the answer if an operator is pressed, else start fresh
+      if ('+-*/^!%'.includes(token[0])) expr = fmt(ans)
+      else expr = ''
+      justEvaluated = false
+    }
+    expr += token
+    render()
+  }
+  function clearAll() { expr = ''; displayEl.textContent = '0'; justEvaluated = false; render() }
+  function backspace() {
+    if (justEvaluated) { justEvaluated = false }
+    // Delete a whole function/constant token when possible
+    const funcMatch = expr.match(/(a?sin|a?cos|a?tan|sqrt|log|ln|exp|abs|pi)\($|(a?sin|a?cos|a?tan|sqrt|log|ln|exp|abs|pi)$/)
+    if (funcMatch) expr = expr.slice(0, expr.length - funcMatch[0].length)
+    else expr = expr.slice(0, -1)
+    render()
+  }
+  function equals() {
+    if (!expr) return
+    try {
+      const result = evaluate(expr)
+      ans = result
+      displayEl.textContent = fmt(result)
+      justEvaluated = true
+    } catch (err) {
+      displayEl.textContent = 'Error'
+      justEvaluated = false
+    }
+  }
+  function toggleMode() {
+    degrees = !degrees
+    modeBtn.textContent = degrees ? 'DEG' : 'RAD'
+  }
+
+  document.getElementById('sci-keypad')!.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('button')
+    if (!btn) return
+    if (btn.dataset.ins != null) return insert(btn.dataset.ins)
+    const key = btn.dataset.key
+    if (key === 'AC') clearAll()
+    else if (key === 'back') backspace()
+    else if (key === 'equals') equals()
+    else if (key === 'mode') toggleMode()
+    else if (key === 'ans') insert(fmt(ans))
+    else if (key && OPS[key]) insert(OPS[key])
+  })
+
+  document.addEventListener('keydown', (e) => {
+    const k = e.key
+    if (/^[0-9.]$/.test(k)) { insert(k); e.preventDefault() }
+    else if ('+-*/^()!%'.includes(k)) { insert(k); e.preventDefault() }
+    else if (k === 'Enter' || k === '=') { equals(); e.preventDefault() }
+    else if (k === 'Backspace') { backspace(); e.preventDefault() }
+    else if (k === 'Escape') { clearAll(); e.preventDefault() }
+  })
+
+  render()
+</script>

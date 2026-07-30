@@ -1,0 +1,113 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  let temp = parseFloat(inputs.temp)
+  let wind = parseFloat(inputs.wind)
+  const unit = inputs.unit || 'imperial'
+  if (isNaN(temp)) throw new Error('Enter the air temperature.')
+  if (isNaN(wind) || wind < 0) throw new Error('Enter a valid wind speed.')
+  // Convert to Fahrenheit / mph for the NWS formula, then back
+  let T = unit === 'metric' ? temp * 9 / 5 + 32 : temp
+  let V = unit === 'metric' ? wind / 1.609344 : wind
+  if (T > 50) throw new Error('Wind chill only applies at 50°F (10°C) or below.')
+  const round = x => Math.round(x * 10) / 10
+  let note = ''
+  let wcF
+  if (V <= 3) {
+    wcF = T
+    note = 'At 3 mph (5 km/h) or less, wind chill equals the actual temperature.'
+  } else {
+    wcF = 35.74 + 0.6215 * T - 35.75 * Math.pow(V, 0.16) + 0.4275 * T * Math.pow(V, 0.16)
+  }
+  const wcOut = unit === 'metric' ? (wcF - 32) * 5 / 9 : wcF
+  const u = unit === 'metric' ? '°C' : '°F'
+  const drop = T - wcF
+  const dropOut = unit === 'metric' ? drop * 5 / 9 : drop
+  // Frostbite risk (based on °F wind chill)
+  let risk
+  if (wcF <= -60) risk = 'Extreme — frostbite in ~5 min'
+  else if (wcF <= -35) risk = 'Danger — frostbite in ~10 min'
+  else if (wcF <= -18) risk = 'Caution — frostbite in ~30 min'
+  else risk = 'Low frostbite risk'
+  return {
+    value: round(wcOut) + u,
+    stats: [
+      { label: 'Feels like', value: round(wcOut) + u },
+      { label: 'Actual temp', value: round(temp) + u },
+      { label: 'Colder by', value: round(dropOut) + u },
+      { label: 'Frostbite risk', value: risk }
+    ],
+    breakdown: [
+      'Air temperature: ' + round(temp) + u,
+      'Wind speed: ' + round(wind) + (unit === 'metric' ? ' km/h' : ' mph'),
+      note || 'NWS formula: 35.74 + 0.6215T − 35.75V^0.16 + 0.4275T·V^0.16',
+      'Wind chill: ' + round(wcOut) + u,
+      'That is ' + round(dropOut) + u + ' colder than the air temperature',
+      'Frostbite risk: ' + risk
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is wind chill?', answer: 'Wind chill is how cold the air actually feels on exposed skin once wind is factored in. Wind strips away the thin layer of warm air your body heats around it, so a windy 20°F day feels far colder than a calm one. It reflects the rate of heat loss, not a change in the true air temperature.' },
+  { question: 'How is wind chill calculated?', answer: 'This calculator uses the official National Weather Service formula (adopted in 2001): Wind Chill = 35.74 + 0.6215T − 35.75V^0.16 + 0.4275T·V^0.16, where T is air temperature in °F and V is wind speed in mph. It is valid for temperatures at or below 50°F and wind speeds above 3 mph.' },
+  { question: 'At what wind chill does frostbite occur?', answer: 'Frostbite risk rises sharply as wind chill drops. Around −18°F wind chill, exposed skin can be affected in about 30 minutes; near −35°F it is about 10 minutes; and at −60°F or below, frostbite can occur in roughly 5 minutes. Cover exposed skin whenever wind chill falls below zero.' },
+  { question: 'Does wind chill affect cars, pipes, or objects?', answer: 'No. Wind chill only applies to living things that generate heat. Wind makes people and animals lose heat faster, but an inanimate object like a water pipe or a car engine will never get colder than the actual air temperature no matter how hard the wind blows.' },
+  { question: 'Why does wind chill only apply below 50°F?', answer: 'The NWS wind chill formula was designed and validated for cold conditions at or below 50°F, where wind-driven heat loss meaningfully increases the risk of hypothermia and frostbite. In warm weather the relevant "feels like" measure is the heat index instead, which combines temperature and humidity.' },
+]
+---
+<Layout
+  title="Wind Chill Calculator: What the Cold Really Feels Like"
+  description="Calculate wind chill from temperature and wind speed using the official NWS formula. See the feels-like temperature and frostbite risk in °F or °C."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Wind Chill Calculator', href: '/calculators/wind-chill-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Wind Chill Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Wind Chill Calculator"
+          description="How cold it really feels, using the official NWS formula"
+          formulaId="wind-chill"
+          formulaFn={formulaFn}
+          resultLabel="Feels Like"
+          inputs={[
+            { id: 'unit', label: 'Units', type: 'select', defaultValue: 'imperial', options: [
+              { value: 'imperial', label: 'Fahrenheit & mph' },
+              { value: 'metric', label: 'Celsius & km/h' },
+            ] },
+            { id: 'temp', label: 'Air temperature', type: 'number', placeholder: '20', step: 'any', defaultValue: 20 },
+            { id: 'wind', label: 'Wind speed', type: 'number', placeholder: '15', min: 0, step: 'any', defaultValue: 15 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Heat Index Calculator', href: '/calculators/heat-index-calculator' },
+            { name: 'Dew Point Calculator', href: '/calculators/dew-point-calculator' },
+            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Frostbite time on exposed skin</h3>
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between"><span>−18°F wind chill</span><span>~30 min</span></div>
+            <div class="flex justify-between"><span>−35°F wind chill</span><span>~10 min</span></div>
+            <div class="flex justify-between"><span>−60°F wind chill</span><span>~5 min</span></div>
+          </div>
+          <p class="text-xs mt-3">Applies to people and animals — not cars or pipes.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

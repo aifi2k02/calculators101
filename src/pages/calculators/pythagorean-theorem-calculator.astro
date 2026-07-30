@@ -1,0 +1,110 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const a = inputs.a === '' || inputs.a == null ? null : parseFloat(inputs.a)
+  const b = inputs.b === '' || inputs.b == null ? null : parseFloat(inputs.b)
+  const c = inputs.c === '' || inputs.c == null ? null : parseFloat(inputs.c)
+  const given = [a, b, c].filter(v => v !== null && !isNaN(v))
+  if (given.length !== 2) throw new Error('Enter exactly two of the three sides — leave the unknown one blank.')
+  if (given.some(v => v <= 0)) throw new Error('Side lengths must be greater than zero.')
+  const round = x => Math.round(x * 1e6) / 1e6
+  let solveFor, result, formula
+  if (c === null || isNaN(c)) {
+    result = Math.sqrt(a * a + b * b)
+    solveFor = 'c (hypotenuse)'
+    formula = 'c = √(a² + b²) = √(' + round(a * a) + ' + ' + round(b * b) + ') = ' + round(result)
+  } else {
+    const other = (a === null || isNaN(a)) ? b : a
+    if (c <= other) throw new Error('The hypotenuse (c) must be the longest side — longer than each leg.')
+    result = Math.sqrt(c * c - other * other)
+    solveFor = (a === null || isNaN(a)) ? 'a (leg)' : 'b (leg)'
+    formula = solveFor.charAt(0) + ' = √(c² − ' + (a === null ? 'b' : 'a') + '²) = √(' + round(c * c) + ' − ' + round(other * other) + ') = ' + round(result)
+  }
+  const A = a !== null && !isNaN(a) ? a : (c === null ? null : result)
+  const B = b !== null && !isNaN(b) ? b : (solveFor.startsWith('b') ? result : (c === null ? result : b))
+  const legA = (a === null || isNaN(a)) ? result : a
+  const legB = (b === null || isNaN(b)) ? (c === null ? result : (solveFor.startsWith('b') ? result : b)) : b
+  const hyp = (c === null || isNaN(c)) ? result : c
+  const area = solveFor.startsWith('c') ? (a * b) / 2 : (legA * legB) / 2
+  const perim = legA + legB + hyp
+  return {
+    value: solveFor.charAt(0) + ' = ' + round(result),
+    stats: [
+      { label: 'Solved for', value: solveFor },
+      { label: 'Value', value: String(round(result)) },
+      { label: 'Area', value: String(round(area)) },
+      { label: 'Perimeter', value: String(round(perim)) }
+    ],
+    breakdown: [
+      'Pythagorean theorem: a² + b² = c²',
+      formula,
+      'Leg a: ' + round(legA),
+      'Leg b: ' + round(legB),
+      'Hypotenuse c: ' + round(hyp),
+      'Area = ½ × leg × leg = ' + round(area),
+      'Perimeter = a + b + c = ' + round(perim)
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is the Pythagorean theorem?', answer: 'The Pythagorean theorem states that in a right triangle, the square of the hypotenuse (the side opposite the right angle) equals the sum of the squares of the other two sides: a² + b² = c². It only applies to right triangles — triangles with one 90-degree angle.' },
+  { question: 'How do you find the hypotenuse?', answer: 'Square both legs, add them together, then take the square root: c = √(a² + b²). For example, with legs of 3 and 4: c = √(9 + 16) = √25 = 5. This is the famous 3-4-5 right triangle.' },
+  { question: 'How do you find a missing leg?', answer: 'Rearrange the theorem: a = √(c² − b²). Subtract the square of the known leg from the square of the hypotenuse, then take the square root. The hypotenuse must always be the longest side, so c² − b² must be positive.' },
+  { question: 'What are common Pythagorean triples?', answer: 'Pythagorean triples are whole-number side lengths that satisfy the theorem. The most common are 3-4-5, 5-12-13, 8-15-17, and 7-24-25. Any multiple of a triple is also a triple, such as 6-8-10 (the 3-4-5 triple doubled).' },
+  { question: 'Can the Pythagorean theorem be used on any triangle?', answer: 'No — it only works for right triangles. For triangles without a right angle, use the Law of Cosines, which is a generalization: c² = a² + b² − 2ab·cos(C). When angle C is 90 degrees, cos(C) = 0 and it reduces to the Pythagorean theorem.' },
+]
+---
+<Layout
+  title="Pythagorean Theorem Calculator: Solve a² + b² = c²"
+  description="Solve any right triangle with the Pythagorean theorem. Find the hypotenuse or a missing leg, plus area and perimeter. Free, with step-by-step working."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Pythagorean Theorem Calculator', href: '/calculators/pythagorean-theorem-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Pythagorean Theorem Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Pythagorean Theorem Calculator"
+          description="Enter any two sides — leave the unknown one blank"
+          formulaId="pythagorean"
+          formulaFn={formulaFn}
+          resultLabel="Missing Side"
+          inputs={[
+            { id: 'a', label: 'Side a (leg)', type: 'number', placeholder: '3', min: 0, step: 'any', defaultValue: 3 },
+            { id: 'b', label: 'Side b (leg)', type: 'number', placeholder: '4', min: 0, step: 'any', defaultValue: 4 },
+            { id: 'c', label: 'Side c (hypotenuse)', type: 'number', placeholder: 'leave blank to solve', min: 0, step: 'any' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Triangle Calculator', href: '/calculators/triangle-calculator' },
+            { name: 'Law of Cosines Calculator', href: '/calculators/law-of-cosines-calculator' },
+            { name: 'Area Calculator', href: '/calculators/area-calculator' },
+            { name: 'Square Root Calculator', href: '/calculators/square-root-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Common triples</h3>
+          <div class="grid grid-cols-2 gap-1 font-mono text-xs">
+            <span>3 · 4 · 5</span><span>5 · 12 · 13</span>
+            <span>8 · 15 · 17</span><span>7 · 24 · 25</span>
+            <span>9 · 40 · 41</span><span>6 · 8 · 10</span>
+          </div>
+          <p class="text-xs mt-3">The hypotenuse (c) is always the longest side, opposite the right angle.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

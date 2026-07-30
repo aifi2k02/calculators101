@@ -200,6 +200,21 @@ const pages = [
   // Astronomy
   { url: '/calculators/sunrise-sunset-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/moon-phase-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Math flagship + core
+  { url: '/calculators/scientific-calculator', priority: '0.9', changefreq: 'monthly' },
+  { url: '/calculators/standard-deviation-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/mean-median-mode-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/probability-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/pythagorean-theorem-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Weather formulas
+  { url: '/calculators/wind-chill-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/heat-index-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/dew-point-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Financial TVM
+  { url: '/calculators/present-value-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/future-value-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/simple-interest-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/percent-off-calculator', priority: '0.85', changefreq: 'monthly' },
 ]
 
 export const GET: APIRoute = async () => {

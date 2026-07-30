@@ -1,0 +1,99 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const raw = (inputs.data || '').trim()
+  if (!raw) throw new Error('Enter some numbers, separated by commas or spaces.')
+  const nums = raw.split(/[\\s,]+/).filter(s => s.length).map(Number)
+  if (nums.some(n => isNaN(n))) throw new Error('All entries must be valid numbers.')
+  const n = nums.length
+  if (n < 1) throw new Error('Enter at least one number.')
+  const round = x => Math.round(x * 1e6) / 1e6
+  const sum = nums.reduce((a, b) => a + b, 0)
+  const mean = sum / n
+  const sorted = [...nums].sort((a, b) => a - b)
+  const mid = Math.floor(n / 2)
+  const median = n % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+  const range = sorted[n - 1] - sorted[0]
+  const counts = {}
+  let maxCount = 0
+  nums.forEach(x => { counts[x] = (counts[x] || 0) + 1; if (counts[x] > maxCount) maxCount = counts[x] })
+  let mode
+  if (maxCount <= 1) mode = 'No mode (all unique)'
+  else mode = Object.keys(counts).filter(k => counts[k] === maxCount).map(Number).sort((a, b) => a - b).join(', ')
+  return {
+    value: 'Mean ' + round(mean),
+    stats: [
+      { label: 'Mean', value: String(round(mean)) },
+      { label: 'Median', value: String(round(median)) },
+      { label: 'Mode', value: String(mode) },
+      { label: 'Range', value: String(round(range)) }
+    ],
+    breakdown: [
+      'Count: ' + n,
+      'Sum: ' + round(sum),
+      'Mean (average): ' + round(sum) + ' ÷ ' + n + ' = ' + round(mean),
+      'Median (middle value): ' + round(median),
+      'Mode (most frequent): ' + mode,
+      'Range (max − min): ' + round(sorted[n - 1]) + ' − ' + round(sorted[0]) + ' = ' + round(range),
+      'Minimum: ' + round(sorted[0]),
+      'Maximum: ' + round(sorted[n - 1])
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What are the mean, median, and mode?', answer: 'They are the three main measures of central tendency. The mean is the arithmetic average (sum divided by count). The median is the middle value when the numbers are sorted. The mode is the value that appears most often. Each summarizes a data set in a different way.' },
+  { question: 'How do you find the median of an even set of numbers?', answer: 'Sort the numbers, then take the two values in the middle and average them. For example, in 2, 4, 6, 8 the two middle values are 4 and 6, so the median is (4 + 6) ÷ 2 = 5.' },
+  { question: 'Can a data set have more than one mode?', answer: 'Yes. If two or more values tie for the most occurrences, the set is multimodal and all of them are modes. If every value appears exactly once, the set has no mode. This calculator lists every value that ties for the highest frequency.' },
+  { question: 'When should I use the median instead of the mean?', answer: 'Use the median when your data has outliers or is skewed, because the mean gets pulled toward extreme values while the median does not. For example, median household income is reported instead of mean income because a few very high earners would distort the average.' },
+  { question: 'What is the range?', answer: 'The range is the difference between the largest and smallest values in the data set (maximum minus minimum). It is the simplest measure of how spread out the data is, though it only reflects the two extreme values.' },
+]
+---
+<Layout
+  title="Mean, Median, Mode & Range Calculator"
+  description="Find the mean, median, mode, and range of any list of numbers instantly. Free statistics calculator with a full step-by-step breakdown."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Mean, Median, Mode Calculator', href: '/calculators/mean-median-mode-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Mean, Median, Mode Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Mean, Median, Mode & Range Calculator"
+          description="Central tendency and spread for any list of numbers"
+          formulaId="mean-median-mode"
+          formulaFn={formulaFn}
+          resultLabel="Statistics"
+          inputs={[
+            { id: 'data', label: 'Numbers (comma or space separated)', type: 'textarea', placeholder: '4, 8, 15, 16, 23, 42', rows: 4, defaultValue: '4, 8, 15, 16, 23, 42' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Standard Deviation Calculator', href: '/calculators/standard-deviation-calculator' },
+            { name: 'Average Calculator', href: '/calculators/average-calculator' },
+            { name: 'Z-Score Calculator', href: '/calculators/z-score-calculator' },
+            { name: 'Grade Calculator', href: '/calculators/grade-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Which average should you use?</h3>
+          <p class="mb-2"><strong>Mean</strong> — best for symmetric data with no big outliers.</p>
+          <p class="mb-2"><strong>Median</strong> — best when data is skewed or has outliers.</p>
+          <p><strong>Mode</strong> — best for categories or finding the most common value.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

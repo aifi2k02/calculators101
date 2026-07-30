@@ -104,6 +104,10 @@ export const categories: Category[] = [
       { name: 'Side Hustle Calculator', href: '/calculators/side-hustle-calculator', description: 'Real profit and true hourly rate after costs and tax', icon: '🚀', live: true },
       { name: 'Coast FIRE Calculator', href: '/calculators/coast-fire-calculator', description: 'The amount to invest now to coast to retirement', icon: '🏝️', live: true },
       { name: 'Nurse Pay Calculator', href: '/calculators/nurse-pay-calculator', description: 'Real pay with night & weekend shift differentials', icon: '🩺', live: true },
+      { name: 'Present Value Calculator', href: '/calculators/present-value-calculator', description: 'What a future sum of money is worth today', icon: '⏮️', live: true },
+      { name: 'Future Value Calculator', href: '/calculators/future-value-calculator', description: 'What a lump sum plus deposits grows to over time', icon: '⏭️', live: true },
+      { name: 'Simple Interest Calculator', href: '/calculators/simple-interest-calculator', description: 'Interest and total using I = P × r × t', icon: '📈', live: true },
+      { name: 'Percent Off Calculator', href: '/calculators/percent-off-calculator', description: 'Sale price and savings on any discount', icon: '🏷️', live: true },
     ],
   },
   {
@@ -203,6 +207,11 @@ export const categories: Category[] = [
       { name: 'Number Base Converter', href: '/calculators/number-base-calculator', description: 'Convert between binary, decimal, hex, octal, and any base 2–36', icon: '🔢', live: true },
       { name: 'Tank Volume Calculator', href: '/calculators/tank-volume-calculator', description: 'Capacity of cylinder, rectangular, and oval tanks in gallons or liters', icon: '🛢️', live: true },
       { name: 'Basic Calculator', href: '/calculators/basic-calculator', description: 'Fast online calculator for add, subtract, multiply, divide', icon: '🧮', live: true },
+      { name: 'Scientific Calculator', href: '/calculators/scientific-calculator', description: 'Trig, logs, exponents, roots & constants with full order of operations', icon: '🧪', live: true },
+      { name: 'Standard Deviation Calculator', href: '/calculators/standard-deviation-calculator', description: 'Standard deviation, variance & mean (sample or population)', icon: '📊', live: true },
+      { name: 'Mean, Median, Mode Calculator', href: '/calculators/mean-median-mode-calculator', description: 'Mean, median, mode, and range for any data set', icon: '📈', live: true },
+      { name: 'Probability Calculator', href: '/calculators/probability-calculator', description: 'Single and two-event probability with and/or/not', icon: '🎲', live: true },
+      { name: 'Pythagorean Theorem Calculator', href: '/calculators/pythagorean-theorem-calculator', description: 'Solve a² + b² = c² for any right-triangle side', icon: '📐', live: true },
     ],
   },
   {
@@ -267,6 +276,9 @@ export const categories: Category[] = [
       { name: 'Time Zone Converter', href: '/calculators/time-zone-converter', description: 'Convert time between world time zones, DST-accurate', icon: '🌐', live: true },
       { name: 'Sunrise & Sunset Calculator', href: '/calculators/sunrise-sunset-calculator', description: 'Sunrise, sunset, and day length for any location', icon: '🌅', live: true },
       { name: 'Moon Phase Calculator', href: '/calculators/moon-phase-calculator', description: 'Moon phase, illumination, and next full moon', icon: '🌙', live: true },
+      { name: 'Wind Chill Calculator', href: '/calculators/wind-chill-calculator', description: 'How cold it really feels, via the official NWS formula', icon: '🥶', live: true },
+      { name: 'Heat Index Calculator', href: '/calculators/heat-index-calculator', description: 'How hot it really feels, from temperature and humidity', icon: '🥵', live: true },
+      { name: 'Dew Point Calculator', href: '/calculators/dew-point-calculator', description: 'Dew point and comfort level from temp and humidity', icon: '💧', live: true },
     ],
   },
 ]

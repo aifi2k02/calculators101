@@ -1,0 +1,108 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const pv = parseFloat(inputs.pv) || 0
+  const rate = parseFloat(inputs.rate)
+  const years = parseFloat(inputs.years)
+  const freq = parseFloat(inputs.freq) || 1
+  const pmt = parseFloat(inputs.pmt) || 0
+  if (isNaN(rate)) throw new Error('Enter the annual interest rate.')
+  if (isNaN(years) || years < 0) throw new Error('Enter the number of years.')
+  if (pv === 0 && pmt === 0) throw new Error('Enter a starting amount, a regular contribution, or both.')
+  const r = rate / 100 / freq
+  const n = years * freq
+  const fvPrincipal = pv * Math.pow(1 + r, n)
+  let fvContrib
+  if (r === 0) fvContrib = pmt * n
+  else fvContrib = pmt * ((Math.pow(1 + r, n) - 1) / r)
+  const fv = fvPrincipal + fvContrib
+  const contributions = pv + pmt * n
+  const interest = fv - contributions
+  const money = x => '$' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return {
+    value: money(fv),
+    stats: [
+      { label: 'Future value', value: money(fv) },
+      { label: 'Total contributions', value: money(contributions) },
+      { label: 'Interest earned', value: money(interest) },
+      { label: 'Periods', value: n + ' × ' + rate + '%/yr' }
+    ],
+    breakdown: [
+      'Starting amount: ' + money(pv),
+      'Regular contribution: ' + money(pmt) + ' per period',
+      'Annual rate: ' + rate + '% compounded ' + freq + '×/year',
+      'Periods (n): ' + years + ' years × ' + freq + ' = ' + n,
+      'Growth on starting amount: ' + money(fvPrincipal),
+      'Growth on contributions: ' + money(fvContrib),
+      'Total contributed: ' + money(contributions),
+      'Interest earned: ' + money(interest),
+      'Future value: ' + money(fv)
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is future value?', answer: 'Future value (FV) is what an amount of money invested today will grow to at a given interest rate over a set period. It reflects the time value of money — the idea that money earns a return and compounds over time. This calculator also handles regular ongoing contributions.' },
+  { question: 'What is the future value formula?', answer: 'For a lump sum, FV = PV × (1 + r)^n. For regular deposits, add the annuity term PMT × [((1 + r)^n − 1) ÷ r], where r is the rate per period and n is the number of periods. This tool combines both so you can model a starting balance plus recurring contributions.' },
+  { question: 'How does compounding frequency affect future value?', answer: 'The more often interest compounds, the more you earn, because each new interest payment starts earning interest sooner. Monthly compounding produces a higher future value than annual compounding at the same nominal rate. The effect is larger at higher rates and over longer periods.' },
+  { question: 'What is the difference between contributions and interest earned?', answer: 'Contributions are the actual money you put in — your starting amount plus every deposit. Interest earned is the growth on top of that, the difference between the final future value and everything you contributed. Over long horizons, compound interest often exceeds the total contributions.' },
+  { question: 'How can I use future value for retirement planning?', answer: 'Enter your current savings as the starting amount, your regular monthly deposit as the contribution, an expected annual return, and the years until retirement. The future value shows your projected balance, letting you test how changes in contribution, rate, or time affect the outcome.' },
+]
+---
+<Layout
+  title="Future Value Calculator: Grow a Lump Sum or Deposits"
+  description="Calculate the future value of a lump sum plus regular contributions at any interest rate and compounding frequency. Free FV calculator with interest breakdown."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Future Value Calculator', href: '/calculators/future-value-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Future Value Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Future Value Calculator"
+          description="What your money grows to, with optional regular contributions"
+          formulaId="future-value"
+          formulaFn={formulaFn}
+          resultLabel="Future Value"
+          inputs={[
+            { id: 'pv', label: 'Starting amount ($)', type: 'number', placeholder: '1000', min: 0, step: 'any', defaultValue: 1000 },
+            { id: 'pmt', label: 'Contribution each period ($, optional)', type: 'number', placeholder: '100', min: 0, step: 'any', defaultValue: 100 },
+            { id: 'rate', label: 'Annual interest rate (%)', type: 'number', placeholder: '7', step: 'any', defaultValue: 7 },
+            { id: 'years', label: 'Number of years', type: 'number', placeholder: '20', min: 0, step: 'any', defaultValue: 20 },
+            { id: 'freq', label: 'Compounding & contribution frequency', type: 'select', defaultValue: '12', options: [
+              { value: '1', label: 'Annually' },
+              { value: '2', label: 'Semi-annually' },
+              { value: '4', label: 'Quarterly' },
+              { value: '12', label: 'Monthly' },
+            ] },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Present Value Calculator', href: '/calculators/present-value-calculator' },
+            { name: 'Compound Interest Calculator', href: '/calculators/compound-interest-calculator' },
+            { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
+            { name: 'Savings Calculator', href: '/calculators/savings-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">The formula</h3>
+          <p class="font-mono text-xs mb-1">FV = PV × (1 + r)^n</p>
+          <p class="font-mono text-xs mb-2">+ PMT × [((1 + r)^n − 1) ÷ r]</p>
+          <p class="text-xs">Contributions are assumed at the end of each period (ordinary annuity).</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

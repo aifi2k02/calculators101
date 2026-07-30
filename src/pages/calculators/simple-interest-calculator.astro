@@ -1,0 +1,96 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const p = parseFloat(inputs.principal)
+  const rate = parseFloat(inputs.rate)
+  const t = parseFloat(inputs.time)
+  const unit = inputs.unit || 'years'
+  if (isNaN(p) || p < 0) throw new Error('Enter the principal amount.')
+  if (isNaN(rate)) throw new Error('Enter the annual interest rate.')
+  if (isNaN(t) || t < 0) throw new Error('Enter the time period.')
+  const years = unit === 'months' ? t / 12 : unit === 'days' ? t / 365 : t
+  const interest = p * (rate / 100) * years
+  const total = p + interest
+  const money = x => '$' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return {
+    value: money(interest),
+    stats: [
+      { label: 'Interest', value: money(interest) },
+      { label: 'Total (principal + interest)', value: money(total) },
+      { label: 'Principal', value: money(p) },
+      { label: 'Time', value: years.toFixed(2) + ' yr' }
+    ],
+    breakdown: [
+      'Principal (P): ' + money(p),
+      'Annual rate (r): ' + rate + '%',
+      'Time (t): ' + t + ' ' + unit + ' = ' + years.toFixed(4) + ' years',
+      'Simple interest = P × r × t',
+      '= ' + money(p) + ' × ' + (rate / 100) + ' × ' + years.toFixed(4),
+      'Interest: ' + money(interest),
+      'Total amount: ' + money(total)
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is simple interest?', answer: 'Simple interest is interest calculated only on the original principal, never on previously earned interest. It grows in a straight line rather than accelerating. The formula is I = P × r × t, where P is the principal, r is the annual rate as a decimal, and t is the time in years.' },
+  { question: 'What is the difference between simple and compound interest?', answer: 'Simple interest is always figured on the original principal alone, so the interest each period stays the same. Compound interest is figured on the principal plus all accumulated interest, so it grows faster over time. Simple interest is common for short-term loans, car loans, and some bonds; compound interest applies to most savings and long-term debt.' },
+  { question: 'How do I calculate simple interest?', answer: 'Multiply the principal by the annual rate (as a decimal) by the time in years. For example, $1,000 at 5% for 3 years is 1,000 × 0.05 × 3 = $150 in interest, for a total of $1,150. If your time is in months or days, this calculator converts it to years for you.' },
+  { question: 'How do I convert months or days to years for the formula?', answer: 'Divide months by 12 or days by 365. For instance, 6 months is 0.5 years and 90 days is roughly 0.247 years. The interest formula requires time in years, so this conversion keeps the rate and time period consistent. Select the unit and the calculator handles it automatically.' },
+  { question: 'Where is simple interest used in real life?', answer: 'Simple interest appears in many car loans, short-term personal loans, some student loans, Treasury bills, and certificates of deposit that pay interest out rather than reinvesting it. It is also used in quick estimates because the math is straightforward.' },
+]
+---
+<Layout
+  title="Simple Interest Calculator: I = P × r × t"
+  description="Calculate simple interest and the total amount on a loan or investment. Enter principal, rate, and time in years, months, or days. Free, with step-by-step math."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Financial', href: '/calculators/financial' },
+    { name: 'Simple Interest Calculator', href: '/calculators/simple-interest-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <span class="text-gray-900">Simple Interest Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Simple Interest Calculator"
+          description="Interest and total on a principal, using I = P × r × t"
+          formulaId="simple-interest"
+          formulaFn={formulaFn}
+          resultLabel="Interest"
+          inputs={[
+            { id: 'principal', label: 'Principal amount ($)', type: 'number', placeholder: '1000', min: 0, step: 'any', defaultValue: 1000 },
+            { id: 'rate', label: 'Annual interest rate (%)', type: 'number', placeholder: '5', step: 'any', defaultValue: 5 },
+            { id: 'time', label: 'Time period', type: 'number', placeholder: '3', min: 0, step: 'any', defaultValue: 3 },
+            { id: 'unit', label: 'Time unit', type: 'select', defaultValue: 'years', options: [
+              { value: 'years', label: 'Years' },
+              { value: 'months', label: 'Months' },
+              { value: 'days', label: 'Days' },
+            ] },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Compound Interest Calculator', href: '/calculators/compound-interest-calculator' },
+            { name: 'Interest Calculator', href: '/calculators/interest-calculator' },
+            { name: 'Loan Calculator', href: '/calculators/loan-calculator' },
+            { name: 'Future Value Calculator', href: '/calculators/future-value-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">The formula</h3>
+          <p class="font-mono text-xs mb-2">I = P × r × t</p>
+          <p class="text-xs">Interest is charged only on the original principal — never on prior interest.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

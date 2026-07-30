@@ -1,0 +1,108 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  let temp = parseFloat(inputs.temp)
+  const rh = parseFloat(inputs.rh)
+  const unit = inputs.unit || 'imperial'
+  if (isNaN(temp)) throw new Error('Enter the air temperature.')
+  if (isNaN(rh) || rh <= 0 || rh > 100) throw new Error('Enter a relative humidity between 1 and 100%.')
+  // Work in Celsius with the Magnus formula
+  let Tc = unit === 'imperial' ? (temp - 32) * 5 / 9 : temp
+  const a = 17.625, b = 243.04
+  const gamma = Math.log(rh / 100) + (a * Tc) / (b + Tc)
+  const dpC = (b * gamma) / (a - gamma)
+  const round = x => Math.round(x * 10) / 10
+  const dpOut = unit === 'imperial' ? dpC * 9 / 5 + 32 : dpC
+  const u = unit === 'imperial' ? '°F' : '°C'
+  // Comfort description (based on °F dew point)
+  const dpF = dpC * 9 / 5 + 32
+  let comfort
+  if (dpF < 50) comfort = 'Dry & comfortable'
+  else if (dpF < 55) comfort = 'Comfortable'
+  else if (dpF < 60) comfort = 'Becoming sticky'
+  else if (dpF < 65) comfort = 'Sticky, humid'
+  else if (dpF < 70) comfort = 'Uncomfortable, muggy'
+  else if (dpF < 75) comfort = 'Oppressive'
+  else comfort = 'Miserable — dangerous humidity'
+  return {
+    value: round(dpOut) + u,
+    stats: [
+      { label: 'Dew point', value: round(dpOut) + u },
+      { label: 'Air temp', value: round(temp) + u },
+      { label: 'Humidity', value: round(rh) + '%' },
+      { label: 'Comfort', value: comfort }
+    ],
+    breakdown: [
+      'Air temperature: ' + round(temp) + u,
+      'Relative humidity: ' + round(rh) + '%',
+      'Magnus formula (a = 17.625, b = 243.04°C)',
+      'Dew point: ' + round(dpOut) + u,
+      'Comfort level: ' + comfort,
+      'The dew point is the temperature air must cool to for dew or fog to form.'
+    ]
+  }
+`
+
+const faqs = [
+  { question: 'What is the dew point?', answer: 'The dew point is the temperature to which air must cool for water vapor to condense into dew, fog, or clouds. It is a direct measure of how much moisture is actually in the air. Unlike relative humidity, the dew point does not change as the air temperature rises and falls during the day.' },
+  { question: 'How is dew point calculated?', answer: 'This calculator uses the Magnus formula with the Alduchov-Eskridge coefficients (a = 17.625, b = 243.04°C). It combines the air temperature and relative humidity to solve for the saturation temperature. The result is accurate to a few tenths of a degree across normal weather conditions.' },
+  { question: 'What dew point feels humid?', answer: 'A dew point below 55°F (13°C) feels comfortable and dry. From 55–60°F it starts to feel sticky, 60–65°F is noticeably humid, 65–70°F is muggy and uncomfortable, and above 70°F (21°C) is oppressive. Dew points above 75°F are rare and can be dangerous for outdoor activity.' },
+  { question: 'What is the difference between dew point and relative humidity?', answer: 'Relative humidity is the percentage of moisture the air holds relative to its maximum at the current temperature, so it swings widely as the temperature changes. Dew point is the absolute moisture content and stays steady. That is why meteorologists prefer dew point to describe how humid it really feels.' },
+  { question: 'Can the dew point be higher than the air temperature?', answer: 'No. The dew point can equal the air temperature — which happens at 100% relative humidity, when fog or dew forms — but it can never exceed it. As the two values converge, the air is fully saturated and condensation begins.' },
+]
+---
+<Layout
+  title="Dew Point Calculator: Temperature & Humidity to Dew Point"
+  description="Calculate the dew point from air temperature and relative humidity using the Magnus formula. See the comfort level in °F or °C. Free and accurate."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Other', href: '/calculators/other' },
+    { name: 'Dew Point Calculator', href: '/calculators/dew-point-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <span class="text-gray-900">Dew Point Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Dew Point Calculator"
+          description="The dew point from temperature and humidity, via the Magnus formula"
+          formulaId="dew-point"
+          formulaFn={formulaFn}
+          resultLabel="Dew Point"
+          inputs={[
+            { id: 'unit', label: 'Units', type: 'select', defaultValue: 'imperial', options: [
+              { value: 'imperial', label: 'Fahrenheit' },
+              { value: 'metric', label: 'Celsius' },
+            ] },
+            { id: 'temp', label: 'Air temperature', type: 'number', placeholder: '75', step: 'any', defaultValue: 75 },
+            { id: 'rh', label: 'Relative humidity (%)', type: 'number', placeholder: '60', min: 1, max: 100, step: 'any', defaultValue: 60 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Heat Index Calculator', href: '/calculators/heat-index-calculator' },
+            { name: 'Wind Chill Calculator', href: '/calculators/wind-chill-calculator' },
+            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Dew point comfort scale</h3>
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between"><span>&lt; 55°F</span><span>Comfortable</span></div>
+            <div class="flex justify-between"><span>60–65°F</span><span>Sticky</span></div>
+            <div class="flex justify-between"><span>65–70°F</span><span>Muggy</span></div>
+            <div class="flex justify-between"><span>&gt; 70°F</span><span>Oppressive</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

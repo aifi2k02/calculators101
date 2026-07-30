@@ -1,0 +1,99 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+
+const formulaFn = `
+  const aFav = parseFloat(inputs.aFav)
+  const aTot = parseFloat(inputs.aTot)
+  const bFav = parseFloat(inputs.bFav)
+  const bTot = parseFloat(inputs.bTot)
+  if (isNaN(aFav) || isNaN(aTot)) throw new Error('Enter the favorable and total outcomes for event A.')
+  if (aTot <= 0 || bTot <= 0) throw new Error('Total outcomes must be greater than zero.')
+  if (aFav < 0 || bFav < 0) throw new Error('Favorable outcomes cannot be negative.')
+  if (aFav > aTot || (!isNaN(bFav) && bFav > bTot)) throw new Error('Favorable outcomes cannot exceed total outcomes.')
+  const pA = aFav / aTot
+  const pct = x => (x * 100).toFixed(2) + '%'
+  const round = x => Math.round(x * 1e6) / 1e6
+  const hasB = !isNaN(bFav) && !isNaN(bTot)
+  const stats = [
+    { label: 'P(A)', value: pct(pA) },
+    { label: 'P(not A)', value: pct(1 - pA) }
+  ]
+  const breakdown = [
+    'P(A) = ' + aFav + ' ÷ ' + aTot + ' = ' + round(pA) + ' = ' + pct(pA),
+    'P(not A) = 1 − P(A) = ' + pct(1 - pA)
+  ]
+  let value = 'P(A) = ' + pct(pA)
+  if (hasB) {
+    const pB = bFav / bTot
+    const pAnd = pA * pB
+    const pOr = pA + pB - pAnd
+    stats.push({ label: 'P(A and B)', value: pct(pAnd) })
+    stats.push({ label: 'P(A or B)', value: pct(pOr) })
+    breakdown.push('P(B) = ' + bFav + ' ÷ ' + bTot + ' = ' + pct(pB))
+    breakdown.push('P(A and B) = P(A) × P(B) = ' + pct(pAnd) + '  (assuming independent events)')
+    breakdown.push('P(A or B) = P(A) + P(B) − P(A and B) = ' + pct(pOr))
+    value = 'P(A and B) = ' + pct(pAnd)
+  }
+  return { value, stats, breakdown }
+`
+
+const faqs = [
+  { question: 'How do you calculate the probability of a single event?', answer: 'Divide the number of favorable outcomes by the total number of possible outcomes. For example, rolling a 4 on a six-sided die has 1 favorable outcome out of 6 possible, so the probability is 1 ÷ 6 ≈ 0.167, or 16.7%.' },
+  { question: 'What is the probability of A and B happening together?', answer: 'For two independent events, multiply their probabilities: P(A and B) = P(A) × P(B). For example, flipping two heads in a row is 0.5 × 0.5 = 0.25, or 25%. This calculator assumes the two events are independent — one does not affect the other.' },
+  { question: 'What is the probability of A or B happening?', answer: 'Use P(A or B) = P(A) + P(B) − P(A and B). Subtracting the overlap prevents double-counting the cases where both occur. For mutually exclusive events (that can not both happen), the overlap is zero, so you simply add the two probabilities.' },
+  { question: 'What is the difference between independent and mutually exclusive events?', answer: 'Independent events do not influence each other — the outcome of one says nothing about the other (like two separate coin flips). Mutually exclusive events cannot both happen at once (like a single coin landing both heads and tails). This tool computes the "and"/"or" values assuming independence.' },
+  { question: 'What does P(not A) mean?', answer: 'P(not A) is the complement — the probability that event A does not happen. Since something either happens or it does not, P(not A) = 1 − P(A). If there is a 30% chance of rain, there is a 70% chance of no rain.' },
+]
+---
+<Layout
+  title="Probability Calculator: Single & Two-Event Odds"
+  description="Calculate the probability of single and multiple events, including P(A and B), P(A or B), and complements. Free probability calculator with step-by-step math."
+  breadcrumbs={[
+    { name: 'Home', href: '/' },
+    { name: 'Math', href: '/calculators/math' },
+    { name: 'Probability Calculator', href: '/calculators/probability-calculator' },
+  ]}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <span class="text-gray-900">Probability Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Probability Calculator"
+          description="Single-event and two-event probability (leave B blank for one event)"
+          formulaId="probability"
+          formulaFn={formulaFn}
+          resultLabel="Probability"
+          inputs={[
+            { id: 'aFav', label: 'Event A — favorable outcomes', type: 'number', placeholder: '1', min: 0, step: 'any', defaultValue: 1 },
+            { id: 'aTot', label: 'Event A — total outcomes', type: 'number', placeholder: '6', min: 0, step: 'any', defaultValue: 6 },
+            { id: 'bFav', label: 'Event B — favorable outcomes (optional)', type: 'number', placeholder: '1', min: 0, step: 'any' },
+            { id: 'bTot', label: 'Event B — total outcomes (optional)', type: 'number', placeholder: '6', min: 0, step: 'any' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={[
+            { name: 'Combination Calculator', href: '/calculators/combination-calculator' },
+            { name: 'Random Number Generator', href: '/calculators/random-number-calculator' },
+            { name: 'Percentage Calculator', href: '/calculators/percentage-calculator' },
+            { name: 'Z-Score Calculator', href: '/calculators/z-score-calculator' },
+          ]}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-sm text-blue-900 leading-relaxed">
+          <h3 class="font-bold mb-2">Quick reference</h3>
+          <p class="font-mono text-xs mb-1">P(A) = favorable ÷ total</p>
+          <p class="font-mono text-xs mb-1">P(not A) = 1 − P(A)</p>
+          <p class="font-mono text-xs mb-1">P(A and B) = P(A) × P(B)</p>
+          <p class="font-mono text-xs">P(A or B) = P(A) + P(B) − P(A and B)</p>
+          <p class="text-xs mt-2 text-blue-700">Two-event results assume independent events.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
