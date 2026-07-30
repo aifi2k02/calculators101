@@ -52,7 +52,7 @@
   <!-- right stat cards -->
   <g font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
     <rect x="838" y="120" width="282" height="120" rx="20" fill="url(#card)" stroke="#ffffff" stroke-opacity="0.16"/>
-    <text x="979" y="192" font-size="56" font-weight="800" fill="#FFFFFF">160+</text>
+    <text x="979" y="192" font-size="56" font-weight="800" fill="#FFFFFF">190+</text>
     <text x="979" y="222" font-size="22" font-weight="500" fill="#B9BFEA">Calculators</text>
 
     <rect x="838" y="256" width="282" height="120" rx="20" fill="url(#card)" stroke="#ffffff" stroke-opacity="0.16"/>
