@@ -346,6 +346,7 @@ const faqSchema = faqs.length > 0 ? {
   const shareCanvas = document.getElementById(`share-canvas-${formulaId}`)
 
   let lastShare = null
+  let lastResult = null
 
   const calculate = new Function('inputs', formulaFn)
 
@@ -422,6 +423,7 @@ const faqSchema = faqs.length > 0 ? {
     try {
       const inputs = getInputs()
       const result = calculate(inputs)
+      lastResult = result
 
       // Main value
       if (resultValue) resultValue.textContent = result.value
@@ -487,16 +489,26 @@ const faqSchema = faqs.length > 0 ? {
     if (aiResult) aiResult.textContent = '✨ Generating explanation...'
     const inputs = getInputs()
     const value = resultValue?.textContent
+    const breakdown = lastResult?.breakdown ?? []
+    const stats = lastResult?.stats ?? []
+    // Client-side fallback if the endpoint is unreachable: use the deterministic steps
+    const localFallback = () => {
+      const steps = breakdown.filter(l => l && l !== '—')
+      return steps.length
+        ? 'Here is how this result was reached:\n\n• ' + steps.join('\n• ')
+        : 'Result: ' + value
+    }
     try {
       const res = await fetch('/api/explain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ calculatorId: formulaId, inputs, result: value })
+        body: JSON.stringify({ calculatorId: formulaId, title: calcTitle, inputs, result: value, breakdown, stats })
       })
+      if (!res.ok) throw new Error('bad status')
       const data = await res.json()
-      if (aiResult) aiResult.textContent = data.explanation ?? 'Could not generate explanation.'
+      if (aiResult) aiResult.textContent = data.explanation ?? localFallback()
     } catch {
-      if (aiResult) aiResult.textContent = 'AI explanation unavailable. Please try again later.'
+      if (aiResult) aiResult.textContent = localFallback()
     }
   })
 
