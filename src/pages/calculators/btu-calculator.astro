@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const area = parseFloat(inputs.area)
+  const occupants = parseFloat(inputs.occupants) || 1
+  const sun = inputs.sun || 'normal'
+  const kitchen = inputs.kitchen === 'yes'
+  const ceiling = parseFloat(inputs.ceiling) || 8
+  if (isNaN(area) || area <= 0) throw new Error('Enter the room area in square feet.')
+  if (occupants < 1) throw new Error('There must be at least 1 occupant.')
+
+  // EnergyStar-style estimate: 20 BTU per sq ft (at 8 ft ceilings)
+  let btu = area * 20
+  // Ceiling height adjustment
+  btu *= ceiling / 8
+  // Extra occupants beyond 2 add ~600 BTU each
+  if (occupants > 2) btu += (occupants - 2) * 600
+  // Kitchens run hot
+  if (kitchen) btu += 4000
+  // Sun exposure: +10% very sunny, -10% heavily shaded
+  if (sun === 'sunny') btu *= 1.10
+  else if (sun === 'shaded') btu *= 0.90
+
+  btu = Math.round(btu / 100) * 100
+  const tons = btu / 12000
+  const watts = Math.round(btu / 3.412)
+  return {
+    value: btu.toLocaleString() + ' BTU/hr',
+    gaugeValue: Math.min(btu / 24000 * 100, 100),
+    stats: [
+      { label: 'Cooling Needed', value: btu.toLocaleString() + ' BTU/hr' },
+      { label: 'In Tons', value: tons.toFixed(2) + ' tons' },
+      { label: 'In Watts', value: watts.toLocaleString() + ' W' },
+      { label: 'Room Area', value: area.toLocaleString() + ' sq ft' },
+    ],
+    breakdown: [
+      'Base: ' + area.toLocaleString() + ' sq ft × 20 BTU = ' + Math.round(area * 20).toLocaleString(),
+      'Ceiling ' + ceiling + ' ft (vs 8 ft standard) applied',
+      occupants > 2 ? 'Extra occupants: +' + ((occupants - 2) * 600).toLocaleString() + ' BTU' : 'Occupants: 1–2 (no adjustment)',
+      kitchen ? 'Kitchen: +4,000 BTU' : 'Not a kitchen',
+      sun === 'sunny' ? 'Very sunny room: +10%' : sun === 'shaded' ? 'Heavily shaded: −10%' : 'Normal sun: no change',
+      '—',
+      'Recommended: ' + btu.toLocaleString() + ' BTU/hr (' + tons.toFixed(2) + ' tons)',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Small (window unit)', color: '#22c55e', from: 0, to: 40 },
+    { label: 'Medium', color: '#3b82f6', from: 40, to: 70 },
+    { label: 'Large (central/mini-split)', color: '#f59e0b', from: 70, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How many BTUs do I need to cool a room?', answer: 'A common rule is about 20 BTU per square foot. A 300 sq ft room needs roughly 6,000 BTU. This calculator refines that with ceiling height, number of occupants, kitchen heat, and sun exposure for a better match.' },
+  { question: 'What happens if the AC is too big or too small?', answer: 'Too small and it runs constantly without cooling well. Too big and it cools fast but short-cycles, leaving the room humid and clammy and wearing out the compressor. Right-sizing matters for comfort, humidity, and efficiency.' },
+  { question: 'How do BTUs convert to tons and watts?', answer: '1 ton of cooling = 12,000 BTU/hr. To convert BTU/hr to watts, divide by 3.412. So a 12,000 BTU unit is 1 ton and about 3,517 watts of cooling.' },
+  { question: 'Do kitchens and sunny rooms need more cooling?', answer: 'Yes. Add about 4,000 BTU for a kitchen because of appliance heat, add roughly 10% for a very sunny room, and subtract about 10% for a heavily shaded one. Each extra person beyond two adds around 600 BTU.' },
+  { question: 'Is BTU used for heating too?', answer: 'Yes — furnaces and heat pumps are also rated in BTU/hr. Heating needs depend heavily on climate and insulation, so a cooling estimate is only a rough starting point for heating; a Manual J load calculation is best for sizing a furnace.' }
+]
+---
+<Layout
+  title="BTU Calculator: AC & Cooling Size for Any Room"
+  description="Calculate the BTUs needed to cool a room by size, ceiling height, occupants, sun, and kitchen heat. Free BTU calculator with tons and watts conversion."
+  breadcrumbs={getBreadcrumbs('/calculators/btu-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/science" class="hover:text-blue-600">Science &amp; Weather</a><span>›</span>
+      <span class="text-gray-900">BTU Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="BTU Calculator"
+          description="Cooling capacity a room needs, in BTU/hr, tons, and watts"
+          formulaId="btu"
+          formulaFn={formulaFn}
+          resultLabel="Cooling Needed"
+          gauge={gauge}
+          inputs={[
+            { id: 'area', label: 'Room Area (sq ft)', type: 'number', placeholder: '300', min: 1, defaultValue: 300 },
+            { id: 'ceiling', label: 'Ceiling Height (ft)', type: 'number', placeholder: '8', min: 6, max: 20, step: 0.5, defaultValue: 8 },
+            { id: 'occupants', label: 'Regular Occupants', type: 'number', placeholder: '2', min: 1, max: 20, defaultValue: 2 },
+            { id: 'sun', label: 'Sun Exposure', type: 'select', options: [
+              { value: 'shaded', label: 'Heavily shaded (−10%)' },
+              { value: 'normal', label: 'Normal' },
+              { value: 'sunny', label: 'Very sunny (+10%)' },
+            ], defaultValue: 'normal' },
+            { id: 'kitchen', label: 'Is it a kitchen?', type: 'select', options: [
+              { value: 'no', label: 'No' },
+              { value: 'yes', label: 'Yes (+4,000 BTU)' },
+            ], defaultValue: 'no' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/btu-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Quick reference</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>100–300 sq ft → 5,000–7,000 BTU</div>
+            <div>300–550 sq ft → 8,000–12,000 BTU</div>
+            <div>550–1,000 sq ft → 14,000–18,000 BTU</div>
+            <div>1 ton = 12,000 BTU/hr</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,103 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const length = parseFloat(inputs.length)
+  const width = parseFloat(inputs.width)
+  const depthIn = parseFloat(inputs.depth)
+  const density = parseFloat(inputs.density) || 1.4   // tons per cubic yard (typical gravel)
+  const waste = parseFloat(inputs.waste) || 0
+  if (isNaN(length) || length <= 0) throw new Error('Enter the length in feet.')
+  if (isNaN(width) || width <= 0) throw new Error('Enter the width in feet.')
+  if (isNaN(depthIn) || depthIn <= 0) throw new Error('Enter the depth in inches.')
+
+  const cubicFeet = length * width * (depthIn / 12)
+  let cubicYards = cubicFeet / 27
+  if (waste > 0) cubicYards *= (1 + waste / 100)
+  const tons = cubicYards * density
+  const pounds = tons * 2000
+  return {
+    value: cubicYards.toFixed(2) + ' cubic yards',
+    gaugeValue: Math.min(cubicYards / 20 * 100, 100),
+    stats: [
+      { label: 'Gravel Needed', value: cubicYards.toFixed(2) + ' cu yd' },
+      { label: 'In Tons', value: tons.toFixed(2) + ' tons' },
+      { label: 'In Pounds', value: Math.round(pounds).toLocaleString() + ' lb' },
+      { label: 'Cubic Feet', value: cubicFeet.toFixed(1) + ' cu ft' },
+      { label: 'Coverage Area', value: (length * width).toLocaleString() + ' sq ft' },
+    ],
+    breakdown: [
+      'Area: ' + length + ' ft × ' + width + ' ft = ' + (length * width).toLocaleString() + ' sq ft',
+      'Depth: ' + depthIn + ' in = ' + (depthIn / 12).toFixed(3) + ' ft',
+      'Volume: ' + cubicFeet.toFixed(1) + ' cu ft ÷ 27 = ' + (cubicFeet / 27).toFixed(2) + ' cu yd',
+      waste > 0 ? 'With ' + waste + '% extra: ' + cubicYards.toFixed(2) + ' cu yd' : 'No waste allowance added',
+      'Weight at ' + density + ' tons/cu yd: ' + tons.toFixed(2) + ' tons',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Small job', color: '#22c55e', from: 0, to: 25 },
+    { label: 'Medium', color: '#3b82f6', from: 25, to: 60 },
+    { label: 'Large (order by truck)', color: '#f59e0b', from: 60, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How much gravel do I need?', answer: 'Multiply length × width × depth to get the volume, then convert to cubic yards (divide cubic feet by 27). For a 20 × 10 ft area at 3 inches deep: 20 × 10 × 0.25 = 50 cubic feet ÷ 27 = about 1.85 cubic yards.' },
+  { question: 'How many tons is a cubic yard of gravel?', answer: 'Most gravel weighs about 1.4 tons (roughly 2,800 lb) per cubic yard, though it ranges from about 1.4 to 1.7 depending on the stone and moisture. This calculator defaults to 1.4 tons/cu yd and lets you change it.' },
+  { question: 'How deep should a gravel layer be?', answer: 'For a walkway or décor, 2–3 inches is typical. For a driveway, use 4–6 inches, often in layers over a compacted base. Deeper layers need proportionally more material — adjust the depth field to compare.' },
+  { question: 'Should I order extra gravel?', answer: 'Yes — add about 5–10% for compaction, uneven ground, and spillage. Use the waste field to include it. It is usually cheaper to order slightly more than to pay for a second small delivery.' },
+  { question: 'How much area does a ton of gravel cover?', answer: 'At 2 inches deep, one ton of gravel covers roughly 100 square feet; at 3 inches, about 70 square feet. Coverage drops as depth increases, so always calculate by volume for the depth you actually need.' }
+]
+---
+<Layout
+  title="Gravel Calculator: Cubic Yards & Tons Needed"
+  description="Calculate how much gravel you need in cubic yards, tons, and pounds from length, width, and depth. Free gravel calculator with waste allowance."
+  breadcrumbs={getBreadcrumbs('/calculators/gravel-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/home-diy" class="hover:text-blue-600">Home &amp; DIY</a><span>›</span>
+      <span class="text-gray-900">Gravel Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Gravel Calculator"
+          description="Cubic yards, tons, and pounds of gravel for any area and depth"
+          formulaId="gravel"
+          formulaFn={formulaFn}
+          resultLabel="Gravel Needed"
+          gauge={gauge}
+          inputs={[
+            { id: 'length', label: 'Length (feet)', type: 'number', placeholder: '20', min: 0.1, step: 0.1, defaultValue: 20 },
+            { id: 'width', label: 'Width (feet)', type: 'number', placeholder: '10', min: 0.1, step: 0.1, defaultValue: 10 },
+            { id: 'depth', label: 'Depth (inches)', type: 'number', placeholder: '3', min: 0.1, step: 0.1, defaultValue: 3 },
+            { id: 'density', label: 'Density (tons/cu yd)', type: 'number', placeholder: '1.4', min: 1, max: 2, step: 0.05, defaultValue: 1.4 },
+            { id: 'waste', label: 'Extra for waste (%)', type: 'number', placeholder: '10', min: 0, max: 50, defaultValue: 10 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/gravel-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Typical depths</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>Walkway / décor: 2–3 in</div>
+            <div>Driveway: 4–6 in (layered)</div>
+            <div>Drainage base: 4–8 in</div>
+            <div class="mt-2">1 cu yd ≈ 1.4 tons ≈ 2,800 lb</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

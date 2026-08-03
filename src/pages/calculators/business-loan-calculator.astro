@@ -1,0 +1,113 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const principal = parseFloat(inputs.principal)
+  const rate = parseFloat(inputs.rate)
+  const years = parseFloat(inputs.years)
+  const feePct = parseFloat(inputs.fee) || 0
+  if (isNaN(principal) || principal <= 0) throw new Error('Enter a valid loan amount.')
+  if (isNaN(rate) || rate < 0) throw new Error('Enter a valid interest rate.')
+  if (isNaN(years) || years <= 0) throw new Error('Enter a valid loan term.')
+  if (feePct < 0 || feePct > 15) throw new Error('Origination fee should be 0–15%.')
+  const r = rate / 100 / 12
+  const n = Math.round(years * 12)
+  const monthly = r === 0 ? principal / n : (principal * r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1)
+  const total = monthly * n
+  const interest = total - principal
+  const fee = principal * (feePct / 100)
+  const netReceived = principal - fee
+  const pv = i => i === 0 ? monthly * n : monthly * (1 - Math.pow(1+i, -n)) / i
+  let apr = rate
+  if (fee > 0) {
+    let lo = r, hi = 1
+    for (let k = 0; k < 200; k++) { const mid = (lo + hi) / 2; if (pv(mid) > netReceived) lo = mid; else hi = mid }
+    apr = ((lo + hi) / 2) * 12 * 100
+  }
+  const stats = [
+    { label: 'Monthly Payment', value: '$' + monthly.toFixed(2) },
+    { label: 'Total Interest', value: '$' + Math.round(interest).toLocaleString() },
+    { label: 'Total Repaid', value: '$' + Math.round(total).toLocaleString() },
+  ]
+  if (fee > 0) {
+    stats.push({ label: 'Origination Fee', value: '$' + Math.round(fee).toLocaleString() })
+    stats.push({ label: 'Funds Received', value: '$' + Math.round(netReceived).toLocaleString() })
+    stats.push({ label: 'True APR (with fee)', value: apr.toFixed(2) + '%' })
+  } else {
+    stats.push({ label: 'Number of Payments', value: n.toString() })
+  }
+  const breakdown = [
+    'Loan amount: $' + principal.toLocaleString(),
+    'Rate: ' + rate + '% APR over ' + years + ' years (' + n + ' payments)',
+    'Monthly payment: $' + monthly.toFixed(2),
+    'Total interest: $' + Math.round(interest).toLocaleString(),
+  ]
+  if (fee > 0) {
+    breakdown.push('—')
+    breakdown.push('Origination fee (' + feePct + '%): $' + Math.round(fee).toLocaleString())
+    breakdown.push('Funds actually received: $' + Math.round(netReceived).toLocaleString())
+    breakdown.push('True APR including the fee: ' + apr.toFixed(2) + '%')
+  }
+  return { value: '$' + monthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), gaugeValue: Math.min(rate, 40), stats, breakdown }
+`
+
+const gauge = {
+  min: 0, max: 40, unit: '% APR',
+  zones: [
+    { label: 'Low <10%', color: '#22c55e', from: 0, to: 10 },
+    { label: 'Typical 10-20%', color: '#3b82f6', from: 10, to: 20 },
+    { label: 'High 20-30%', color: '#f59e0b', from: 20, to: 30 },
+    { label: 'Very high 30%+', color: '#ef4444', from: 30, to: 40 },
+  ]
+}
+
+const faqs = [
+  { question: 'How is a business loan payment calculated?', answer: 'With standard amortization: M = P x r x (1+r)^n / ((1+r)^n - 1), where P is the amount borrowed, r is the monthly rate, and n is the number of months. A $50,000 loan at 10% over 5 years is about $1,062/month.' },
+  { question: 'What fees do business loans charge?', answer: 'Common ones include an origination fee (1–8% of the loan, often deducted up front), plus possible packaging, underwriting, or SBA guarantee fees. Because fees reduce the cash you actually receive, they raise your effective cost — the true APR — above the stated rate. Enter the origination fee above to see it.' },
+  { question: 'What is APR vs factor rate?', answer: 'Traditional loans quote an APR (annualized cost including fees). Some short-term lenders and merchant cash advances quote a factor rate (e.g. 1.3), meaning you repay 1.3x the amount borrowed regardless of term — which can translate to a very high APR. Always convert to APR to compare.' },
+  { question: 'What is a typical business loan term?', answer: 'Term loans commonly run 1–5 years; SBA 7(a) loans can extend to 10 years (or 25 for real estate). Longer terms lower the monthly payment but increase total interest. Equipment and working-capital loans are usually shorter.' },
+  { question: 'Can I deduct business loan interest?', answer: 'Generally, interest on a loan used for business purposes is tax-deductible as a business expense (the principal is not). Rules and limits apply — confirm with your accountant for your situation.' }
+]
+---
+<Layout
+  title="Business Loan Calculator: Payment, Interest & True APR"
+  description="Calculate business loan monthly payments, total interest, and the true APR including origination fees. Free business loan calculator with full breakdown."
+  breadcrumbs={getBreadcrumbs('/calculators/business-loan-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
+      <span class="text-gray-900">Business Loan Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Business Loan Calculator"
+          description="Monthly payment, total interest, and true APR including fees"
+          formulaId="business-loan"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Payment"
+          gauge={gauge}
+          inputs={[
+            { id: 'principal', label: 'Loan Amount ($)', type: 'number', placeholder: '50000', min: 1, defaultValue: 50000 },
+            { id: 'rate', label: 'Interest Rate (% APR)', type: 'number', placeholder: '10', min: 0, step: 0.01, defaultValue: 10 },
+            { id: 'years', label: 'Loan Term (years)', type: 'number', placeholder: '5', min: 1, max: 25, defaultValue: 5 },
+            { id: 'fee', label: 'Origination Fee (%, optional)', type: 'number', placeholder: '0', min: 0, max: 15, step: 0.1, defaultValue: 0 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/business-loan-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Compare offers by APR</h3>
+          <p class="text-xs text-blue-800 leading-relaxed">Lenders quote rates differently — APR, factor rate, or monthly fees. Convert every offer to a true APR (fees included) so you compare the real cost of borrowing, not the headline number.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

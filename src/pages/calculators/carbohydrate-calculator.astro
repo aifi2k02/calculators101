@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const calories = parseFloat(inputs.calories)
+  const split = inputs.split || 'moderate'
+  const customPct = parseFloat(inputs.pct)
+  if (isNaN(calories) || calories <= 0) throw new Error('Enter your daily calorie intake.')
+  const presets = { low: 20, moderate: 50, high: 60 }
+  let pct = presets[split]
+  if (split === 'custom') {
+    if (isNaN(customPct) || customPct < 0 || customPct > 100) throw new Error('Enter a carb % between 0 and 100.')
+    pct = customPct
+  }
+  const carbCals = calories * pct / 100
+  const carbGrams = carbCals / 4         // 4 kcal per gram of carbohydrate
+  const fiberLow = Math.round(calories / 1000 * 14)  // ~14 g fiber per 1000 kcal (Dietary Guidelines)
+  const sugarMax = Math.round(calories * 0.10 / 4)   // added sugar < 10% of calories
+  return {
+    value: Math.round(carbGrams) + ' g/day',
+    gaugeValue: Math.min(pct, 100),
+    stats: [
+      { label: 'Daily Carbs', value: Math.round(carbGrams) + ' g' },
+      { label: 'Carb Calories', value: Math.round(carbCals) + ' kcal' },
+      { label: 'Carb % of Diet', value: pct + '%' },
+      { label: 'Recommended Fiber', value: fiberLow + ' g+' },
+      { label: 'Added-Sugar Limit', value: sugarMax + ' g' },
+    ],
+    breakdown: [
+      'Daily calories: ' + calories.toLocaleString() + ' kcal',
+      'Carbs at ' + pct + '% of calories: ' + Math.round(carbCals) + ' kcal',
+      'Grams = carb calories ÷ 4 kcal/g = ' + Math.round(carbGrams) + ' g',
+      '—',
+      'Aim for at least ' + fiberLow + ' g of fiber (about 14 g per 1,000 kcal)',
+      'Keep added sugar under ' + sugarMax + ' g (10% of calories)',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '% carbs',
+  zones: [
+    { label: 'Low-carb / keto (<25%)', color: '#8b5cf6', from: 0, to: 25 },
+    { label: 'Moderate (25-55%)', color: '#22c55e', from: 25, to: 55 },
+    { label: 'High-carb (55%+)', color: '#f59e0b', from: 55, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How many carbs should I eat per day?', answer: 'The Dietary Guidelines suggest 45–65% of calories from carbohydrate for most people — about 225–325 g on a 2,000-calorie diet. Low-carb diets use roughly 10–25% (50–125 g), and keto often under 50 g. This calculator converts your chosen percentage into grams.' },
+  { question: 'How do I convert carb calories to grams?', answer: 'Carbohydrate provides 4 calories per gram, so grams = carb calories ÷ 4. If 50% of a 2,000-calorie diet is carbs, that is 1,000 carb calories ÷ 4 = 250 g of carbs per day.' },
+  { question: 'What is a low-carb vs high-carb diet?', answer: 'Low-carb typically means under 25% of calories (or under ~130 g/day); moderate is roughly 45–55%; high-carb is 60%+ and suits endurance athletes. The best split depends on your goals, activity, and how your body responds.' },
+  { question: 'How much fiber and sugar should be in my carbs?', answer: 'Aim for about 14 g of fiber per 1,000 calories (25–38 g/day for most adults) from whole grains, fruit, and vegetables. Keep added sugar under 10% of calories. This tool shows both targets based on your intake.' },
+  { question: 'Are net carbs the same as total carbs?', answer: 'No. Net carbs = total carbs − fiber − (often) sugar alcohols, and are used mainly on low-carb and keto diets to estimate the carbs that affect blood sugar. Nutrition labels list total carbs; this calculator works with total carbohydrate.' }
+]
+---
+<Layout
+  title="Carbohydrate Calculator: Daily Carb Grams from Calories"
+  description="Calculate how many grams of carbs to eat per day from your calorie intake and diet split (low-carb, moderate, or high-carb), plus fiber and sugar targets."
+  breadcrumbs={getBreadcrumbs('/calculators/carbohydrate-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/nutrition" class="hover:text-blue-600">Nutrition &amp; Diet</a><span>›</span>
+      <span class="text-gray-900">Carbohydrate Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Carbohydrate Calculator"
+          description="Your daily carb target in grams, plus fiber and added-sugar limits"
+          formulaId="carbohydrate"
+          formulaFn={formulaFn}
+          resultLabel="Daily Carbs"
+          gauge={gauge}
+          inputs={[
+            { id: 'calories', label: 'Daily Calorie Intake (kcal)', type: 'number', placeholder: '2000', min: 1, defaultValue: 2000 },
+            { id: 'split', label: 'Diet Type', type: 'select', options: [
+              { value: 'low', label: 'Low-carb (20%)' },
+              { value: 'moderate', label: 'Moderate (50%)' },
+              { value: 'high', label: 'High-carb (60%)' },
+              { value: 'custom', label: 'Custom %' },
+            ], defaultValue: 'moderate' },
+            { id: 'pct', label: 'Custom Carb % (if selected)', type: 'number', placeholder: '45', min: 0, max: 100, defaultValue: 45 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/carbohydrate-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Carb quality matters</h3>
+          <p class="text-xs text-blue-800 leading-relaxed">Grams are only half the picture. Favor whole-food carbs — vegetables, fruit, legumes, and whole grains — for fiber and steady energy, and limit refined grains and added sugar.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

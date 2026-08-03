@@ -1,0 +1,101 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const age = parseFloat(inputs.age)
+  const resting = parseFloat(inputs.resting) || 0
+  if (isNaN(age) || age < 5 || age > 120) throw new Error('Enter a valid age (5–120).')
+  if (resting && (resting < 30 || resting > 120)) throw new Error('Resting heart rate should be 30–120 bpm.')
+  const mhr = 220 - age
+  const useKarvonen = resting > 0
+  // Target HR for a given intensity fraction
+  const targetAt = f => useKarvonen ? Math.round(f * (mhr - resting) + resting) : Math.round(f * mhr)
+  const zone = (lo, hi) => targetAt(lo) + '–' + targetAt(hi) + ' bpm'
+  return {
+    value: mhr + ' bpm max',
+    gaugeValue: Math.min(mhr / 220 * 100, 100),
+    stats: [
+      { label: 'Max Heart Rate', value: mhr + ' bpm' },
+      { label: 'Fat Burn (50–70%)', value: zone(0.50, 0.70) },
+      { label: 'Cardio (70–85%)', value: zone(0.70, 0.85) },
+      { label: 'Peak (85–95%)', value: zone(0.85, 0.95) },
+      { label: 'Method', value: useKarvonen ? 'Karvonen (HRR)' : '% of Max HR' },
+    ],
+    breakdown: [
+      'Max heart rate = 220 − age = 220 − ' + age + ' = ' + mhr + ' bpm',
+      useKarvonen
+        ? 'Heart-rate reserve (HRR) = ' + mhr + ' − ' + resting + ' = ' + (mhr - resting) + ' bpm'
+        : 'No resting HR given — zones use simple % of max HR',
+      '—',
+      'Warm-up / fat burn (50–70%): ' + zone(0.50, 0.70),
+      'Aerobic / cardio (70–85%): ' + zone(0.70, 0.85),
+      'Anaerobic / peak (85–95%): ' + zone(0.85, 0.95),
+      useKarvonen
+        ? 'Karvonen: target = intensity × HRR + resting HR'
+        : 'Tip: add your resting HR for a more personal Karvonen estimate',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Fat burn', color: '#22c55e', from: 0, to: 40 },
+    { label: 'Cardio', color: '#3b82f6', from: 40, to: 75 },
+    { label: 'Peak', color: '#ef4444', from: 75, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I calculate my target heart rate?', answer: 'First estimate your maximum heart rate as 220 − age. Your target training zones are then percentages of that max: about 50–70% for fat burning and 70–85% for cardio. For a 40-year-old, max is 180 bpm, so the cardio zone is roughly 126–153 bpm.' },
+  { question: 'What is the Karvonen (heart-rate reserve) method?', answer: 'Karvonen personalizes zones using your resting heart rate: target = intensity × (max HR − resting HR) + resting HR. It is more accurate than plain % of max because it accounts for your fitness. Enter your resting HR above to use it.' },
+  { question: 'What is the fat-burning heart rate zone?', answer: 'Roughly 50–70% of your maximum heart rate. At this lower intensity a higher share of calories comes from fat, though higher-intensity work burns more total calories. Both have a place in a training plan.' },
+  { question: 'How do I find my resting heart rate?', answer: 'Measure your pulse for 60 seconds first thing in the morning before getting up, ideally on several days. A typical adult resting heart rate is 60–100 bpm; well-trained athletes are often 40–60.' },
+  { question: 'Is 220 minus age accurate?', answer: 'It is a widely used estimate but can be off by ±10–12 bpm for any individual. Alternatives like 208 − 0.7 × age (Tanaka) fit older adults better. Use these zones as guidance, and for medical conditions consult a doctor.' }
+]
+---
+<Layout
+  title="Target Heart Rate Calculator: Training Zones by Age"
+  description="Calculate your maximum heart rate and target training zones (fat burn, cardio, peak) by age, with the Karvonen heart-rate-reserve method. Free HR zone calculator."
+  breadcrumbs={getBreadcrumbs('/calculators/target-heart-rate-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/exercise" class="hover:text-blue-600">Exercise &amp; Cardio</a><span>›</span>
+      <span class="text-gray-900">Target Heart Rate Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Target Heart Rate Calculator"
+          description="Max heart rate and training zones — optionally personalized with Karvonen"
+          formulaId="target-heart-rate"
+          formulaFn={formulaFn}
+          resultLabel="Max Heart Rate"
+          gauge={gauge}
+          inputs={[
+            { id: 'age', label: 'Age (years)', type: 'number', placeholder: '40', min: 5, max: 120, defaultValue: 40 },
+            { id: 'resting', label: 'Resting Heart Rate (bpm, optional)', type: 'number', placeholder: '65', min: 30, max: 120, defaultValue: 0 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/target-heart-rate-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Training zones</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>50–70% — warm-up &amp; fat burn</div>
+            <div>70–85% — aerobic / cardio fitness</div>
+            <div>85–95% — anaerobic / peak effort</div>
+          </div>
+          <p class="text-xs text-blue-700 mt-3">Add your resting HR for a more accurate Karvonen estimate.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
