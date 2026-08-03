@@ -4,6 +4,7 @@ const siteUrl = siteConfig.siteUrl
 
 const pages = [
   { url: '/', priority: '1.0', changefreq: 'weekly' },
+  { url: '/methodology', priority: '0.6', changefreq: 'yearly' },
   // Category pages
   { url: '/calculators/financial', priority: '0.9', changefreq: 'weekly' },
   { url: '/calculators/fitness', priority: '0.9', changefreq: 'weekly' },

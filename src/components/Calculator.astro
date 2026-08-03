@@ -273,13 +273,15 @@ const faqSchema = faqs.length > 0 ? {
   </div>
 )}
 
-<!-- Disclaimer -->
-{disclaimer && (
-  <div class="mt-4 max-w-2xl mx-auto flex gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-    <svg class="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-    <span>{disclaimer}</span>
-  </div>
-)}
+<!-- Disclaimer (custom if provided, otherwise a standard estimate + methodology note) -->
+<div class="mt-4 max-w-2xl mx-auto flex gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+  <svg class="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  {disclaimer ? (
+    <span>{disclaimer} <a href="/methodology" class="underline hover:text-blue-600">How we verify our calculators</a>.</span>
+  ) : (
+    <span>Results are estimates for informational purposes only — not professional financial, medical, or legal advice. See <a href="/methodology" class="underline hover:text-blue-600">how we build and verify our calculators</a>.</span>
+  )}
+</div>
 
 <!-- Last updated -->
 {lastUpdated && (

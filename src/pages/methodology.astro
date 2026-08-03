@@ -1,0 +1,76 @@
+---
+import Layout from '../layouts/Layout.astro'
+const lastUpdated = '2026-08-03'
+---
+<Layout
+  title="Our Methodology — How We Build & Verify Calculators"
+  description="How Super Calculator builds and verifies its calculators: authoritative formulas, tested against known values, with sources shown on every tool. Accuracy you can check."
+  canonical="https://supercalculator.xyz/methodology"
+  lastUpdated={lastUpdated}
+  pageType="article"
+>
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <span class="text-gray-900">Methodology</span>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Our Methodology</h1>
+    <p class="text-sm text-gray-500 mb-10">How we build, source, and verify every calculator · Last updated: August 3, 2026</p>
+
+    <div class="space-y-8 text-gray-700 text-sm leading-relaxed">
+
+      <section>
+        <p>Super Calculator is a set of tools, not opinion articles. Our job is simple: every calculator should return the <strong>right number</strong>, use a <strong>transparent formula</strong>, and cite the <strong>standard or source</strong> it is based on. This page explains exactly how we do that so you can trust — and check — our results.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-gray-900 mb-3">1. We use authoritative formulas</h2>
+        <p>Each calculator implements the recognized formula or published standard for its topic, not a homemade approximation. A few examples of the sources we build on:</p>
+        <ul class="list-disc pl-5 mt-3 space-y-1.5">
+          <li><strong>Health &amp; fitness</strong> — Mifflin–St Jeor and Harris–Benedict equations (BMR/calories), the U.S. Navy body-fat method, WHO BMI classification, the Institute of Medicine (IOM) pregnancy weight-gain guidelines, the Widmark formula (BAC), and the Karvonen heart-rate-reserve method.</li>
+          <li><strong>Finance</strong> — the standard amortization formula used by lenders (loans and mortgages), time-value-of-money formulas (present/future value, compound interest), the 2025 IRS tax brackets and the Social Security bend-point formula, and FHA MIP rates.</li>
+          <li><strong>Science &amp; weather</strong> — the official U.S. National Weather Service wind-chill and heat-index formulas, the NOAA solar-position algorithm (sunrise/sunset), and standard physics and chemistry relationships (density, molarity, Ohm's law).</li>
+          <li><strong>Math</strong> — exact mathematical definitions (determinants by cofactor expansion, Gauss–Jordan matrix inversion, permutation and combination formulas, and geometry surface-area and volume formulas).</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-gray-900 mb-3">2. Every formula is tested before it ships</h2>
+        <p>Before a calculator goes live, its formula is executed against <strong>known correct values</strong> — worked textbook examples, published reference figures, or hand calculations. A calculator is only published once its output matches those checks exactly. For example, our matrix calculator is validated by confirming that A × A⁻¹ returns the identity matrix, and our loan tools are checked against standard amortization tables.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-gray-900 mb-3">3. The math is transparent</h2>
+        <p>You never have to take the result on faith. Every calculator shows a <strong>step-by-step breakdown</strong> of how it reached its answer, and most include the underlying formula on the page. If you can follow the breakdown, you can verify the result yourself.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-gray-900 mb-3">4. Private by design</h2>
+        <p>Calculations run <strong>entirely in your browser</strong>. Nothing you type is sent to a server, stored, or tracked. The tools work offline once the page has loaded.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-gray-900 mb-3">5. Estimates, not professional advice</h2>
+        <p>Many of our calculators cover money, health, and other consequential topics. They are built to be accurate, but they produce <strong>estimates based on the information you enter and standard assumptions</strong> — they cannot know your full situation.</p>
+        <ul class="list-disc pl-5 mt-3 space-y-1.5">
+          <li><strong>Financial &amp; tax tools</strong> give planning estimates. Your actual rates, payments, and tax outcomes depend on your lender, credit, and current law — confirm major decisions with a licensed professional.</li>
+          <li><strong>Health &amp; fitness tools</strong> use population-based formulas and do not account for individual medical conditions. Consult a qualified healthcare provider for personal advice.</li>
+          <li><strong>Official figures</strong> (for example, Social Security benefits or taxes owed) should be confirmed with the relevant authority, such as ssa.gov or irs.gov.</li>
+        </ul>
+        <p class="mt-2">See our <a href="/terms" class="text-blue-600 hover:underline">Terms of Use</a> for the full disclaimer.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-gray-900 mb-3">6. Updates &amp; corrections</h2>
+        <p>Rates, tax figures, and guidelines change, and we update calculators when they do. If you ever spot a result that looks wrong, please tell us — we take accuracy seriously and will investigate and correct it promptly.</p>
+        <div class="mt-3 bg-gray-50 border border-gray-200 rounded-lg px-5 py-4">
+          <p class="font-semibold text-gray-900">Report an issue or ask a question</p>
+          <p>Email: <a href="mailto:aifi2k02@gmail.com" class="text-blue-600 hover:underline">aifi2k02@gmail.com</a></p>
+          <p>Or use our <a href="/contact" class="text-blue-600 hover:underline">contact page</a>.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</Layout>
