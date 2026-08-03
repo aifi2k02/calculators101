@@ -1,0 +1,97 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const lastPeriod = inputs.lastPeriod || '2025-01-01'
+  const cycleLength = parseInt(inputs.cycleLength) || 28
+  const periodLength = parseInt(inputs.periodLength) || 5
+  if (cycleLength < 21 || cycleLength > 45) throw new Error('Cycle length should be 21–45 days.')
+  if (periodLength < 1 || periodLength > 10) throw new Error('Period length should be 1–10 days.')
+  const lp = new Date(lastPeriod)
+  if (isNaN(lp.getTime())) throw new Error('Enter a valid last period start date.')
+  const addDays = (d, days) => { const x = new Date(d); x.setDate(x.getDate() + days); return x }
+  const fmt = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+
+  const nextPeriod = addDays(lp, cycleLength)
+  const periodEnds = addDays(lp, periodLength - 1)
+  const ovulation = addDays(nextPeriod, -14)          // ~14 days before the next period
+  const fertileStart = addDays(ovulation, -5)
+  const upcoming = [1, 2, 3].map(k => fmt(addDays(lp, cycleLength * k)))
+  return {
+    value: 'Next period: ' + fmt(nextPeriod),
+    gaugeValue: 50,
+    stats: [
+      { label: 'Next Period Starts', value: fmt(nextPeriod) },
+      { label: 'This Period Ends', value: fmt(periodEnds) },
+      { label: 'Estimated Ovulation', value: fmt(ovulation) },
+      { label: 'Fertile Window', value: fmt(fertileStart) + ' – ' + fmt(ovulation) },
+      { label: 'Cycle Length', value: cycleLength + ' days' },
+    ],
+    breakdown: [
+      'Last period started: ' + fmt(lp),
+      'Cycle length: ' + cycleLength + ' days, period length: ' + periodLength + ' days',
+      'Next period = last period + ' + cycleLength + ' days = ' + fmt(nextPeriod),
+      'Ovulation ≈ 14 days before next period = ' + fmt(ovulation),
+      'Fertile window (5 days before ovulation): ' + fmt(fertileStart) + ' – ' + fmt(ovulation),
+      'Next three periods: ' + upcoming.join('  •  '),
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Menstrual', color: '#ef4444', from: 0, to: 20 },
+    { label: 'Follicular / fertile', color: '#22c55e', from: 20, to: 60 },
+    { label: 'Luteal', color: '#8b5cf6', from: 60, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I predict my next period?', answer: 'Add your average cycle length to the first day of your last period. If your last period started on the 1st and your cycle is 28 days, your next period is expected around the 29th. This calculator also projects the next few cycles.' },
+  { question: 'How is the fertile window estimated?', answer: 'Ovulation usually occurs about 14 days before your next period. Because sperm can survive up to 5 days, the fertile window is roughly the 5 days before ovulation plus ovulation day. Cycle-based estimates are approximate — ovulation kits or temperature tracking are more precise.' },
+  { question: 'What is a normal cycle length?', answer: 'A typical cycle is 21–35 days, with 28 days often used as an average. Some variation month to month is normal. Consistently very short, very long, or irregular cycles are worth discussing with a healthcare provider.' },
+  { question: 'Can I use this for birth control?', answer: 'Calendar prediction alone is not reliable contraception, especially with irregular cycles — typical-use failure rates are significant. Use it for awareness and planning, and rely on a proven contraceptive method if you are preventing pregnancy.' },
+  { question: 'Why is my period late?', answer: 'Common causes include stress, travel, illness, significant weight or exercise changes, hormonal shifts, and pregnancy. An occasional late period is usually not a concern, but if periods are frequently irregular or absent, consult a healthcare professional.' }
+]
+---
+<Layout
+  title="Period Calculator: Predict Your Next Period & Cycle"
+  description="Predict your next period, ovulation, and fertile window from your last period date and cycle length. Free period tracker calculator with upcoming cycles."
+  breadcrumbs={getBreadcrumbs('/calculators/period-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/health" class="hover:text-blue-600">Health &amp; Life</a><span>›</span>
+      <span class="text-gray-900">Period Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Period Calculator"
+          description="Predict your next period, ovulation, and fertile window"
+          formulaId="period"
+          formulaFn={formulaFn}
+          resultLabel="Prediction"
+          inputs={[
+            { id: 'lastPeriod', label: 'First Day of Last Period', type: 'date', defaultValue: '2025-01-01' },
+            { id: 'cycleLength', label: 'Average Cycle Length (days)', type: 'number', placeholder: '28', min: 21, max: 45, defaultValue: 28 },
+            { id: 'periodLength', label: 'Period Length (days)', type: 'number', placeholder: '5', min: 1, max: 10, defaultValue: 5 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/period-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">Estimate only</h3>
+          <p class="text-xs text-amber-800 leading-relaxed">Predictions are based on average cycle length and are approximate — actual dates vary, especially with irregular cycles. Not a substitute for medical advice or contraception.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

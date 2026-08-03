@@ -1,0 +1,100 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const mass = parseFloat(inputs.mass)
+  const molarMass = parseFloat(inputs.molarMass)
+  const volume = parseFloat(inputs.volume)
+  const volUnit = inputs.volUnit || 'L'
+  if (isNaN(mass) || mass <= 0) throw new Error('Enter the mass of solute in grams.')
+  if (isNaN(molarMass) || molarMass <= 0) throw new Error('Enter the molar mass (g/mol).')
+  if (isNaN(volume) || volume <= 0) throw new Error('Enter the solution volume.')
+  const liters = volUnit === 'mL' ? volume / 1000 : volUnit === 'uL' ? volume / 1000000 : volume
+  const moles = mass / molarMass
+  const molarity = moles / liters
+  return {
+    value: molarity.toFixed(4) + ' mol/L',
+    gaugeValue: Math.min(molarity / 5 * 100, 100),
+    stats: [
+      { label: 'Molarity', value: molarity.toFixed(4) + ' M' },
+      { label: 'Moles of Solute', value: moles.toFixed(4) + ' mol' },
+      { label: 'Millimolar', value: (molarity * 1000).toFixed(1) + ' mM' },
+      { label: 'Solution Volume', value: liters.toFixed(3) + ' L' },
+    ],
+    breakdown: [
+      'Moles = mass ÷ molar mass = ' + mass + ' ÷ ' + molarMass + ' = ' + moles.toFixed(4) + ' mol',
+      'Volume: ' + volume + ' ' + volUnit + ' = ' + liters.toFixed(4) + ' L',
+      'Molarity = moles ÷ liters = ' + moles.toFixed(4) + ' ÷ ' + liters.toFixed(4),
+      '= ' + molarity.toFixed(4) + ' mol/L (' + molarity.toFixed(4) + ' M)',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Dilute (<0.5 M)', color: '#22c55e', from: 0, to: 10 },
+    { label: 'Moderate', color: '#3b82f6', from: 10, to: 60 },
+    { label: 'Concentrated', color: '#f59e0b', from: 60, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is the molarity formula?', answer: 'Molarity (M) = moles of solute ÷ liters of solution. First convert mass to moles by dividing by the molar mass (moles = grams ÷ g/mol), then divide by the volume in liters. This calculator does both steps.' },
+  { question: 'How do I find molarity from grams?', answer: 'Divide the mass in grams by the molar mass to get moles, then divide moles by the solution volume in liters. For example, 58.44 g of NaCl (molar mass 58.44 g/mol) in 1 L is 1 mole ÷ 1 L = 1 M.' },
+  { question: 'What is molar mass?', answer: 'Molar mass is the mass of one mole of a substance, in grams per mole (g/mol), found by adding the atomic masses of all atoms in the formula. Water (H₂O) is about 18.02 g/mol; sodium chloride (NaCl) is 58.44 g/mol.' },
+  { question: 'What is the difference between molarity and molality?', answer: 'Molarity uses the volume of the whole solution (mol per liter). Molality uses the mass of the solvent (mol per kilogram) and does not change with temperature. This tool calculates molarity.' },
+  { question: 'How do I make a solution of a target molarity?', answer: 'Rearrange the formula: grams needed = molarity × volume (L) × molar mass. To make 0.5 L of 2 M NaCl: 2 × 0.5 × 58.44 = 58.44 g dissolved and topped up to 0.5 L.' }
+]
+---
+<Layout
+  title="Molarity Calculator: Molar Concentration (mol/L)"
+  description="Calculate molarity from mass, molar mass, and solution volume. Free molarity calculator that converts grams to moles and gives concentration in mol/L and mM."
+  breadcrumbs={getBreadcrumbs('/calculators/molarity-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/science" class="hover:text-blue-600">Science &amp; Weather</a><span>›</span>
+      <span class="text-gray-900">Molarity Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Molarity Calculator"
+          description="Molar concentration from mass, molar mass, and volume"
+          formulaId="molarity"
+          formulaFn={formulaFn}
+          resultLabel="Molarity"
+          gauge={gauge}
+          inputs={[
+            { id: 'mass', label: 'Mass of Solute (g)', type: 'number', placeholder: '58.44', min: 0, step: 0.0001, defaultValue: 58.44 },
+            { id: 'molarMass', label: 'Molar Mass (g/mol)', type: 'number', placeholder: '58.44', min: 0.0001, step: 0.0001, defaultValue: 58.44 },
+            { id: 'volume', label: 'Solution Volume', type: 'number', placeholder: '1', min: 0, step: 0.0001, defaultValue: 1 },
+            { id: 'volUnit', label: 'Volume Unit', type: 'select', options: [
+              { value: 'L', label: 'liters (L)' },
+              { value: 'mL', label: 'milliliters (mL)' },
+              { value: 'uL', label: 'microliters (µL)' },
+            ], defaultValue: 'L' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/molarity-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common molar masses</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div class="flex justify-between"><span>Water H₂O</span><span class="font-mono">18.02</span></div>
+            <div class="flex justify-between"><span>NaCl</span><span class="font-mono">58.44</span></div>
+            <div class="flex justify-between"><span>Glucose C₆H₁₂O₆</span><span class="font-mono">180.16</span></div>
+            <div class="flex justify-between"><span>Sulfuric acid H₂SO₄</span><span class="font-mono">98.08</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

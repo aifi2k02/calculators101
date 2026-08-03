@@ -243,6 +243,12 @@ const pages = [
   { url: '/calculators/ip-subnet-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/roofing-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/depreciation-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/fha-loan-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/mutual-fund-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/horsepower-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/molarity-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/stair-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/period-calculator', priority: '0.8', changefreq: 'monthly' },
   // Silo hub pages (topical cluster landing pages)
   { url: '/calculators/loans', priority: '0.9', changefreq: 'weekly' },
   { url: '/calculators/investing', priority: '0.9', changefreq: 'weekly' },

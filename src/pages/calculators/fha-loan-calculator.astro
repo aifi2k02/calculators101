@@ -1,0 +1,111 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const price = parseFloat(inputs.price)
+  const downPct = parseFloat(inputs.downPct)
+  const rate = parseFloat(inputs.rate)
+  const years = parseFloat(inputs.years)
+  if (isNaN(price) || price <= 0) throw new Error('Enter the home price.')
+  if (isNaN(downPct) || downPct < 3.5 || downPct > 100) throw new Error('FHA minimum down payment is 3.5%.')
+  if (isNaN(rate) || rate < 0) throw new Error('Enter a valid interest rate.')
+  if (isNaN(years) || years <= 0) throw new Error('Enter the loan term.')
+  const down = price * downPct / 100
+  const baseLoan = price - down
+  const UPFRONT_MIP = 0.0175          // 1.75% upfront MIP, financed into the loan
+  const ANNUAL_MIP = downPct < 5 ? 0.0055 : 0.0050   // annual MIP rate (typical 30-yr)
+  const upfrontMip = baseLoan * UPFRONT_MIP
+  const loan = baseLoan + upfrontMip
+  const r = rate / 100 / 12
+  const n = Math.round(years * 12)
+  const pi = r === 0 ? loan / n : (loan * r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1)
+  const monthlyMip = baseLoan * ANNUAL_MIP / 12
+  const totalMonthly = pi + monthlyMip
+  const totalInterest = pi * n - loan
+  return {
+    value: '$' + totalMonthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),
+    gaugeValue: Math.min(rate, 12),
+    stats: [
+      { label: 'Total Monthly', value: '$' + totalMonthly.toFixed(2) },
+      { label: 'Principal & Interest', value: '$' + pi.toFixed(2) },
+      { label: 'Monthly MIP', value: '$' + monthlyMip.toFixed(2) },
+      { label: 'Upfront MIP (financed)', value: '$' + Math.round(upfrontMip).toLocaleString() },
+      { label: 'Loan Amount', value: '$' + Math.round(loan).toLocaleString() },
+      { label: 'Down Payment', value: '$' + Math.round(down).toLocaleString() },
+    ],
+    breakdown: [
+      'Home price: $' + price.toLocaleString() + ', down ' + downPct + '% = $' + Math.round(down).toLocaleString(),
+      'Base loan: $' + Math.round(baseLoan).toLocaleString(),
+      'Upfront MIP (1.75%, financed): $' + Math.round(upfrontMip).toLocaleString() + ' → loan $' + Math.round(loan).toLocaleString(),
+      'Principal & interest: $' + pi.toFixed(2) + '/mo',
+      'Annual MIP (' + (ANNUAL_MIP*100).toFixed(2) + '%): $' + monthlyMip.toFixed(2) + '/mo',
+      '—',
+      'Total monthly (P&I + MIP): $' + totalMonthly.toFixed(2),
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 12, unit: '% rate',
+  zones: [
+    { label: 'Low <5%', color: '#22c55e', from: 0, to: 5 },
+    { label: 'Moderate 5-7%', color: '#3b82f6', from: 5, to: 7 },
+    { label: 'High 7-9%', color: '#f59e0b', from: 7, to: 9 },
+    { label: 'Very high 9%+', color: '#ef4444', from: 9, to: 12 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is an FHA loan?', answer: 'An FHA loan is a government-backed mortgage with a low minimum down payment (3.5%) and flexible credit requirements. In exchange, it requires mortgage insurance premiums (MIP): a 1.75% upfront fee financed into the loan plus an annual premium paid monthly.' },
+  { question: 'How is FHA mortgage insurance calculated?', answer: 'Upfront MIP is 1.75% of the base loan, usually rolled into the loan balance. Annual MIP is about 0.55% per year (0.50% with 5%+ down on a 30-year loan), divided by 12 and added to each payment. This calculator applies those standard rates.' },
+  { question: 'How much down payment do I need for FHA?', answer: 'The minimum is 3.5% with a credit score of 580+, or 10% for scores between 500 and 579. A larger down payment lowers your loan, your MIP, and your monthly payment.' },
+  { question: 'Does FHA MIP ever go away?', answer: 'For most current FHA loans with less than 10% down, annual MIP lasts the life of the loan. With 10% or more down it drops off after 11 years. Many borrowers later refinance into a conventional loan to remove MIP once they have enough equity.' },
+  { question: 'FHA vs conventional — which is cheaper?', answer: 'FHA often wins for lower credit scores or small down payments, but its lifetime MIP can cost more than conventional PMI (which cancels at 20% equity). Compare total monthly cost and how long you plan to keep the loan. Rates here are estimates — confirm with a lender.' }
+]
+---
+<Layout
+  title="FHA Loan Calculator: Payment with MIP (Mortgage Insurance)"
+  description="Calculate your FHA loan monthly payment including upfront and annual MIP, principal, and interest. Free FHA mortgage calculator with 3.5% down."
+  breadcrumbs={getBreadcrumbs('/calculators/fha-loan-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
+      <span class="text-gray-900">FHA Loan Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="FHA Loan Calculator"
+          description="Monthly payment including FHA mortgage insurance (MIP)"
+          formulaId="fha-loan"
+          formulaFn={formulaFn}
+          resultLabel="Total Monthly Payment"
+          gauge={gauge}
+          inputs={[
+            { id: 'price', label: 'Home Price ($)', type: 'number', placeholder: '300000', min: 1, defaultValue: 300000 },
+            { id: 'downPct', label: 'Down Payment (%)', type: 'number', placeholder: '3.5', min: 3.5, max: 100, step: 0.1, defaultValue: 3.5 },
+            { id: 'rate', label: 'Interest Rate (%)', type: 'number', placeholder: '6.5', min: 0, step: 0.01, defaultValue: 6.5 },
+            { id: 'years', label: 'Loan Term (years)', type: 'number', placeholder: '30', min: 1, max: 40, defaultValue: 30 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/fha-loan-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">MIP rates used</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>Upfront MIP: 1.75% (financed)</div>
+            <div>Annual MIP: ~0.55% (0.50% with 5%+ down)</div>
+          </div>
+          <p class="text-xs text-blue-700 mt-2">Estimates for a typical 30-year FHA loan — confirm current rates with your lender.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

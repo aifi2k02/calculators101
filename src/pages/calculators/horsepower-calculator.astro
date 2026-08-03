@@ -1,0 +1,117 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const mode = inputs.mode || 'torque'
+  if (mode === 'torque') {
+    const torque = parseFloat(inputs.torque)
+    const rpm = parseFloat(inputs.rpm)
+    if (isNaN(torque) || torque <= 0) throw new Error('Enter torque in lb-ft.')
+    if (isNaN(rpm) || rpm <= 0) throw new Error('Enter engine RPM.')
+    const hp = torque * rpm / 5252
+    const kw = hp * 0.745699872
+    return {
+      value: hp.toFixed(1) + ' HP',
+      gaugeValue: Math.min(hp / 700 * 100, 100),
+      stats: [
+        { label: 'Horsepower', value: hp.toFixed(1) + ' HP' },
+        { label: 'In Kilowatts', value: kw.toFixed(1) + ' kW' },
+        { label: 'In Metric HP (PS)', value: (kw / 0.7355).toFixed(1) + ' PS' },
+        { label: 'Torque', value: torque + ' lb-ft' },
+        { label: 'RPM', value: rpm.toLocaleString() },
+      ],
+      breakdown: [
+        'HP = torque × RPM ÷ 5252',
+        'HP = ' + torque + ' × ' + rpm.toLocaleString() + ' ÷ 5252',
+        '= ' + hp.toFixed(1) + ' horsepower',
+        '= ' + kw.toFixed(1) + ' kW (' + (kw / 0.7355).toFixed(1) + ' metric PS)',
+        'Note: torque and HP are always equal at 5,252 RPM.',
+      ]
+    }
+  } else {
+    const hp = parseFloat(inputs.hp)
+    const rpm = parseFloat(inputs.rpm)
+    if (isNaN(hp) || hp <= 0) throw new Error('Enter horsepower.')
+    if (isNaN(rpm) || rpm <= 0) throw new Error('Enter engine RPM.')
+    const torque = hp * 5252 / rpm
+    return {
+      value: torque.toFixed(1) + ' lb-ft',
+      gaugeValue: Math.min(torque / 700 * 100, 100),
+      stats: [
+        { label: 'Torque', value: torque.toFixed(1) + ' lb-ft' },
+        { label: 'In Newton-meters', value: (torque * 1.355818).toFixed(1) + ' Nm' },
+        { label: 'Horsepower', value: hp + ' HP' },
+        { label: 'RPM', value: rpm.toLocaleString() },
+      ],
+      breakdown: [
+        'Torque = HP × 5252 ÷ RPM',
+        'Torque = ' + hp + ' × 5252 ÷ ' + rpm.toLocaleString(),
+        '= ' + torque.toFixed(1) + ' lb-ft (' + (torque * 1.355818).toFixed(1) + ' Nm)',
+      ]
+    }
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Economy', color: '#22c55e', from: 0, to: 30 },
+    { label: 'Performance', color: '#3b82f6', from: 30, to: 70 },
+    { label: 'High-performance', color: '#f59e0b', from: 70, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do you calculate horsepower from torque?', answer: 'Horsepower = torque (lb-ft) × RPM ÷ 5252. For example, an engine making 300 lb-ft at 5,000 RPM produces 300 × 5000 ÷ 5252 ≈ 286 HP. The constant 5252 comes from the definition of one horsepower (33,000 ft-lb per minute).' },
+  { question: 'Why do torque and horsepower cross at 5252 RPM?', answer: 'Because HP = torque × RPM ÷ 5252, the two values are numerically equal whenever RPM equals 5252. On a dyno chart the horsepower and torque curves always intersect at that point.' },
+  { question: 'What is the difference between torque and horsepower?', answer: 'Torque is rotational force — how hard the engine twists. Horsepower is the rate of doing work — torque combined with how fast the engine spins. Torque gets you moving; horsepower determines top speed and how quickly work is done.' },
+  { question: 'How do I convert horsepower to kilowatts?', answer: 'Multiply horsepower by 0.7457 to get kilowatts (1 HP = 0.7457 kW). Metric horsepower (PS or CV) is slightly different: 1 PS = 0.7355 kW, so 100 HP ≈ 101.4 PS.' },
+  { question: 'What is a good amount of horsepower for a car?', answer: 'Everyday commuter cars typically make 120–200 HP, sporty cars 250–400 HP, and performance/supercars 500+ HP. What matters for feel is the power-to-weight ratio, not horsepower alone.' }
+]
+---
+<Layout
+  title="Horsepower Calculator: HP from Torque & RPM"
+  description="Calculate horsepower from torque and RPM (or torque from HP), with kW and metric PS conversions. Free horsepower calculator using HP = torque × RPM ÷ 5252."
+  breadcrumbs={getBreadcrumbs('/calculators/horsepower-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/science" class="hover:text-blue-600">Science &amp; Weather</a><span>›</span>
+      <span class="text-gray-900">Horsepower Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Horsepower Calculator"
+          description="HP from torque and RPM — or torque from HP — with kW and PS"
+          formulaId="horsepower"
+          formulaFn={formulaFn}
+          resultLabel="Horsepower"
+          gauge={gauge}
+          inputs={[
+            { id: 'mode', label: 'Solve for', type: 'select', options: [
+              { value: 'torque', label: 'Horsepower (from torque + RPM)' },
+              { value: 'hp', label: 'Torque (from HP + RPM)' },
+            ], defaultValue: 'torque' },
+            { id: 'torque', label: 'Torque (lb-ft) — for HP mode', type: 'number', placeholder: '300', min: 0, step: 0.1, defaultValue: 300 },
+            { id: 'hp', label: 'Horsepower — for torque mode', type: 'number', placeholder: '300', min: 0, step: 0.1, defaultValue: 300 },
+            { id: 'rpm', label: 'Engine RPM', type: 'number', placeholder: '5252', min: 1, defaultValue: 5252 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/horsepower-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">The formula</h3>
+          <div class="text-sm text-blue-800 font-mono">HP = T × RPM ÷ 5252</div>
+          <p class="text-xs text-blue-700 mt-2">Torque in lb-ft. 1 HP = 0.7457 kW.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

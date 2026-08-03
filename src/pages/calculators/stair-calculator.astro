@@ -1,0 +1,101 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const totalRise = parseFloat(inputs.totalRise)
+  const targetRiser = parseFloat(inputs.targetRiser) || 7
+  if (isNaN(totalRise) || totalRise <= 0) throw new Error('Enter the total rise (floor-to-floor height) in inches.')
+  if (targetRiser < 4 || targetRiser > 9) throw new Error('Target riser height should be 4–9 inches.')
+  const numRisers = Math.max(1, Math.round(totalRise / targetRiser))
+  const riserHeight = totalRise / numRisers
+  const numTreads = numRisers - 1
+  const treadDepth = 25 - 2 * riserHeight     // "2R + T = 25" comfort rule
+  const totalRun = treadDepth * numTreads
+  const stringer = Math.sqrt(totalRise * totalRise + totalRun * totalRun)
+  const angle = Math.atan2(totalRise, totalRun) * 180 / Math.PI
+  const codeOK = riserHeight <= 7.75 && treadDepth >= 10
+  return {
+    value: numRisers + ' steps',
+    gaugeValue: Math.min(angle / 50 * 100, 100),
+    stats: [
+      { label: 'Number of Steps (risers)', value: String(numRisers) },
+      { label: 'Riser Height', value: riserHeight.toFixed(2) + ' in' },
+      { label: 'Tread Depth', value: treadDepth.toFixed(2) + ' in' },
+      { label: 'Total Run', value: totalRun.toFixed(1) + ' in' },
+      { label: 'Stringer Length', value: stringer.toFixed(1) + ' in' },
+      { label: 'Angle', value: angle.toFixed(1) + '°' },
+    ],
+    breakdown: [
+      'Total rise: ' + totalRise + ' in',
+      'Steps = round(rise ÷ target riser ' + targetRiser + ') = ' + numRisers + ' risers',
+      'Riser height = ' + totalRise + ' ÷ ' + numRisers + ' = ' + riserHeight.toFixed(2) + ' in',
+      'Tread depth (2R + T = 25 rule) = ' + treadDepth.toFixed(2) + ' in',
+      'Total run = tread × ' + numTreads + ' treads = ' + totalRun.toFixed(1) + ' in',
+      'Stringer = √(rise² + run²) = ' + stringer.toFixed(1) + ' in',
+      codeOK ? 'Within typical code (riser ≤ 7¾", tread ≥ 10").' : 'Check local code — riser/tread may be out of range.',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Gentle', color: '#22c55e', from: 0, to: 40 },
+    { label: 'Standard', color: '#3b82f6', from: 40, to: 75 },
+    { label: 'Steep', color: '#f59e0b', from: 75, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I calculate the number of stairs?', answer: 'Divide the total rise (floor-to-floor height) by a comfortable target riser height — about 7 inches — and round to the nearest whole number. That is your number of risers (steps). The number of treads is one less than the number of risers.' },
+  { question: 'What is a comfortable riser height and tread depth?', answer: 'Most codes cap riser height around 7¾ inches and require tread depth of at least 10 inches. A widely used comfort rule is 2 × riser + tread ≈ 25 inches, which this calculator uses to pair a tread depth with your riser height.' },
+  { question: 'Why must all the risers be equal?', answer: 'Uneven risers are a major trip hazard and a common code violation. Codes typically allow no more than about 3/8 inch variation between the largest and smallest riser in a flight. Dividing the total rise evenly guarantees uniform steps.' },
+  { question: 'What is the stringer length?', answer: 'The stringer is the diagonal board that supports the steps. Its length is the hypotenuse of the rise and run: √(total rise² + total run²). Add extra material for the cuts and connections at the top and bottom.' },
+  { question: 'What angle should a staircase be?', answer: 'Comfortable interior stairs are usually between about 30° and 37°. Steeper than ~42° feels ladder-like and may not meet code. This calculator reports the resulting angle so you can adjust the riser height if needed.' }
+]
+---
+<Layout
+  title="Stair Calculator: Steps, Riser Height & Stringer"
+  description="Calculate the number of steps, riser height, tread depth, total run, and stringer length from your total rise. Free stair calculator with code guidance."
+  breadcrumbs={getBreadcrumbs('/calculators/stair-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/home-diy" class="hover:text-blue-600">Home &amp; DIY</a><span>›</span>
+      <span class="text-gray-900">Stair Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Stair Calculator"
+          description="Steps, riser height, tread depth, run, and stringer from total rise"
+          formulaId="stair"
+          formulaFn={formulaFn}
+          resultLabel="Steps"
+          gauge={gauge}
+          inputs={[
+            { id: 'totalRise', label: 'Total Rise — floor to floor (in)', type: 'number', placeholder: '108', min: 1, step: 0.1, defaultValue: 108 },
+            { id: 'targetRiser', label: 'Target Riser Height (in)', type: 'number', placeholder: '7', min: 4, max: 9, step: 0.1, defaultValue: 7 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/stair-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Rules of thumb</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>Riser ≤ 7¾ in</div>
+            <div>Tread ≥ 10 in</div>
+            <div>2 × riser + tread ≈ 25 in</div>
+            <div>Comfortable angle 30–37°</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

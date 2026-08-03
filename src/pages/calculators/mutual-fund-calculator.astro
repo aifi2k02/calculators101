@@ -1,0 +1,108 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const initial = parseFloat(inputs.initial) || 0
+  const monthly = parseFloat(inputs.monthly) || 0
+  const ret = parseFloat(inputs.ret)
+  const expense = parseFloat(inputs.expense) || 0
+  const years = parseFloat(inputs.years)
+  if (initial <= 0 && monthly <= 0) throw new Error('Enter an initial amount or monthly contribution.')
+  if (isNaN(ret) || ret < 0) throw new Error('Enter an expected annual return.')
+  if (expense < 0 || expense > 5) throw new Error('Expense ratio should be 0–5%.')
+  if (isNaN(years) || years <= 0) throw new Error('Enter the number of years.')
+  const n = Math.round(years * 12)
+  const grow = annualRate => {
+    const r = annualRate / 100 / 12
+    const fvInitial = initial * Math.pow(1 + r, n)
+    const fvContrib = r === 0 ? monthly * n : monthly * ((Math.pow(1 + r, n) - 1) / r)
+    return fvInitial + fvContrib
+  }
+  const net = ret - expense
+  const finalValue = grow(net)
+  const noFeeValue = grow(ret)
+  const contributed = initial + monthly * n
+  const growth = finalValue - contributed
+  const feeCost = noFeeValue - finalValue
+  return {
+    value: '$' + Math.round(finalValue).toLocaleString(),
+    gaugeValue: Math.min(net / 12 * 100, 100),
+    stats: [
+      { label: 'Future Value', value: '$' + Math.round(finalValue).toLocaleString() },
+      { label: 'Total Contributed', value: '$' + Math.round(contributed).toLocaleString() },
+      { label: 'Investment Growth', value: '$' + Math.round(growth).toLocaleString() },
+      { label: 'Net Return (after fees)', value: net.toFixed(2) + '%' },
+      { label: 'Lost to Fees', value: '$' + Math.round(feeCost).toLocaleString() },
+    ],
+    breakdown: [
+      'Initial: $' + initial.toLocaleString() + ', monthly: $' + monthly.toLocaleString(),
+      'Expected return ' + ret + '% − expense ratio ' + expense + '% = ' + net.toFixed(2) + '% net',
+      'Over ' + years + ' years (' + n + ' months)',
+      '—',
+      'Future value: $' + Math.round(finalValue).toLocaleString(),
+      'Total contributed: $' + Math.round(contributed).toLocaleString() + ', growth: $' + Math.round(growth).toLocaleString(),
+      'Same fund at 0% fees would be $' + Math.round(noFeeValue).toLocaleString() + ' — fees cost you $' + Math.round(feeCost).toLocaleString(),
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Conservative', color: '#22c55e', from: 0, to: 40 },
+    { label: 'Moderate', color: '#3b82f6', from: 40, to: 75 },
+    { label: 'Aggressive', color: '#f59e0b', from: 75, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How is mutual fund growth calculated?', answer: 'It compounds your initial investment plus monthly contributions at your net return (expected return minus the expense ratio), monthly, over your time horizon. The future value combines the growth of the lump sum and the growth of the recurring contributions.' },
+  { question: 'What is an expense ratio and why does it matter?', answer: 'The expense ratio is the annual percentage a fund charges to cover management and operating costs. It is deducted from returns every year, so even a 1% ratio can cost tens of thousands over decades. This calculator shows exactly how much fees eat into your final balance.' },
+  { question: 'What is a good expense ratio?', answer: 'Low-cost index funds often charge 0.03–0.20%. Actively managed funds commonly charge 0.5–1.5%. Because fees compound against you, favoring low-expense funds is one of the most reliable ways to improve long-term returns.' },
+  { question: 'What return should I assume?', answer: 'A diversified stock fund has historically returned roughly 7–10% before inflation over long periods, but returns vary widely year to year and are not guaranteed. Bond and balanced funds return less. Try a range to see best and worst cases.' },
+  { question: 'Does this account for taxes?', answer: 'No — it models pre-tax growth. In a taxable account, dividends and capital gains may be taxed along the way and at sale. Tax-advantaged accounts (401k, IRA) defer or eliminate those taxes. Treat this as a gross estimate.' }
+]
+---
+<Layout
+  title="Mutual Fund Calculator: Future Value with Expense Ratio"
+  description="Project mutual fund growth from an initial investment and monthly contributions, and see how the expense ratio reduces your returns. Free mutual fund calculator."
+  breadcrumbs={getBreadcrumbs('/calculators/mutual-fund-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/investing" class="hover:text-blue-600">Investing &amp; Retirement</a><span>›</span>
+      <span class="text-gray-900">Mutual Fund Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Mutual Fund Calculator"
+          description="Future value with contributions — and what the expense ratio costs you"
+          formulaId="mutual-fund"
+          formulaFn={formulaFn}
+          resultLabel="Future Value"
+          gauge={gauge}
+          inputs={[
+            { id: 'initial', label: 'Initial Investment ($)', type: 'number', placeholder: '10000', min: 0, defaultValue: 10000 },
+            { id: 'monthly', label: 'Monthly Contribution ($)', type: 'number', placeholder: '500', min: 0, defaultValue: 500 },
+            { id: 'ret', label: 'Expected Annual Return (%)', type: 'number', placeholder: '8', min: 0, step: 0.01, defaultValue: 8 },
+            { id: 'expense', label: 'Expense Ratio (%)', type: 'number', placeholder: '0.5', min: 0, max: 5, step: 0.01, defaultValue: 0.5 },
+            { id: 'years', label: 'Years Invested', type: 'number', placeholder: '20', min: 1, max: 60, defaultValue: 20 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/mutual-fund-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Fees compound too</h3>
+          <p class="text-xs text-blue-800 leading-relaxed">A 1% expense ratio doesn't cost 1% — it compounds every year against your whole balance. Over decades it can quietly consume a large slice of your gains.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
