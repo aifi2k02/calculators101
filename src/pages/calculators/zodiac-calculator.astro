@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -56,16 +56,13 @@ const faqs = [
 <Layout
   title="Zodiac Sign Calculator: Find Your Astrology Sign & Traits"
   description="Find your zodiac sign from any birthday. Learn about your sun sign traits, compatibility, and element. Free zodiac calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Other", href: "/calculators/other" },
-    { name: "Zodiac Sign Calculator", href: "/calculators/zodiac-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/zodiac-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#fun" class="hover:text-blue-600">Fun &amp; Lifestyle</a><span>›</span>
       <span class="text-gray-900">Zodiac Sign Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

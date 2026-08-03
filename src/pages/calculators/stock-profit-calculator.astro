@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -43,16 +43,13 @@ const faqs = [
 <Layout
   title="Stock Profit Calculator: Investment Return & Capital Gains"
   description="Calculate your profit, loss, and return percentage from buying and selling stocks. Includes commission costs. Free stock profit calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Financial", href: "/calculators/financial" },
-    { name: "Stock Profit Calculator", href: "/calculators/stock-profit-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/stock-profit-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#invest" class="hover:text-blue-600">Investing &amp; Retirement</a><span>›</span>
       <span class="text-gray-900">Stock Profit Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

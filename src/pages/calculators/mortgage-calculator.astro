@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const homePrice = parseFloat(inputs.principal) || 0
@@ -64,12 +64,13 @@ const gauge = {
 <Layout
   title="Mortgage Calculator: Monthly Payment, Interest & PITI"
   description="Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI. Supports 10, 15, 20, and 30-year fixed-rate loans."
-  breadcrumbs={[{name:"Home",href:"/"},{name:"Financial",href:"/calculators/financial"},{name:"Mortgage Calculator",href:"/calculators/mortgage-calculator"}]}
+  breadcrumbs={getBreadcrumbs('/calculators/mortgage-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
       <span class="text-gray-900">Mortgage Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

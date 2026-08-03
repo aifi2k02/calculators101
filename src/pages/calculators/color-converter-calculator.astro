@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -58,16 +58,13 @@ const faqs = [
 <Layout
   title="Color Converter: HEX, RGB, HSL, HSV & CSS Colors"
   description="Convert colors between HEX, RGB, HSL, HSV, and CMYK formats. Preview colors instantly. Free color converter and picker."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Other", href: "/calculators/other" },
-    { name: "Color Converter", href: "/calculators/color-converter-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/color-converter-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#stats" class="hover:text-blue-600">Stats &amp; Numbers</a><span>›</span>
       <span class="text-gray-900">Color Converter</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

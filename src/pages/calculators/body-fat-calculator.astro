@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const sex = inputs.sex
@@ -71,12 +71,13 @@ const gaugeMale = {
 <Layout
   title="Body Fat Calculator: US Navy Method with Categories"
   description="Calculate your body fat percentage using the US Navy circumference method. Get fat mass, lean mass, and category (athletic, fit, average, obese)."
-  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"Body Fat Calculator",href:"/calculators/body-fat-calculator"}]}
+  breadcrumbs={getBreadcrumbs('/calculators/body-fat-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/fitness#body" class="hover:text-blue-600">Body &amp; Weight</a><span>›</span>
       <span class="text-gray-900">Body Fat Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

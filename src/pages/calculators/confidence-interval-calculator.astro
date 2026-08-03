@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const mean = parseFloat(inputs.mean)
@@ -50,16 +50,13 @@ const faqs = [
 <Layout
   title="Confidence Interval Calculator: Mean, Margin & Range"
   description="Calculate the confidence interval for a mean at 80–99.9% confidence. Get the margin of error, standard error, and z-value. Free, with step-by-step working."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Math', href: '/calculators/math' },
-    { name: 'Confidence Interval Calculator', href: '/calculators/confidence-interval-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/confidence-interval-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/math#stats" class="hover:text-blue-600">Stats &amp; Numbers</a><span>›</span>
       <span class="text-gray-900">Confidence Interval Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

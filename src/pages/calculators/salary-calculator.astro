@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -48,16 +48,13 @@ const faqs = [
 <Layout
   title="Salary Calculator: Annual, Monthly & Hourly Pay"
   description="Convert salary to hourly, daily, weekly, monthly, or annual pay. Calculate take-home pay with tax estimate. Free salary calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Financial", href: "/calculators/financial" },
-    { name: "Salary Calculator", href: "/calculators/salary-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/salary-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#pay" class="hover:text-blue-600">Income &amp; Pay</a><span>›</span>
       <span class="text-gray-900">Salary Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

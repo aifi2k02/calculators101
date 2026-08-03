@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const filing = inputs.filing || 'single'
@@ -81,17 +81,14 @@ const faqs = [
 <Layout
   title="Content Creator Tax Calculator 2026: Influencer & YouTuber Taxes"
   description="Estimate 2026 taxes on creator income — sponsorships, AdSense, affiliate, and merch. See what you keep and set aside each quarter. Free creator tax calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Financial', href: '/calculators/financial' },
-    { name: 'Creator Tax Calculator', href: '/calculators/creator-tax-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/creator-tax-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
-      <span class="text-gray-900">Creator Tax Calculator</span>
+      <a href="/calculators/financial#tax" class="hover:text-blue-600">Taxes</a><span>›</span>
+      <span class="text-gray-900">Content Creator Tax Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">

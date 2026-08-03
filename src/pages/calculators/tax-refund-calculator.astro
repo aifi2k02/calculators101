@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const filing = inputs.filing || 'single'
@@ -77,16 +77,13 @@ const faqs = [
 <Layout
   title="Tax Refund Calculator 2026: Estimate Your Federal Refund"
   description="Estimate your 2026 federal tax refund or balance due. Free tax refund calculator using official 2026 IRS brackets and standard deductions — no signup."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Financial', href: '/calculators/financial' },
-    { name: 'Tax Refund Calculator', href: '/calculators/tax-refund-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/tax-refund-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#tax" class="hover:text-blue-600">Taxes</a><span>›</span>
       <span class="text-gray-900">Tax Refund Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

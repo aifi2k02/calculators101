@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -46,16 +46,13 @@ const faqs = [
 <Layout
   title="Paint Calculator: How Many Gallons Do I Need?"
   description="Calculate how much paint you need to cover a room or surface. Accounts for doors, windows, and multiple coats. Free paint calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Other", href: "/calculators/other" },
-    { name: "Paint Calculator", href: "/calculators/paint-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/paint-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#home" class="hover:text-blue-600">Home &amp; DIY</a><span>›</span>
       <span class="text-gray-900">Paint Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

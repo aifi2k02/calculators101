@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -48,17 +48,14 @@ const faqs = [
 <Layout
   title="LCM and GCD Calculator: Least Common Multiple & Greatest Common Divisor"
   description="Find the LCM (least common multiple) and GCD (greatest common divisor/HCF) of two or more numbers. Shows prime factorization. Free LCM GCD calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Math", href: "/calculators/math" },
-    { name: "LCM & GCD Calculator", href: "/calculators/lcm-gcd-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/lcm-gcd-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
-      <span class="text-gray-900">LCM & GCD Calculator</span>
+      <a href="/calculators/math#invest" class="hover:text-blue-600">Investing &amp; Retirement</a><span>›</span>
+      <span class="text-gray-900">LCM &amp; GCD Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">

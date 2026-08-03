@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const length = parseFloat(inputs.length)
@@ -51,16 +51,13 @@ const faqs = [
 <Layout
   title="Square Footage Calculator: Area & Material Cost"
   description="Calculate square footage from length and width in feet, inches, yards, or meters. Get area in ft², m², and yd², plus material cost. Free square footage calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Square Footage Calculator', href: '/calculators/square-footage-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/square-footage-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#math" class="hover:text-blue-600">Core Math</a><span>›</span>
       <span class="text-gray-900">Square Footage Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

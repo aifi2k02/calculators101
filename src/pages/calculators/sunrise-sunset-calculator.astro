@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const lat = parseFloat(inputs.lat)
@@ -94,16 +94,13 @@ const faqs = [
 <Layout
   title="Sunrise & Sunset Calculator: Times for Any Location"
   description="Calculate sunrise, sunset, solar noon, and day length for any latitude, longitude, and date using the NOAA solar algorithm. Free, accurate sunrise sunset calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Sunrise & Sunset Calculator', href: '/calculators/sunrise-sunset-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/sunrise-sunset-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#sci" class="hover:text-blue-600">Science &amp; Weather</a><span>›</span>
       <span class="text-gray-900">Sunrise &amp; Sunset Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

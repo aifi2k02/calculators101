@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const base = parseFloat(inputs.base) || 0
@@ -69,16 +69,13 @@ const faqs = [
 <Layout
   title="Nurse Pay Calculator: Shift Differential & Effective Hourly Rate"
   description="Calculate your real nursing pay with night and weekend shift differentials and overtime. Free nurse pay calculator showing weekly, annual, and effective hourly rate."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Financial', href: '/calculators/financial' },
-    { name: 'Nurse Pay Calculator', href: '/calculators/nurse-pay-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/nurse-pay-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#pay" class="hover:text-blue-600">Income &amp; Pay</a><span>›</span>
       <span class="text-gray-900">Nurse Pay Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

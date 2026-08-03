@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const level = inputs.level || '95'
@@ -52,16 +52,13 @@ const faqs = [
 <Layout
   title="Sample Size Calculator: How Many People to Survey"
   description="Calculate the survey sample size you need for a given confidence level and margin of error, with optional finite population correction. Free and accurate."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Math', href: '/calculators/math' },
-    { name: 'Sample Size Calculator', href: '/calculators/sample-size-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/sample-size-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/math#stats" class="hover:text-blue-600">Stats &amp; Numbers</a><span>›</span>
       <span class="text-gray-900">Sample Size Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

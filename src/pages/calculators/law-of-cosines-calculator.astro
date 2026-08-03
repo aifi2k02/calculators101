@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -63,16 +63,13 @@ const faqs = [
 <Layout
   title="Law of Cosines Calculator: Solve Any Triangle"
   description="Use the law of cosines to solve any triangle. Find side lengths and angles from SSS or SAS configurations. Free law of cosines calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Math", href: "/calculators/math" },
-    { name: "Law of Cosines Calculator", href: "/calculators/law-of-cosines-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/law-of-cosines-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/math#math" class="hover:text-blue-600">Core Math</a><span>›</span>
       <span class="text-gray-900">Law of Cosines Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

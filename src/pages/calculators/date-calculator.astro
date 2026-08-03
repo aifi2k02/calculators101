@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const type = inputs.type || 'diff'
@@ -56,16 +56,13 @@ const faqs = [
 <Layout
   title="Date Calculator: Days Between Dates & Date Math"
   description="Calculate the number of days between two dates, or add/subtract days from a date. Free date calculator with weeks, months, and years breakdown."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Date Calculator', href: '/calculators/date-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/date-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#date" class="hover:text-blue-600">Date &amp; Time</a><span>›</span>
       <span class="text-gray-900">Date Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

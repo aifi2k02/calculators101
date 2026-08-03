@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro'
+import { getBreadcrumbs } from '../../lib/calculators'
 
 const faqs = [
   { question: 'How do I use the basic calculator?', answer: 'Click the buttons or type on your keyboard. Enter a number, choose an operation (+, −, ×, ÷), enter the next number, and press = or Enter to see the result. Press AC to clear everything, or the ± and % keys for sign change and percentages.' },
@@ -28,11 +29,7 @@ const faqSchema = {
 <Layout
   title="Basic Calculator — Free Online Calculator"
   description="A free, fast online basic calculator for addition, subtraction, multiplication, and division. Full keyboard support, no ads, no sign-up — just results."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Math', href: '/calculators/math' },
-    { name: 'Basic Calculator', href: '/calculators/basic-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/basic-calculator')}
 >
   <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
@@ -41,6 +38,7 @@ const faqSchema = {
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/math#math" class="hover:text-blue-600">Core Math</a><span>›</span>
       <span class="text-gray-900">Basic Calculator</span>
     </nav>
 

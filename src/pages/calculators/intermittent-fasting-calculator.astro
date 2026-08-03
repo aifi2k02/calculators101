@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -45,16 +45,13 @@ const faqs = [
 <Layout
   title="Intermittent Fasting Calculator: Fasting Window & Schedule"
   description="Calculate your intermittent fasting window, eating schedule, and expected calorie deficit. Free IF calculator for 16:8, 18:6, and more."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Fitness", href: "/calculators/fitness" },
-    { name: "Intermittent Fasting Calculator", href: "/calculators/intermittent-fasting-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/intermittent-fasting-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/fitness#nutri" class="hover:text-blue-600">Nutrition &amp; Diet</a><span>›</span>
       <span class="text-gray-900">Intermittent Fasting Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const unit = inputs.unit
@@ -77,12 +77,13 @@ const gauge = {
 <Layout
   title="BMI Calculator: Check Body Mass Index & Healthy Weight Range"
   description="Calculate your Body Mass Index (BMI), weight category, healthy weight range, BMI Prime, and Ponderal Index. Free BMI calculator with WHO classification table."
-  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"BMI Calculator",href:"/calculators/bmi-calculator"}]}
+  breadcrumbs={getBreadcrumbs('/calculators/bmi-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/fitness#body" class="hover:text-blue-600">Body &amp; Weight</a><span>›</span>
       <span class="text-gray-900">BMI Calculator</span>
     </nav>
 

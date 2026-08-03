@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const price = parseFloat(inputs.price) || 0
@@ -38,16 +38,13 @@ const faqs = [
 <Layout
   title="Sales Tax Calculator: Price After Tax"
   description="Calculate total price after sales tax for any state. Add tax to any purchase amount instantly. Free sales tax calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Sales Tax Calculator', href: '/calculators/sales-tax-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/sales-tax-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#tax" class="hover:text-blue-600">Taxes</a><span>›</span>
       <span class="text-gray-900">Sales Tax Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

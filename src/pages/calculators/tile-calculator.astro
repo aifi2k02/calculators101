@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const roomL = parseFloat(inputs.roomL) || 0
@@ -50,16 +50,13 @@ const faqs = [
 <Layout
   title="Tile Calculator: How Many Tiles & Boxes You Need"
   description="Calculate how many tiles and boxes you need for any floor or wall, including waste. Free tile calculator for any room and tile size."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Tile Calculator', href: '/calculators/tile-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/tile-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#home" class="hover:text-blue-600">Home &amp; DIY</a><span>›</span>
       <span class="text-gray-900">Tile Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

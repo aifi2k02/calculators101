@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -42,17 +42,14 @@ const faqs = [
 <Layout
   title="Crypto Calculator: Convert Crypto to USD & Calculate Gains"
   description="Calculate cryptocurrency value in USD, profit/loss, and percent return. Supports Bitcoin, Ethereum, and major cryptos. Free crypto calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Other", href: "/calculators/other" },
-    { name: "Crypto Calculator", href: "/calculators/crypto-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/crypto-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
-      <span class="text-gray-900">Crypto Calculator</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#invest" class="hover:text-blue-600">Investing &amp; Retirement</a><span>›</span>
+      <span class="text-gray-900">Crypto Profit Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">

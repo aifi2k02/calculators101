@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const weight = parseFloat(inputs.weight) || 0
@@ -47,16 +47,13 @@ const faqs = [
 <Layout
   title="Water Intake Calculator: Daily Hydration Needs"
   description="Calculate how much water you should drink per day based on weight, activity level, and climate. Free water intake calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Fitness & Health', href: '/calculators/fitness' },
-    { name: 'Water Intake Calculator', href: '/calculators/water-intake-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/water-intake-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/fitness#nutri" class="hover:text-blue-600">Nutrition &amp; Diet</a><span>›</span>
       <span class="text-gray-900">Water Intake Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

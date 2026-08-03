@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -46,17 +46,14 @@ const faqs = [
 <Layout
   title="Binary Calculator: Convert & Calculate Binary, Decimal, Hex"
   description="Convert between binary, decimal, hexadecimal, and octal. Perform binary addition, subtraction, AND, OR, XOR operations. Free binary calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Math", href: "/calculators/math" },
-    { name: "Binary Calculator", href: "/calculators/binary-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/binary-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
-      <span class="text-gray-900">Binary Calculator</span>
+      <a href="/calculators/math#stats" class="hover:text-blue-600">Stats &amp; Numbers</a><span>›</span>
+      <span class="text-gray-900">Binary Converter</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">

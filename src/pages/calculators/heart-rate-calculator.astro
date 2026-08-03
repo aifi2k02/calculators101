@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const age = parseFloat(inputs.age)
@@ -55,12 +55,13 @@ const gauge = {
 <Layout
   title="Heart Rate Calculator: Max HR & 5 Training Zones"
   description="Calculate your maximum heart rate and all 5 Karvonen training zones for fat burning, aerobic fitness, and peak performance."
-  breadcrumbs={[{name:"Home",href:"/"},{name:"Fitness & Health",href:"/calculators/fitness"},{name:"Heart Rate Calculator",href:"/calculators/heart-rate-calculator"}]}
+  breadcrumbs={getBreadcrumbs('/calculators/heart-rate-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/fitness#exer" class="hover:text-blue-600">Exercise &amp; Cardio</a><span>›</span>
       <span class="text-gray-900">Heart Rate Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const miles = parseFloat(inputs.miles) || 0
@@ -53,16 +53,13 @@ const faqs = [
 <Layout
   title="Carbon Footprint Calculator: Your Annual CO₂ Emissions"
   description="Estimate your annual carbon footprint in tons of CO₂ from driving, electricity, flights, and diet. Free carbon footprint calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Carbon Footprint Calculator', href: '/calculators/carbon-footprint-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/carbon-footprint-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#health" class="hover:text-blue-600">Health &amp; Life</a><span>›</span>
       <span class="text-gray-900">Carbon Footprint Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

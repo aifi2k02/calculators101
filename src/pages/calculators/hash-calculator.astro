@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro'
+import { getBreadcrumbs } from '../../lib/calculators'
 
 const faqs = [
   { question: 'What is an MD5 hash?', answer: 'MD5 is a hashing algorithm that turns any text into a fixed 32-character hexadecimal fingerprint. The same input always produces the same hash, and even a one-character change produces a completely different result — which makes it useful for verifying that data has not changed.' },
@@ -28,11 +29,7 @@ const faqSchema = {
 <Layout
   title="Hash Calculator: MD5, SHA-256 & SHA-512 Generator"
   description="Free online hash calculator and MD5 generator. Turn any text into an MD5, SHA-1, SHA-256, or SHA-512 hash instantly in your browser — private, no signup."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Hash Calculator', href: '/calculators/hash-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/hash-calculator')}
 >
   <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
@@ -41,6 +38,7 @@ const faqSchema = {
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#stats" class="hover:text-blue-600">Stats &amp; Numbers</a><span>›</span>
       <span class="text-gray-900">Hash Calculator</span>
     </nav>
 

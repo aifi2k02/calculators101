@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const goal = parseFloat(inputs.goal) || 0
@@ -51,16 +51,13 @@ const faqs = [
 <Layout
   title="Savings Calculator: How Long to Reach Your Goal?"
   description="Calculate how long it takes to reach your savings goal with monthly contributions. Free savings calculator with interest rate support."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Financial', href: '/calculators/financial' },
-    { name: 'Savings Calculator', href: '/calculators/savings-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/savings-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#invest" class="hover:text-blue-600">Investing &amp; Retirement</a><span>›</span>
       <span class="text-gray-900">Savings Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

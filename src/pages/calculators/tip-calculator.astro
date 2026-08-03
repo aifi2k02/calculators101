@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const bill = parseFloat(inputs.bill) || 0
@@ -42,16 +42,13 @@ const faqs = [
 <Layout
   title="Tip Calculator: Split the Bill & Calculate Gratuity"
   description="Calculate tip amount and total bill instantly. Split between any number of people. Free tip calculator with customizable tip percentage."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Tip Calculator', href: '/calculators/tip-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/tip-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#budget" class="hover:text-blue-600">Budget &amp; Spending</a><span>›</span>
       <span class="text-gray-900">Tip Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

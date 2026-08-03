@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const price = parseFloat(inputs.price) || 0
@@ -45,16 +45,13 @@ const faqs = [
 <Layout
   title="Auto Loan Calculator: Monthly Car Payment Estimator"
   description="Calculate your monthly car payment, total interest, and total cost. Supports down payment and trade-in. Free auto loan calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Financial', href: '/calculators/financial' },
-    { name: 'Auto Loan Calculator', href: '/calculators/auto-loan-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/auto-loan-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
       <span class="text-gray-900">Auto Loan Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

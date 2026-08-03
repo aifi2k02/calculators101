@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro'
+import { getBreadcrumbs } from '../../lib/calculators'
 
 const faqs = [
   { question: 'How do I use the scientific calculator?', answer: 'Build an expression using the buttons or your keyboard, then press = or Enter to evaluate it. It follows the correct order of operations (PEMDAS), supports parentheses, exponents, roots, logarithms, and trigonometric functions, and shows your running expression above the result. Press AC to clear or the backspace key to delete the last entry.' },
@@ -28,11 +29,7 @@ const faqSchema = {
 <Layout
   title="Scientific Calculator — Free Online with Trig, Log & Exponents"
   description="A free online scientific calculator with trigonometry, logarithms, exponents, roots, factorials, π and e. Full order of operations, DEG/RAD, keyboard support — no ads."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Math', href: '/calculators/math' },
-    { name: 'Scientific Calculator', href: '/calculators/scientific-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/scientific-calculator')}
 >
   <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
@@ -41,6 +38,7 @@ const faqSchema = {
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/math#math" class="hover:text-blue-600">Core Math</a><span>›</span>
       <span class="text-gray-900">Scientific Calculator</span>
     </nav>
 

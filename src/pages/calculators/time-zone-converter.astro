@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro'
+import { getBreadcrumbs } from '../../lib/calculators'
 
 const faqs = [
   { question: 'How does the time zone converter work?', answer: 'Pick a date and time, the zone it is in ("from"), and the zone you want it in ("to"). The converter uses your browser\'s built-in time-zone database — the same IANA data that powers operating systems — to translate the time accurately, including daylight saving time changes.' },
@@ -28,11 +29,7 @@ const faqSchema = {
 <Layout
   title="Time Zone Converter: Convert Time Between Any Time Zones"
   description="Convert any time between world time zones with accurate daylight saving handling. Free time zone converter and meeting planner — private, in your browser."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Time Zone Converter', href: '/calculators/time-zone-converter' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/time-zone-converter')}
 >
   <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
   <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
@@ -41,6 +38,7 @@ const faqSchema = {
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#date" class="hover:text-blue-600">Date &amp; Time</a><span>›</span>
       <span class="text-gray-900">Time Zone Converter</span>
     </nav>
 

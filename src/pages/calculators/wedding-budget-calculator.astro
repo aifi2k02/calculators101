@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const budget = parseFloat(inputs.budget) || 0
@@ -51,16 +51,13 @@ const faqs = [
 <Layout
   title="Wedding Budget Calculator: Cost Breakdown by Category"
   description="Plan your wedding budget with a category-by-category breakdown. See venue, catering, photography, and per-guest costs. Free wedding budget calculator."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Financial', href: '/calculators/financial' },
-    { name: 'Wedding Budget Calculator', href: '/calculators/wedding-budget-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/wedding-budget-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#budget" class="hover:text-blue-600">Budget &amp; Spending</a><span>›</span>
       <span class="text-gray-900">Wedding Budget Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

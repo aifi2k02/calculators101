@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -40,17 +40,14 @@ const faqs = [
 <Layout
   title="Love Compatibility Calculator: Relationship Compatibility Score"
   description="Find your love compatibility score based on names and birthdays. Fun relationship compatibility calculator using numerology and astrology."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Other", href: "/calculators/other" },
-    { name: "Love Compatibility Calculator", href: "/calculators/love-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/love-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
-      <span class="text-gray-900">Love Compatibility Calculator</span>
+      <a href="/calculators/other#fun" class="hover:text-blue-600">Fun &amp; Lifestyle</a><span>›</span>
+      <span class="text-gray-900">Love Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">

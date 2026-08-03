@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const principal = parseFloat(inputs.principal)
@@ -52,12 +52,13 @@ const gauge = {
 <Layout
   title="Loan Calculator: Monthly Payment & Total Interest"
   description="Calculate monthly loan payments, total repayment, and interest for any personal loan, auto loan, or debt. Full amortization breakdown included."
-  breadcrumbs={[{name:"Home",href:"/"},{name:"Financial",href:"/calculators/financial"},{name:"Loan Calculator",href:"/calculators/loan-calculator"}]}
+  breadcrumbs={getBreadcrumbs('/calculators/loan-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/financial#loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
       <span class="text-gray-900">Loan Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

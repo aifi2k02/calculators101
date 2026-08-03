@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -56,17 +56,14 @@ const faqs = [
 <Layout
   title="Quadratic Formula Calculator: Solve ax^2 + bx + c = 0"
   description="Solve any quadratic equation using the quadratic formula. Find real and complex roots with full step-by-step solution. Free quadratic calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Math", href: "/calculators/math" },
-    { name: "Quadratic Formula Calculator", href: "/calculators/quadratic-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/quadratic-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
-      <span class="text-gray-900">Quadratic Formula Calculator</span>
+      <a href="/calculators/math#math" class="hover:text-blue-600">Core Math</a><span>›</span>
+      <span class="text-gray-900">Quadratic Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">

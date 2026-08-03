@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const miles = parseFloat(inputs.miles) || 0
@@ -47,16 +47,13 @@ const faqs = [
 <Layout
   title="Gas Mileage Calculator: MPG, Cost Per Mile & Trip Cost"
   description="Calculate your car's gas mileage (MPG), cost per mile, and trip fuel cost. Free gas mileage calculator with metric L/100km conversion."
-  breadcrumbs={[
-    { name: 'Home', href: '/' },
-    { name: 'Other', href: '/calculators/other' },
-    { name: 'Gas Mileage Calculator', href: '/calculators/gas-mileage-calculator' },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/gas-mileage-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
       <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/other#budget" class="hover:text-blue-600">Budget &amp; Spending</a><span>›</span>
       <span class="text-gray-900">Gas Mileage Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

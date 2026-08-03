@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
   const tdee = parseFloat(inputs.tdee)
@@ -55,11 +55,14 @@ const gauge = {
   ]
 }
 ---
-<Layout title="Caloric Deficit Calculator — Daily Calorie Target for Weight Loss" description="Calculate your caloric deficit or surplus for weight loss or gain. Enter your TDEE and weight loss rate to get daily calorie targets and realistic timelines.">
+<Layout title="Caloric Deficit Calculator — Daily Calorie Target for Weight Loss" description="Calculate your caloric deficit or surplus for weight loss or gain. Enter your TDEE and weight loss rate to get daily calorie targets and realistic timelines."
+  breadcrumbs={getBreadcrumbs('/calculators/caloric-deficit-calculator')}
+>
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness & Health</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/fitness#body" class="hover:text-blue-600">Body &amp; Weight</a><span>›</span>
       <span class="text-gray-900">Caloric Deficit Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">

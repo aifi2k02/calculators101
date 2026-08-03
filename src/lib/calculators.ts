@@ -533,6 +533,13 @@ const _bySlug: Record<string, CalcEntry> = Object.fromEntries(
   categories.flatMap(c => c.calculators).map(e => [e.href.replace('/calculators/', ''), e])
 )
 
+// Flat slug → its registry category (the real category page it lives under).
+const _catOf: Record<string, { slug: string; name: string }> = Object.fromEntries(
+  categories.flatMap(c =>
+    c.calculators.map(e => [e.href.replace('/calculators/', ''), { slug: c.slug, name: c.name }])
+  )
+)
+
 function _slugOf(href: string): string {
   return href.replace('/calculators/', '').replace(/^\/+|\/+$/g, '')
 }
@@ -562,4 +569,26 @@ export function getRelated(href: string, limit = 6): { name: string; href: strin
   return [...sameHub, ...sameSilo]
     .slice(0, limit)
     .map(([s]) => ({ name: _bySlug[s].name, href: _bySlug[s].href }))
+}
+
+/**
+ * Breadcrumb trail for a calculator page, with the topical silo as a tier:
+ *   Home › {Category} › {Silo} › {Calculator}
+ * The category tier is the calculator's real registry category. The silo tier
+ * links to that category page with a #{siloId} anchor (repoint to a dedicated
+ * hub page once those exist). Returns [] for non-calculator URLs.
+ */
+export function getBreadcrumbs(href: string): { name: string; href: string }[] {
+  const slug = _slugOf(href)
+  const entry = _bySlug[slug]
+  const cat = _catOf[slug]
+  const a = siloAssignments[slug]
+  if (!entry || !cat || !a) return []
+  const meta = getSiloMeta(a.silo)
+  return [
+    { name: 'Home', href: '/' },
+    { name: cat.name, href: `/calculators/${cat.slug}` },
+    { name: meta ? meta.name : a.silo, href: `/calculators/${cat.slug}#${a.silo}` },
+    { name: entry.name, href: entry.href },
+  ]
 }

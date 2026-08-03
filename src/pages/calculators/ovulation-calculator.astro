@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
-import { getRelated } from '../../lib/calculators'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -43,16 +43,13 @@ const faqs = [
 <Layout
   title="Ovulation Calculator: Fertile Window & Ovulation Date"
   description="Calculate your ovulation date, fertile window, and next period date. Plan or prevent pregnancy naturally. Free ovulation calculator."
-  breadcrumbs={[
-    { name: "Home", href: "/" },
-    { name: "Fitness", href: "/calculators/fitness" },
-    { name: "Ovulation Calculator", href: "/calculators/ovulation-calculator" },
-  ]}
+  breadcrumbs={getBreadcrumbs('/calculators/ovulation-calculator')}
 >
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
       <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
-      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness</a><span>›</span>
+      <a href="/calculators/fitness" class="hover:text-blue-600">Fitness &amp; Health</a><span>›</span>
+      <a href="/calculators/fitness#health" class="hover:text-blue-600">Health &amp; Life</a><span>›</span>
       <span class="text-gray-900">Ovulation Calculator</span>
     </nav>
     <div class="grid lg:grid-cols-3 gap-8">
