@@ -1,0 +1,114 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const principal = parseFloat(inputs.principal)
+  const rate = parseFloat(inputs.rate)
+  const years = parseFloat(inputs.years)
+  const feePct = parseFloat(inputs.fee) || 0
+  if (isNaN(principal) || principal <= 0) throw new Error('Enter a valid loan amount.')
+  if (isNaN(rate) || rate < 0) throw new Error('Enter a valid interest rate.')
+  if (isNaN(years) || years <= 0) throw new Error('Enter a valid loan term.')
+  if (feePct < 0 || feePct > 15) throw new Error('Origination fee should be 0–15%.')
+  const r = rate / 100 / 12
+  const n = Math.round(years * 12)
+  const monthly = r === 0 ? principal / n : (principal * r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1)
+  const total = monthly * n
+  const interest = total - principal
+  const fee = principal * (feePct / 100)
+  const netReceived = principal - fee
+  // True APR: monthly rate i where the amount actually received equals the PV of payments.
+  const pv = i => i === 0 ? monthly * n : monthly * (1 - Math.pow(1+i, -n)) / i
+  let apr = rate
+  if (fee > 0) {
+    let lo = r, hi = 1
+    for (let k = 0; k < 200; k++) { const mid = (lo + hi) / 2; if (pv(mid) > netReceived) lo = mid; else hi = mid }
+    apr = ((lo + hi) / 2) * 12 * 100
+  }
+  const stats = [
+    { label: 'Monthly Payment', value: '$' + monthly.toFixed(2) },
+    { label: 'Total Interest', value: '$' + Math.round(interest).toLocaleString() },
+    { label: 'Total Repaid', value: '$' + Math.round(total).toLocaleString() },
+  ]
+  if (fee > 0) {
+    stats.push({ label: 'Origination Fee', value: '$' + Math.round(fee).toLocaleString() })
+    stats.push({ label: 'Amount Received', value: '$' + Math.round(netReceived).toLocaleString() })
+    stats.push({ label: 'True APR (with fee)', value: apr.toFixed(2) + '%' })
+  } else {
+    stats.push({ label: 'Number of Payments', value: n.toString() })
+  }
+  const breakdown = [
+    'Loan amount: $' + principal.toLocaleString(),
+    'Rate: ' + rate + '% APR over ' + years + ' years (' + n + ' payments)',
+    'Monthly payment: $' + monthly.toFixed(2),
+    'Total interest: $' + Math.round(interest).toLocaleString(),
+  ]
+  if (fee > 0) {
+    breakdown.push('—')
+    breakdown.push('Origination fee (' + feePct + '%): $' + Math.round(fee).toLocaleString())
+    breakdown.push('Cash actually received: $' + Math.round(netReceived).toLocaleString())
+    breakdown.push('True APR including the fee: ' + apr.toFixed(2) + '%')
+  }
+  return { value: '$' + monthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), gaugeValue: Math.min(rate, 36), stats, breakdown }
+`
+
+const gauge = {
+  min: 0, max: 36, unit: '% APR',
+  zones: [
+    { label: 'Excellent <10%', color: '#22c55e', from: 0, to: 10 },
+    { label: 'Good 10-18%', color: '#3b82f6', from: 10, to: 18 },
+    { label: 'Fair 18-28%', color: '#f59e0b', from: 18, to: 28 },
+    { label: 'High 28%+', color: '#ef4444', from: 28, to: 36 },
+  ]
+}
+
+const faqs = [
+  { question: 'How is a personal loan payment calculated?', answer: 'With standard amortization: M = P x r x (1+r)^n / ((1+r)^n - 1). A $10,000 loan at 12% over 3 years is about $332/month, or $11,957 total ($1,957 interest).' },
+  { question: 'What is an origination fee and how does it affect APR?', answer: 'Many personal loans charge a 1–8% origination fee, deducted from the money you receive. You still repay the full loan amount, so your effective cost — the true APR — is higher than the stated rate. Enter the fee percentage and this calculator computes the real APR.' },
+  { question: 'What is the difference between interest rate and APR?', answer: 'The interest rate is the cost of borrowing the principal. APR (Annual Percentage Rate) also folds in fees like origination, giving the true yearly cost. Two loans with the same rate can have very different APRs if one charges a big fee.' },
+  { question: 'What is a good personal loan rate?', answer: 'It depends on credit: strong credit can see under 10%, average credit 10–20%, and subprime 20–36%. Always compare APR (not just rate) across lenders, and watch for origination fees that inflate the real cost.' },
+  { question: 'Can I pay off a personal loan early?', answer: 'Usually yes, and most personal loans have no prepayment penalty — check your agreement. Paying early reduces total interest. If there is a penalty, weigh it against the interest you would save.' }
+]
+---
+<Layout
+  title="Personal Loan Calculator: Payment, Interest & True APR"
+  description="Calculate personal loan monthly payments, total interest, and the true APR including origination fees. Free personal loan calculator with full breakdown."
+  breadcrumbs={getBreadcrumbs('/calculators/personal-loan-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
+      <span class="text-gray-900">Personal Loan Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Personal Loan Calculator"
+          description="Monthly payment, total interest, and true APR including origination fees"
+          formulaId="personal-loan"
+          formulaFn={formulaFn}
+          resultLabel="Monthly Payment"
+          gauge={gauge}
+          inputs={[
+            { id: 'principal', label: 'Loan Amount ($)', type: 'number', placeholder: '10000', min: 1, defaultValue: 10000 },
+            { id: 'rate', label: 'Interest Rate (% APR)', type: 'number', placeholder: '12', min: 0, step: 0.01, defaultValue: 12 },
+            { id: 'years', label: 'Loan Term (years)', type: 'number', placeholder: '3', min: 1, max: 12, defaultValue: 3 },
+            { id: 'fee', label: 'Origination Fee (%, optional)', type: 'number', placeholder: '0', min: 0, max: 15, step: 0.1, defaultValue: 0 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/personal-loan-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Compare by APR, not rate</h3>
+          <p class="text-xs text-blue-800 leading-relaxed">A loan with a low rate but a high origination fee can cost more than a higher-rate loan with no fee. The <strong>true APR</strong> field folds the fee in so you can compare offers fairly.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

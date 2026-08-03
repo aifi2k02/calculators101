@@ -1,0 +1,116 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const balance = parseFloat(inputs.balance)
+  const rate = parseFloat(inputs.rate)
+  const years = parseFloat(inputs.years)
+  const extra = parseFloat(inputs.extra) || 0
+  if (isNaN(balance) || balance <= 0) throw new Error('Enter your current mortgage balance.')
+  if (isNaN(rate) || rate < 0) throw new Error('Enter a valid interest rate.')
+  if (isNaN(years) || years <= 0) throw new Error('Enter the years remaining.')
+  if (extra < 0) throw new Error('Extra payment cannot be negative.')
+  const r = rate / 100 / 12
+  const n = Math.round(years * 12)
+  const monthly = r === 0 ? balance / n : (balance * r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1)
+  const interestOrig = monthly * n - balance
+  const simulate = pay => {
+    let bal = balance, months = 0, interest = 0
+    if (r > 0 && pay <= bal * r) return null
+    while (bal > 0 && months < 12000) {
+      const i = bal * r
+      let princ = pay - i
+      if (princ > bal) princ = bal
+      interest += i; bal -= princ; months++
+    }
+    return { months, interest }
+  }
+  let newMonths = n, newInterest = interestOrig
+  const sim = extra > 0 ? simulate(monthly + extra) : null
+  if (sim) { newMonths = sim.months; newInterest = sim.interest }
+  const monthsSaved = n - newMonths
+  const interestSaved = interestOrig - newInterest
+  const ny = Math.floor(newMonths/12), nm = newMonths % 12
+  const sy = Math.floor(monthsSaved/12), sm = monthsSaved % 12
+  const stats = [
+    { label: 'Current Monthly (P&I)', value: '$' + monthly.toFixed(2) },
+    { label: 'New Monthly Payment', value: '$' + (monthly + extra).toFixed(2) },
+    { label: 'Payoff Time', value: ny + ' yr ' + nm + ' mo' },
+    { label: 'Time Saved', value: sy + ' yr ' + sm + ' mo' },
+    { label: 'Interest Saved', value: '$' + Math.round(interestSaved).toLocaleString() },
+    { label: 'Total Interest (new)', value: '$' + Math.round(newInterest).toLocaleString() },
+  ]
+  const breakdown = [
+    'Current balance: $' + balance.toLocaleString(),
+    'Rate: ' + rate + '% over ' + years + ' years remaining (' + n + ' payments)',
+    'Required monthly P&I: $' + monthly.toFixed(2),
+    'Interest if unchanged: $' + Math.round(interestOrig).toLocaleString(),
+    '—',
+    'Extra per month: $' + extra.toLocaleString(),
+    'New payoff: ' + ny + ' yr ' + nm + ' mo (' + sy + ' yr ' + sm + ' mo sooner)',
+    'Interest saved: $' + Math.round(interestSaved).toLocaleString(),
+  ]
+  const headline = extra > 0 ? '$' + Math.round(interestSaved).toLocaleString() : '$' + monthly.toFixed(2)
+  return { value: headline, gaugeValue: Math.min(rate, 12), stats, breakdown }
+`
+
+const gauge = {
+  min: 0, max: 12, unit: '% rate',
+  zones: [
+    { label: 'Low <4%', color: '#22c55e', from: 0, to: 4 },
+    { label: 'Moderate 4-6%', color: '#3b82f6', from: 4, to: 6 },
+    { label: 'High 6-8%', color: '#f59e0b', from: 6, to: 8 },
+    { label: 'Very high 8%+', color: '#ef4444', from: 8, to: 12 },
+  ]
+}
+
+const faqs = [
+  { question: 'How does paying extra on my mortgage help?', answer: 'Every extra dollar goes straight to principal, so it removes all the future interest that principal would have generated. Because mortgages are front-loaded with interest, even a modest extra amount can cut years off the loan and save tens of thousands in interest.' },
+  { question: 'How much can I save by paying an extra $200 a month?', answer: 'On a $300,000 balance at 6.5% with 30 years left, adding $200/month pays the loan off roughly 6 years early and saves well over $80,000 in interest. Enter your own numbers above to see your exact figures.' },
+  { question: 'Is it better to pay off the mortgage or invest?', answer: 'Compare your mortgage rate to your expected after-tax investment return. If the mortgage rate is higher, extra payments give a guaranteed, risk-free return equal to the rate. If investments reliably beat it, investing may win — but paying down debt is certain.' },
+  { question: 'Should I make biweekly payments instead?', answer: 'Biweekly payments (half the monthly amount every two weeks) result in 13 monthly payments per year instead of 12 — one extra payment annually. That single extra payment produces most of the savings this calculator shows for a monthly extra amount.' },
+  { question: 'Does an extra payment lower my monthly bill?', answer: 'No — extra principal shortens the loan term, not the required monthly payment. Your minimum payment stays the same; you simply finish sooner. To lower the monthly payment you would need to refinance or recast the loan.' }
+]
+---
+<Layout
+  title="Mortgage Payoff Calculator: Save Interest with Extra Payments"
+  description="See how much time and interest you save by paying extra on your mortgage. Free mortgage payoff calculator with early-payoff date and interest saved."
+  breadcrumbs={getBreadcrumbs('/calculators/mortgage-payoff-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
+      <span class="text-gray-900">Mortgage Payoff Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Mortgage Payoff Calculator"
+          description="How much extra payments shorten your mortgage and cut interest"
+          formulaId="mortgage-payoff"
+          formulaFn={formulaFn}
+          resultLabel="Interest Saved"
+          gauge={gauge}
+          inputs={[
+            { id: 'balance', label: 'Current Balance ($)', type: 'number', placeholder: '300000', min: 1, defaultValue: 300000 },
+            { id: 'rate', label: 'Interest Rate (%)', type: 'number', placeholder: '6.5', min: 0, step: 0.01, defaultValue: 6.5 },
+            { id: 'years', label: 'Years Remaining', type: 'number', placeholder: '30', min: 1, max: 40, defaultValue: 30 },
+            { id: 'extra', label: 'Extra Monthly Payment ($)', type: 'number', placeholder: '200', min: 0, defaultValue: 200 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/mortgage-payoff-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Why extra payments work so well</h3>
+          <p class="text-xs text-blue-800 leading-relaxed">Early in a mortgage, most of each payment is interest. Extra principal now erases years of that interest later — which is why paying extra in the first decade saves the most.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
