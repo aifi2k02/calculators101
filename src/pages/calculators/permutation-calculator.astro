@@ -1,0 +1,120 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+
+  const n = parseInt(inputs.n)||0
+  const r = parseInt(inputs.r)||0
+  if(n<0||r<0) throw new Error("n and r must be non-negative.")
+  if(r>n) throw new Error("r cannot be greater than n.")
+  if(n>20) throw new Error("n must be 20 or less to keep results exact.")
+  const factorial = x => {
+    if(x<=1) return 1
+    let result=1
+    for(let i=2;i<=x;i++) result*=i
+    return result
+  }
+  const nPr = factorial(n)/factorial(n-r)
+  const nCr = factorial(n)/(factorial(r)*factorial(n-r))
+  return {
+    value:"P("+n+","+r+") = "+nPr.toLocaleString(),
+    gaugeValue:Math.min(nPr/1000*100,100),
+    breakdown:[
+      "n = "+n+" items",
+      "r = "+r+" arranged",
+      "P(n,r) = n! / (n-r)! = "+n+"! / "+(n-r)+"!",
+      "Permutations P("+n+","+r+") = "+nPr.toLocaleString(),
+      "Combinations C("+n+","+r+") = "+nCr.toLocaleString(),
+      "P(n,r) = C(n,r) x r! = "+nCr.toLocaleString()+" x "+factorial(r)
+    ],
+    stats:[
+      {label:"Permutations (nPr)",value:nPr.toLocaleString()},
+      {label:"Combinations (nCr)",value:nCr.toLocaleString()},
+      {label:"n",value:String(n)},
+      {label:"r",value:String(r)},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is a permutation?", answer: "A permutation P(n,r) counts the ways to arrange r items chosen from n items where ORDER MATTERS. Picking a president, vice-president, and treasurer from 10 people is P(10,3) = 720. Here president Alice / VP Bob / treasurer Carol is a DIFFERENT outcome from Carol / Bob / Alice, so both are counted." },
+  { question: "What is the permutation formula?", answer: "P(n,r) = n! / (n-r)!. For P(10,3): 10! / 7! = (10 x 9 x 8) = 720. You multiply the top r descending factors of n. When r = n it becomes a full arrangement: P(n,n) = n!." },
+  { question: "What is the difference between a permutation and a combination?", answer: "Order. Permutations count arrangements where order matters (rankings, race finishes, passwords, assigned roles). Combinations count selections where order does not matter (committees, lottery numbers, poker hands). P(n,r) is always greater than or equal to C(n,r), and P(n,r) = C(n,r) x r!." },
+  { question: "How do I calculate permutations on a calculator?", answer: "On a scientific calculator: enter n, press the nPr button, enter r, press =. On graphing calculators look under MATH > PRB > nPr. In Excel use PERMUT(n,r). In Python use math.perm(n,r)." },
+  { question: "What is a real example of permutations?", answer: "Arranging books: how many ways to line up 5 of 8 books on a shelf? P(8,5) = 8! / 3! = 6,720. Race medals: how many ways can gold, silver, and bronze be awarded among 12 runners? P(12,3) = 1,320. Both matter because order (the exact position) changes the outcome." }
+]
+---
+<Layout
+  title="Permutation Calculator: nPr Permutations (Order Matters)"
+  description="Calculate permutations nPr — the number of ordered arrangements of r items from n. Free permutation calculator with formula, steps, and examples."
+  breadcrumbs={getBreadcrumbs('/calculators/permutation-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/statistics" class="hover:text-blue-600">Stats &amp; Numbers</a><span>›</span>
+      <span class="text-gray-900">Permutation Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Permutation Calculator"
+          description="Calculate permutations nPr where order matters"
+          formulaId="permutation"
+          formulaFn={formulaFn}
+          resultLabel="Permutations"
+          inputs={[
+            {id:"n",label:"Total items (n)",type:"number",placeholder:"10",min:0,max:20,defaultValue:10},
+            {id:"r",label:"Items arranged (r)",type:"number",placeholder:"3",min:0,max:20,defaultValue:3}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "permutations",
+            zones: [
+              { label: "Small (<100)", color: "#22c55e", from: 0, to: 10 },
+              { label: "Medium (100-1000)", color: "#3b82f6", from: 10, to: 100 },
+              { label: "Large (1000+)", color: "#f59e0b", from: 100, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/permutation-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Formulas</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-2">
+            <div>P(n,r) = n! / (n-r)!</div>
+            <div>C(n,r) = n! / (r! x (n-r)!)</div>
+            <div class="mt-2 font-sans">nPr = nCr x r!</div>
+          </div>
+          <div class="text-xs text-blue-700 mt-3">P = Permutations (order MATTERS)<br/>C = Combinations (order does NOT matter)</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Common Permutation Values</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">P(n,r)</th><th class="p-2 text-xs font-semibold text-right">Result</th><th class="p-2 text-xs font-semibold text-right">Example</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["P(4,2)","12","Arrange 2 of 4"],["P(6,3)","120","Order 3 of 6"],["P(10,3)","720","President, VP, treasurer"],["P(12,3)","1,320","Gold, silver, bronze"],["P(8,5)","6,720","Line up 5 of 8 books"]].map(r => (
+              <tr><td class="p-2 text-xs font-mono">{r[0]}</td><td class="p-2 text-xs text-right font-medium">{r[1]}</td><td class="p-2 text-xs text-right text-gray-500">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">When Order Matters</h2>
+        <div class="space-y-2">
+          {["Race results — gold, silver, and bronze are distinct positions","Passwords & PINs — 1234 is different from 4321","Seating arrangements — who sits in which chair","Rankings & leaderboards — 1st, 2nd, 3rd place","Assigning roles — president vs treasurer are different jobs","Scheduling — the order tasks run in changes the outcome"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,137 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+
+  const shape = inputs.shape||"cube"
+  const a = parseFloat(inputs.a)||0
+  const b = parseFloat(inputs.b)||0
+  const c = parseFloat(inputs.c)||0
+  let surfaceArea, volume, formula
+  if(shape==="cube"){
+    if(a<=0) throw new Error("Enter side length.")
+    surfaceArea=6*a*a; volume=a*a*a; formula="SA = 6 s^2"
+  } else if(shape==="box"){
+    if(a<=0||b<=0||c<=0) throw new Error("Enter length, width, and height.")
+    surfaceArea=2*(a*b+b*c+a*c); volume=a*b*c; formula="SA = 2(lw + wh + lh)"
+  } else if(shape==="sphere"){
+    if(a<=0) throw new Error("Enter radius.")
+    surfaceArea=4*Math.PI*a*a; volume=(4/3)*Math.PI*a*a*a; formula="SA = 4 pi r^2"
+  } else if(shape==="cylinder"){
+    if(a<=0||b<=0) throw new Error("Enter radius and height.")
+    surfaceArea=2*Math.PI*a*(a+b); volume=Math.PI*a*a*b; formula="SA = 2 pi r (r + h)"
+  } else if(shape==="cone"){
+    if(a<=0||b<=0) throw new Error("Enter radius and height.")
+    const slant=Math.sqrt(a*a+b*b)
+    surfaceArea=Math.PI*a*(a+slant); volume=(1/3)*Math.PI*a*a*b; formula="SA = pi r (r + l)"
+  } else throw new Error("Unknown shape")
+  return {
+    value:surfaceArea.toFixed(4)+" square units",
+    gaugeValue:Math.min(surfaceArea/1000*100,100),
+    breakdown:[
+      "Shape: "+shape,
+      "Formula: "+formula,
+      "Surface area: "+surfaceArea.toFixed(4)+" sq units",
+      "Volume: "+volume.toFixed(4)+" cubic units"
+    ],
+    stats:[
+      {label:"Surface Area",value:surfaceArea.toFixed(4)},
+      {label:"Volume",value:volume.toFixed(4)},
+      {label:"Shape",value:shape.charAt(0).toUpperCase()+shape.slice(1)},
+      {label:"Formula",value:formula},
+    ]
+  }
+
+`
+
+const faqs = [
+  { question: "What is surface area?", answer: "Surface area is the total area of all the outer faces of a 3D object, measured in square units (e.g. cm2, in2). It is how much material you would need to cover or wrap the shape completely — different from volume, which measures how much space it holds." },
+  { question: "What is the surface area formula for a cube?", answer: "SA = 6 x s^2, because a cube has 6 identical square faces. A cube with side 5 has surface area = 6 x 25 = 150 square units. For a rectangular box the faces differ, so SA = 2(lw + wh + lh)." },
+  { question: "What is the surface area of a sphere?", answer: "SA = 4 x pi x r^2. A sphere with radius 3 has surface area = 4 x pi x 9 = 113.10 square units. Note it is exactly 4 times the area of its own great circle (pi x r^2)." },
+  { question: "What is the surface area formula for a cylinder?", answer: "SA = 2 x pi x r x (r + h). This is the two circular ends (2 x pi x r^2) plus the curved side (2 x pi x r x h). A cylinder with radius 5 and height 10: SA = 2 x pi x 5 x 15 = 471.24 square units." },
+  { question: "How is a cone's surface area calculated?", answer: "SA = pi x r x (r + l), where l is the slant height = sqrt(r^2 + h^2). This is the circular base (pi x r^2) plus the curved lateral surface (pi x r x l). A cone with radius 5 and height 10 has slant 11.18, so SA = pi x 5 x 16.18 = 254.16 square units." }
+]
+---
+<Layout
+  title="Surface Area Calculator: Cube, Sphere, Cylinder & Cone"
+  description="Calculate the surface area of any 3D shape — cube, rectangular box, sphere, cylinder, and cone — with formulas and steps. Free surface area calculator."
+  breadcrumbs={getBreadcrumbs('/calculators/surface-area-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/core-math" class="hover:text-blue-600">Core Math</a><span>›</span>
+      <span class="text-gray-900">Surface Area Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Surface Area Calculator"
+          description="Calculate surface area (and volume) of any 3D shape"
+          formulaId="surface-area"
+          formulaFn={formulaFn}
+          resultLabel="Surface Area"
+          inputs={[
+            {id:"shape",label:"3D Shape",type:"select",options:[
+              {value:"cube",label:"Cube"},
+              {value:"box",label:"Rectangular Box"},
+              {value:"sphere",label:"Sphere"},
+              {value:"cylinder",label:"Cylinder"},
+              {value:"cone",label:"Cone"},
+            ],defaultValue:"cylinder"},
+            {id:"a",label:"Dimension A (side / radius / length)",type:"number",placeholder:"5",min:0,step:0.001,defaultValue:5},
+            {id:"b",label:"Dimension B (width / height)",type:"number",placeholder:"10",min:0,step:0.001,defaultValue:10},
+            {id:"c",label:"Dimension C (height, box only)",type:"number",placeholder:"3",min:0,step:0.001,defaultValue:3}
+          ]}
+          gauge={{
+            min: 0, max: 100, unit: "%",
+            zones: [
+              { label: "Small", color: "#3b82f6", from: 0, to: 10 },
+              { label: "Medium", color: "#22c55e", from: 10, to: 50 },
+              { label: "Large", color: "#f59e0b", from: 50, to: 100 },
+            ]
+          }}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/surface-area-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Surface Area Formulas</h3>
+          <div class="text-xs text-blue-800 font-mono space-y-1">
+            <div>Cube: SA = 6 s^2</div>
+            <div>Box: SA = 2(lw + wh + lh)</div>
+            <div>Sphere: SA = 4 pi r^2</div>
+            <div>Cylinder: SA = 2 pi r (r + h)</div>
+            <div>Cone: SA = pi r (r + l)</div>
+          </div>
+          <div class="text-xs text-blue-700 mt-3">l (cone) = slant height = sqrt(r^2 + h^2)</div>
+        </div>
+      </aside>
+    </div>
+    <div class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Example Surface Areas</h2>
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-50"><tr><th class="p-2 text-xs font-semibold text-left">Shape</th><th class="p-2 text-xs font-semibold text-left">Dimensions</th><th class="p-2 text-xs font-semibold text-right">Surface Area</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            {[["Cube","side 5","150"],["Box","10 x 5 x 3","190"],["Sphere","radius 3","113.10"],["Cylinder","r 5, h 10","471.24"],["Cone","r 5, h 10","254.16"]].map(r => (
+              <tr><td class="p-2 text-xs font-medium">{r[0]}</td><td class="p-2 text-xs text-gray-500">{r[1]}</td><td class="p-2 text-xs text-right font-mono">{r[2]}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Where Surface Area Is Used</h2>
+        <div class="space-y-2">
+          {["Painting — how much paint to cover a tank or wall","Packaging — material needed to wrap or box a product","Heat transfer — larger surface area radiates heat faster","Construction — sealant, cladding, and insulation quantities","Biology — cell and lung surface area vs volume","Manufacturing — sheet metal and coating estimates"].map(t => (
+            <div class="flex gap-2 text-xs text-gray-600"><span class="text-blue-500 mt-0.5">•</span><span>{t}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

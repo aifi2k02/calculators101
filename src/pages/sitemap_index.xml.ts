@@ -225,6 +225,9 @@ const pages = [
   { url: '/calculators/url-encode-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/ohms-law-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/square-footage-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Gap-fill calculators
+  { url: '/calculators/permutation-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/surface-area-calculator', priority: '0.8', changefreq: 'monthly' },
   // Silo hub pages (topical cluster landing pages)
   { url: '/calculators/loans', priority: '0.9', changefreq: 'weekly' },
   { url: '/calculators/investing', priority: '0.9', changefreq: 'weekly' },
