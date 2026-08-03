@@ -1,0 +1,319 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { getBreadcrumbs, getRelated } from '../../lib/calculators'
+const related = getRelated('/calculators/matrix-calculator')
+
+const faqs = [
+  { question: 'What can this matrix calculator do?', answer: 'It works with square matrices from 2×2 to 4×4 and computes A + B, A − B, A × B, the determinant of A, the inverse of A, the transpose of A, and a scalar multiple of A. Enter the numbers in the grids, pick an operation, and the result appears instantly — everything runs in your browser.' },
+  { question: 'How is the determinant calculated?', answer: 'By cofactor (Laplace) expansion. For a 2×2 matrix [[a,b],[c,d]] the determinant is ad − bc. For larger matrices it expands along the first row using minors and alternating signs. A determinant of zero means the matrix is singular and has no inverse.' },
+  { question: 'How is the inverse found?', answer: 'Using Gauss–Jordan elimination: the matrix is augmented with the identity and row-reduced until the left side becomes the identity, leaving the inverse on the right. If the determinant is zero the matrix is not invertible, and the calculator says so instead of returning a result.' },
+  { question: 'Why do I need matrix multiplication rules?', answer: 'Matrix multiplication is not element-by-element. Each result entry is the dot product of a row of A with a column of B, so the number of columns in A must equal the number of rows in B. This calculator uses equal-size square matrices, so A × B is always defined — but note A × B usually does not equal B × A.' },
+  { question: 'What is a transpose?', answer: 'The transpose flips a matrix over its main diagonal, turning rows into columns: entry (i, j) becomes (j, i). It is used throughout linear algebra, for example in computing symmetric matrices, covariance, and least-squares solutions.' }
+]
+
+const appSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Matrix Calculator',
+  description: 'Free online matrix calculator for 2×2 to 4×4 matrices — add, subtract, multiply, determinant, inverse, transpose, and scalar multiplication.',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  browserRequirements: 'Requires JavaScript',
+}
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+}
+---
+<Layout
+  title="Matrix Calculator: Multiply, Determinant, Inverse & More"
+  description="Free online matrix calculator for 2×2, 3×3, and 4×4 matrices. Add, subtract, multiply, transpose, and find the determinant or inverse — instant, step-free results."
+  breadcrumbs={getBreadcrumbs('/calculators/matrix-calculator')}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/math" class="hover:text-blue-600">Math</a><span>›</span>
+      <a href="/calculators/core-math" class="hover:text-blue-600">Core Math</a><span>›</span>
+      <span class="text-gray-900">Matrix Calculator</span>
+    </nav>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-3xl shadow-xl shadow-blue-100/60 border border-gray-200/80 overflow-hidden">
+          <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-6 py-5">
+            <h1 class="text-xl font-bold text-white">Matrix Calculator</h1>
+            <p class="text-blue-100/90 text-sm mt-1">Add, multiply, determinant, inverse &amp; more — 2×2 to 4×4</p>
+          </div>
+          <div class="p-5 sm:p-6">
+            <!-- Size -->
+            <div class="flex items-center gap-3 mb-5">
+              <label class="text-sm font-medium text-gray-700">Matrix size</label>
+              <select id="mx-size" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium">
+                <option value="2">2 × 2</option>
+                <option value="3" selected>3 × 3</option>
+                <option value="4">4 × 4</option>
+              </select>
+            </div>
+
+            <!-- Matrices -->
+            <div class="flex flex-wrap items-center gap-4 mb-5">
+              <div>
+                <div class="text-xs font-semibold text-gray-500 mb-1.5">Matrix A</div>
+                <div id="mx-A" class="grid gap-1.5"></div>
+              </div>
+              <div id="mx-op-sym" class="text-2xl font-bold text-gray-400 self-center pt-5">+</div>
+              <div id="mx-B-wrap">
+                <div class="text-xs font-semibold text-gray-500 mb-1.5">Matrix B</div>
+                <div id="mx-B" class="grid gap-1.5"></div>
+              </div>
+              <div id="mx-scalar-wrap" class="hidden">
+                <div class="text-xs font-semibold text-gray-500 mb-1.5">Scalar</div>
+                <input id="mx-scalar" type="number" value="2" class="w-20 border border-gray-300 rounded-lg px-2 py-2 text-sm text-center" />
+              </div>
+            </div>
+
+            <!-- Operations -->
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-5" id="mx-ops">
+              <button data-op="add" class="mx-btn mx-btn-primary">A + B</button>
+              <button data-op="sub" class="mx-btn">A − B</button>
+              <button data-op="mul" class="mx-btn">A × B</button>
+              <button data-op="scalar" class="mx-btn">k · A</button>
+              <button data-op="det" class="mx-btn">det(A)</button>
+              <button data-op="inv" class="mx-btn">A⁻¹</button>
+              <button data-op="trans" class="mx-btn">Aᵀ</button>
+              <button data-op="clear" class="mx-btn mx-btn-clear">Clear</button>
+            </div>
+
+            <!-- Result -->
+            <div class="bg-gray-900 rounded-2xl px-5 py-5">
+              <div id="mx-result-label" class="text-gray-400 text-xs font-medium mb-2">Result</div>
+              <div id="mx-result" class="text-white"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm text-gray-700 leading-relaxed">
+          <p>A full matrix calculator that runs in your browser: add, subtract, multiply, transpose, and find the determinant or inverse of 2×2–4×4 matrices. No ads, no sign-up.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-semibold text-gray-900 text-sm mb-3">Quick reference</h3>
+          <div class="space-y-1.5 text-xs text-gray-600">
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>2×2 determinant</span><span class="font-mono">ad − bc</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Inverse exists if</span><span class="font-mono">det ≠ 0</span></div>
+            <div class="flex justify-between border-b border-gray-100 pb-1"><span>Multiply</span><span class="font-mono">row · column</span></div>
+            <div class="flex justify-between"><span>Transpose</span><span class="font-mono">(i,j)→(j,i)</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Related calculators (silo-scoped) -->
+    {related.length > 0 && (
+      <div class="mt-10 max-w-2xl">
+        <h2 class="text-base font-semibold text-gray-800 mb-3">Related Calculators</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {related.map(rc => (
+            <a href={rc.href} class="bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:text-blue-700 transition-colors font-medium">{rc.name}</a>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- FAQ -->
+    <section class="mt-12 max-w-3xl">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Frequently asked questions</h2>
+      <div class="space-y-3">
+        {faqs.map(f => (
+          <details class="bg-white border border-gray-200 rounded-xl p-4">
+            <summary class="font-medium text-gray-900 text-sm cursor-pointer">{f.question}</summary>
+            <p class="text-sm text-gray-600 leading-relaxed mt-2">{f.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .mx-cell { width: 3.25rem; height: 2.5rem; text-align: center; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; }
+  .mx-cell:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+  .mx-btn { border: 1px solid #e5e7eb; background: #fff; border-radius: 0.5rem; padding: 0.6rem 0; font-weight: 600; font-size: 0.85rem; color: #374151; transition: all .15s; }
+  .mx-btn:hover { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
+  .mx-btn-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .mx-btn-primary:hover { background: #1d4ed8; color: #fff; }
+  .mx-btn-clear { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .mx-btn-clear:hover { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+</style>
+
+<script>
+  const sizeSel = document.getElementById('mx-size')
+  const gridA = document.getElementById('mx-A')
+  const gridB = document.getElementById('mx-B')
+  const bWrap = document.getElementById('mx-B-wrap')
+  const opSym = document.getElementById('mx-op-sym')
+  const scalarWrap = document.getElementById('mx-scalar-wrap')
+  const resultEl = document.getElementById('mx-result')
+  const resultLabel = document.getElementById('mx-result-label')
+
+  const SAMPLE = [
+    [4, 3, 2, 1],
+    [1, 5, 0, 2],
+    [2, 1, 3, 0],
+    [0, 2, 1, 4],
+  ]
+
+  function buildGrid(container, n, fill) {
+    container.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, 1fr))'
+    container.innerHTML = ''
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        const inp = document.createElement('input')
+        inp.type = 'number'
+        inp.className = 'mx-cell'
+        inp.dataset.i = i; inp.dataset.j = j
+        inp.value = fill ? String(fill(i, j)) : '0'
+        container.appendChild(inp)
+      }
+    }
+  }
+
+  function readMatrix(container, n) {
+    const m = Array.from({ length: n }, () => Array(n).fill(0))
+    container.querySelectorAll('input').forEach(inp => {
+      m[+inp.dataset.i][+inp.dataset.j] = parseFloat(inp.value) || 0
+    })
+    return m
+  }
+
+  function size() { return parseInt(sizeSel.value) }
+
+  function rebuild() {
+    const n = size()
+    buildGrid(gridA, n, (i, j) => SAMPLE[i][j])
+    buildGrid(gridB, n, (i, j) => (i === j ? 1 : 0))
+  }
+
+  // ── Matrix math ──
+  function det(m) {
+    const n = m.length
+    if (n === 1) return m[0][0]
+    if (n === 2) return m[0][0] * m[1][1] - m[0][1] * m[1][0]
+    let d = 0
+    for (let c = 0; c < n; c++) {
+      const minor = m.slice(1).map(row => row.filter((_, j) => j !== c))
+      d += (c % 2 === 0 ? 1 : -1) * m[0][c] * det(minor)
+    }
+    return d
+  }
+  function transpose(m) { return m[0].map((_, j) => m.map(row => row[j])) }
+  function addSub(a, b, s) { return a.map((row, i) => row.map((v, j) => v + s * b[i][j])) }
+  function multiply(a, b) {
+    const n = a.length
+    return a.map((row, i) => b[0].map((_, j) => {
+      let s = 0
+      for (let k = 0; k < n; k++) s += a[i][k] * b[k][j]
+      return s
+    }))
+  }
+  function scalarMul(a, k) { return a.map(row => row.map(v => v * k)) }
+  function inverse(m) {
+    const n = m.length
+    if (Math.abs(det(m)) < 1e-12) return null
+    const A = m.map((row, i) => [...row, ...Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))])
+    for (let col = 0; col < n; col++) {
+      let piv = col
+      for (let r = col; r < n; r++) if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r
+      const tmp = A[col]; A[col] = A[piv]; A[piv] = tmp
+      const pv = A[col][col]
+      for (let j = 0; j < 2 * n; j++) A[col][j] /= pv
+      for (let r = 0; r < n; r++) {
+        if (r !== col) {
+          const f = A[r][col]
+          for (let j = 0; j < 2 * n; j++) A[r][j] -= f * A[col][j]
+        }
+      }
+    }
+    return A.map(row => row.slice(n))
+  }
+
+  // ── Formatting ──
+  function fmt(x) {
+    if (Object.is(x, -0)) x = 0
+    const r = Math.round(x * 10000) / 10000
+    if (Math.abs(r - Math.round(r)) < 1e-9) return String(Math.round(r))
+    return String(r)
+  }
+  function renderMatrix(m) {
+    const n = m.length
+    let html = '<div class="inline-grid gap-1" style="grid-template-columns: repeat(' + n + ', minmax(0,1fr))">'
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      html += '<div class="font-mono text-right text-lg px-3 py-1.5 min-w-[3rem]">' + fmt(m[i][j]) + '</div>'
+    }
+    html += '</div>'
+    return html
+  }
+
+  function show(label, content) {
+    resultLabel.textContent = label
+    resultEl.innerHTML = content
+  }
+
+  function compute(op) {
+    const n = size()
+    const A = readMatrix(gridA, n)
+    const B = readMatrix(gridB, n)
+    switch (op) {
+      case 'add': show('A + B', renderMatrix(addSub(A, B, 1))); break
+      case 'sub': show('A − B', renderMatrix(addSub(A, B, -1))); break
+      case 'mul': show('A × B', renderMatrix(multiply(A, B))); break
+      case 'scalar': {
+        const k = parseFloat(document.getElementById('mx-scalar').value) || 0
+        show(k + ' · A', renderMatrix(scalarMul(A, k))); break
+      }
+      case 'det': show('det(A)', '<span class="text-3xl font-mono font-semibold">' + fmt(det(A)) + '</span>'); break
+      case 'inv': {
+        const inv = inverse(A)
+        if (!inv) show('A⁻¹', '<span class="text-amber-300 text-sm">Matrix A is singular (det = 0) — no inverse exists.</span>')
+        else show('A⁻¹', renderMatrix(inv))
+        break
+      }
+      case 'trans': show('Aᵀ', renderMatrix(transpose(A))); break
+      case 'clear': {
+        buildGrid(gridA, n, () => 0); buildGrid(gridB, n, () => 0)
+        show('Result', '<span class="text-gray-500 text-sm">Cleared.</span>'); break
+      }
+    }
+  }
+
+  function setMode(op) {
+    // toggle B grid vs scalar visibility and operator symbol
+    const needsB = op === 'add' || op === 'sub' || op === 'mul'
+    const isScalar = op === 'scalar'
+    bWrap.style.display = needsB ? '' : 'none'
+    scalarWrap.classList.toggle('hidden', !isScalar)
+    opSym.style.display = needsB ? '' : 'none'
+    opSym.textContent = op === 'add' ? '+' : op === 'sub' ? '−' : '×'
+  }
+
+  document.getElementById('mx-ops').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-op]')
+    if (!btn) return
+    const op = btn.dataset.op
+    if (op !== 'clear') setMode(op)
+    compute(op)
+  })
+  sizeSel.addEventListener('change', () => { rebuild(); compute('det') })
+
+  // init
+  rebuild()
+  setMode('det')
+  compute('det')
+</script>

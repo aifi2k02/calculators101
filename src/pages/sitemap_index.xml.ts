@@ -237,6 +237,7 @@ const pages = [
   { url: '/calculators/target-heart-rate-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/btu-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/gravel-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/matrix-calculator', priority: '0.8', changefreq: 'monthly' },
   // Silo hub pages (topical cluster landing pages)
   { url: '/calculators/loans', priority: '0.9', changefreq: 'weekly' },
   { url: '/calculators/investing', priority: '0.9', changefreq: 'weekly' },
