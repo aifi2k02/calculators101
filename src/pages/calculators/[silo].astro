@@ -1,0 +1,122 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import CalcIcon from '../../components/CalcIcon.astro'
+import {
+  siloHubs,
+  getSiloHub,
+  getSiloMeta,
+  getSiloCalculators,
+  getCategoryBySlug,
+} from '../../lib/calculators'
+
+export function getStaticPaths() {
+  return siloHubs.map(hub => ({ params: { silo: hub.slug }, props: { hub } }))
+}
+
+const { hub } = Astro.props
+const meta = getSiloMeta(hub.id)!
+const parent = getCategoryBySlug(hub.parentCat)!
+const groups = getSiloCalculators(hub.id)
+const total = groups.reduce((n, g) => n + g.items.length, 0)
+
+// Static Tailwind classes per parent category (dynamic names would be purged).
+const COLORS: Record<string, { bg: string; hover: string; shadow: string }> = {
+  financial: { bg: 'bg-blue-600', hover: 'group-hover:bg-blue-700', shadow: 'shadow-blue-200' },
+  fitness: { bg: 'bg-green-600', hover: 'group-hover:bg-green-700', shadow: 'shadow-green-200' },
+  math: { bg: 'bg-purple-600', hover: 'group-hover:bg-purple-700', shadow: 'shadow-purple-200' },
+  other: { bg: 'bg-orange-500', hover: 'group-hover:bg-orange-600', shadow: 'shadow-orange-200' },
+}
+const c = COLORS[hub.parentCat] ?? COLORS.financial
+
+const breadcrumbs = [
+  { name: 'Home', href: '/' },
+  { name: parent.name, href: `/calculators/${parent.slug}` },
+  { name: meta.name, href: `/calculators/${hub.slug}` },
+]
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: hub.faqs.map(f => ({
+    '@type': 'Question',
+    name: f.question,
+    acceptedAnswer: { '@type': 'Answer', text: f.answer },
+  })),
+}
+---
+
+<Layout
+  title={`${hub.title} — ${total} Free Tools`}
+  description={hub.description}
+  pageType="category"
+  breadcrumbs={breadcrumbs}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} slot="head" />
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Breadcrumb -->
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap" aria-label="Breadcrumb">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href={`/calculators/${parent.slug}`} class="hover:text-blue-600">{parent.name}</a><span>›</span>
+      <span class="text-gray-900">{meta.name}</span>
+    </nav>
+
+    <!-- H1 + intro -->
+    <div class="mb-10">
+      <div class="flex items-center gap-4 mb-3">
+        <div class={`w-16 h-16 rounded-2xl ${c.bg} flex items-center justify-center shadow-md ${c.shadow}`}>
+          <CalcIcon icon={parent.icon} size={32} class="text-white" />
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">{hub.title}</h1>
+      </div>
+      <p class="text-gray-600 max-w-2xl leading-relaxed">{hub.intro}</p>
+      <p class="text-sm text-gray-400 mt-2">{total} free calculators · no sign-up · instant results</p>
+    </div>
+
+    <!-- Grouped calculators -->
+    {groups.map(group => (
+      <section class="mb-10">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">{group.hub}</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {group.items.map(calc => (
+            <a
+              href={calc.href}
+              class="bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md rounded-xl p-5 transition-all group"
+            >
+              <div class="flex items-start gap-3">
+                <div class={`w-12 h-12 rounded-2xl ${c.bg} ${c.hover} flex items-center justify-center shrink-0 transition-colors shadow-sm ${c.shadow}`}>
+                  <CalcIcon icon={calc.icon} size={22} class="text-white" />
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900 group-hover:text-blue-700 text-sm mb-1">{calc.name}</div>
+                  <div class="text-xs text-gray-500 leading-relaxed">{calc.description}</div>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <!-- FAQ -->
+    <section class="mb-12 max-w-3xl">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Frequently asked questions</h2>
+      <div class="space-y-3">
+        {hub.faqs.map(f => (
+          <details class="bg-white border border-gray-200 rounded-xl p-4">
+            <summary class="font-medium text-gray-900 text-sm cursor-pointer">{f.question}</summary>
+            <p class="text-sm text-gray-600 leading-relaxed mt-2">{f.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- Back to category -->
+    <div class="border-t border-gray-100 pt-6">
+      <a href={`/calculators/${parent.slug}`} class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+        ← All {parent.name} calculators
+      </a>
+    </div>
+  </div>
+</Layout>

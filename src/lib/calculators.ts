@@ -585,10 +585,202 @@ export function getBreadcrumbs(href: string): { name: string; href: string }[] {
   const a = siloAssignments[slug]
   if (!entry || !cat || !a) return []
   const meta = getSiloMeta(a.silo)
+  const hub = getSiloHub(a.silo)
+  const siloHref = hub ? `/calculators/${hub.slug}` : `/calculators/${cat.slug}#${a.silo}`
   return [
     { name: 'Home', href: '/' },
     { name: cat.name, href: `/calculators/${cat.slug}` },
-    { name: meta ? meta.name : a.silo, href: `/calculators/${cat.slug}#${a.silo}` },
+    { name: meta ? meta.name : a.silo, href: siloHref },
     { name: entry.name, href: entry.href },
   ]
+}
+
+// ─── Silo hub pages: rankable landing pages at /calculators/{slug}/ that ───
+// aggregate a topical cluster and target its head keyword. Additive: no
+// existing URL changes. The breadcrumb silo tier links here.
+export interface SiloHub {
+  id: string          // matches a silo id in `silos`
+  slug: string        // URL slug under /calculators/
+  parentCat: string   // registry category slug this cluster sits under
+  title: string       // H1 + SEO title base
+  description: string // meta description
+  intro: string
+  faqs: { question: string; answer: string }[]
+}
+
+export const siloHubs: SiloHub[] = [
+  {
+    id: 'loans', slug: 'loans', parentCat: 'financial',
+    title: 'Loan & Mortgage Calculators',
+    description: 'Free loan and mortgage calculators — monthly payments, amortization, refinancing, auto loans, home affordability, and debt payoff. Instant, accurate, no sign-up.',
+    intro: 'Everything you need to plan borrowing and pay down debt. Estimate a mortgage payment, run a full amortization schedule, compare refinancing, size an auto or personal loan, and build a debt-payoff plan — all in one place.',
+    faqs: [
+      { question: 'Which loan calculator should I start with?', answer: 'For a home, start with the Mortgage Calculator for your monthly payment, then House Affordability to see your budget and Amortization to view the full payoff schedule. For a car, use the Auto Loan Calculator; for cards and other debt, use the Debt Payoff Calculator.' },
+      { question: 'Are these calculators accurate?', answer: 'Yes — they use the standard amortization formula banks and lenders use. Results are estimates for planning; your actual rate and payment depend on your lender, credit score, and local taxes.' },
+    ],
+  },
+  {
+    id: 'invest', slug: 'investing', parentCat: 'financial',
+    title: 'Investment & Retirement Calculators',
+    description: 'Free investment and retirement calculators — compound interest, 401k, Roth IRA, FIRE, ROI, dividends, and future value. Project your growth instantly.',
+    intro: 'Model how your money grows and plan for retirement. Project compound interest and future value, run 401k and Roth IRA scenarios, find your FIRE number, and measure returns with ROI, dividend, and net-worth tools.',
+    faqs: [
+      { question: 'How do I project my retirement savings?', answer: 'Use the 401k or Retirement Calculator to project your balance from contributions, employer match, and expected return. The FIRE and Coast FIRE calculators show the number you need to retire early.' },
+      { question: 'What return rate should I assume?', answer: 'A common long-run assumption for a diversified stock portfolio is 6–7% after inflation, but returns vary year to year. Try a range of rates to see best- and worst-case outcomes.' },
+    ],
+  },
+  {
+    id: 'tax', slug: 'taxes', parentCat: 'financial',
+    title: 'Tax Calculators',
+    description: 'Free tax calculators — income tax, sales tax, capital gains, self-employment, 1099, quarterly estimates, and tax refund. Estimate what you owe in seconds.',
+    intro: 'Estimate what you owe and what you keep. Calculate federal income tax by bracket, sales tax and VAT, capital gains, self-employment and 1099 taxes, quarterly estimates, and your expected refund.',
+    faqs: [
+      { question: 'Can these calculators file my taxes?', answer: 'No — they are estimation tools to help you plan and set money aside. Use them to understand your likely bill, then file with the IRS or a tax professional.' },
+      { question: 'Which calculator is right for freelancers?', answer: 'Use the 1099 / Freelancer Tax Calculator and the Self-Employment Tax Calculator together, then the Quarterly Estimated Tax Calculator to plan your four IRS payments.' },
+    ],
+  },
+  {
+    id: 'pay', slug: 'income', parentCat: 'financial',
+    title: 'Paycheck & Income Calculators',
+    description: 'Free paycheck and income calculators — take-home pay, salary vs hourly, overtime, raises, bonuses, commission, and freelance rates. Know your real pay.',
+    intro: 'Understand your real earnings. Convert salary to hourly, estimate take-home pay after withholding, calculate overtime and commission, and see what a raise, bonus, or freelance rate is actually worth.',
+    faqs: [
+      { question: 'How do I find my take-home pay?', answer: 'Use the Paycheck Calculator to estimate net pay after federal tax, Social Security, and Medicare. For hourly work, start with Hourly to Salary, then add Overtime.' },
+      { question: 'What is my raise really worth?', answer: 'The Pay Raise Calculator shows your increase after tax, and the Cost of Living Raise Calculator shows the raise you need just to keep up with inflation.' },
+    ],
+  },
+  {
+    id: 'budget', slug: 'budgeting', parentCat: 'financial',
+    title: 'Budgeting & Spending Calculators',
+    description: 'Free budgeting calculators — 50/30/20 budget, tips, discounts, currency, fuel cost, and subscription spending. Take control of your money.',
+    intro: 'Plan your spending and catch waste. Build a 50/30/20 budget, split a tip, work out discounts and currency conversions, estimate fuel and driving costs, and see the true lifetime cost of your subscriptions.',
+    faqs: [
+      { question: 'What is the 50/30/20 budget?', answer: 'It splits after-tax income into 50% needs, 30% wants, and 20% savings and debt payoff. The Budget Calculator applies it to your income automatically.' },
+      { question: 'How can these tools save me money?', answer: 'The Subscription Cost Calculator reveals recurring spend you may have forgotten, while the Fuel Cost and Discount calculators help with everyday decisions.' },
+    ],
+  },
+  {
+    id: 'body', slug: 'body-weight', parentCat: 'fitness',
+    title: 'Body Fat & Weight Calculators',
+    description: 'Free body composition calculators — BMI, body fat %, BMR, TDEE, ideal weight, and lean body mass. Science-based formulas, instant results.',
+    intro: 'Measure and track your body composition. Calculate BMI, body fat percentage, basal metabolic rate, ideal weight range, and lean body mass using clinically validated formulas.',
+    faqs: [
+      { question: 'Is BMI or body fat percentage better?', answer: 'BMI is a fast screening tool but does not distinguish muscle from fat. For a fuller picture, pair it with the Body Fat and Lean Body Mass calculators, especially if you are muscular.' },
+      { question: 'What is BMR and why does it matter?', answer: 'Basal metabolic rate is the calories your body burns at rest. It is the starting point for setting calorie targets — use the BMR Calculator, then TDEE for your daily total.' },
+    ],
+  },
+  {
+    id: 'nutri', slug: 'nutrition', parentCat: 'fitness',
+    title: 'Nutrition & Diet Calculators',
+    description: 'Free nutrition calculators — daily calories, macros, protein, keto, intermittent fasting, and water intake. Plan your diet with confidence.',
+    intro: 'Dial in your diet. Calculate daily calorie needs, macro and protein targets, keto ratios, an intermittent fasting schedule, and how much water to drink for your body and goals.',
+    faqs: [
+      { question: 'How many calories should I eat?', answer: 'Start with the Calorie Calculator for your maintenance level, then adjust for your goal. The Caloric Deficit Calculator shows a target and timeline for weight loss.' },
+      { question: 'How much protein do I need?', answer: 'The Protein Calculator recommends a daily target based on your weight, activity, and goal — generally higher for those building muscle or losing fat.' },
+    ],
+  },
+  {
+    id: 'exer', slug: 'exercise', parentCat: 'fitness',
+    title: 'Exercise & Cardio Calculators',
+    description: 'Free exercise calculators — calories burned, running pace, VO2 max, heart rate zones, one-rep max, and steps to miles. Train smarter.',
+    intro: 'Get more from your training. Estimate calories burned, running pace and finish time, VO2 max, heart-rate zones, and your one-rep max, and convert steps to miles and distance.',
+    faqs: [
+      { question: 'How do I find my training heart-rate zones?', answer: 'The Heart Rate Calculator estimates your maximum heart rate and target zones by age, so you can train at the right intensity for endurance or fat burning.' },
+      { question: 'What is a one-rep max and why calculate it?', answer: 'Your one-rep max is the most weight you can lift once. The One Rep Max Calculator estimates it from any set so you can program training weights without maxing out.' },
+    ],
+  },
+  {
+    id: 'health', slug: 'health', parentCat: 'fitness',
+    title: 'Health & Wellness Calculators',
+    description: 'Free health calculators — pregnancy due date, ovulation, life expectancy, height converter, and shoe size. Simple, science-based tools.',
+    intro: 'Everyday health and wellness tools. Estimate a pregnancy due date and fertile window, project life expectancy from lifestyle, and convert height and shoe sizes.',
+    faqs: [
+      { question: 'How accurate is the due date calculator?', answer: 'It uses the standard method (280 days from your last period, or from conception) that clinicians use for an estimated due date. Only about 1 in 20 babies arrive on the exact date.' },
+      { question: 'Are these medical tools?', answer: 'No — they are informational estimates. For personal medical decisions, always consult a qualified healthcare professional.' },
+    ],
+  },
+  {
+    id: 'math', slug: 'core-math', parentCat: 'math',
+    title: 'Arithmetic, Algebra & Geometry Calculators',
+    description: 'Free math calculators — percentages, fractions, exponents, square roots, quadratic equations, area, volume, triangles, and GPA. Step-by-step results.',
+    intro: 'Solve everyday and school math fast. Work with percentages, fractions, exponents and roots, quadratic equations, geometry (area, volume, triangles, circles), and grades and GPA.',
+    faqs: [
+      { question: 'Do these calculators show the steps?', answer: 'Many, including the Quadratic, Fraction, and Percentage calculators, show the breakdown so you can follow and learn the method, not just the answer.' },
+      { question: 'Which calculator handles geometry?', answer: 'Use the Area, Volume, Circle, and Triangle calculators for shapes, and the Pythagorean Theorem and Law of Cosines calculators for triangle sides and angles.' },
+    ],
+  },
+  {
+    id: 'stats', slug: 'statistics', parentCat: 'math',
+    title: 'Statistics & Number Calculators',
+    description: 'Free statistics calculators — mean, median, mode, standard deviation, z-score, probability, confidence interval, plus binary, hex, and dev tools.',
+    intro: 'Crunch data and convert numbers. Calculate mean, median, mode, standard deviation, z-scores, probability, and confidence intervals, and work with binary, number bases, hashes, and other developer tools.',
+    faqs: [
+      { question: 'Which calculator finds standard deviation?', answer: 'The Standard Deviation Calculator computes both sample and population standard deviation, plus variance and the mean, from any list of numbers.' },
+      { question: 'Can I convert between number systems?', answer: 'Yes — use the Binary, Number Base, and Scientific Notation calculators to convert between decimal, binary, hexadecimal, and more.' },
+    ],
+  },
+  {
+    id: 'date', slug: 'date-time', parentCat: 'other',
+    title: 'Date & Time Calculators',
+    description: 'Free date and time calculators — age, date difference, business days, day of week, week number, time zones, and countdowns. DST-accurate.',
+    intro: 'Work with dates and time precisely. Calculate your age, the difference between two dates, business days, the day of the week for any date, ISO week numbers, time-zone conversions, and days until an event.',
+    faqs: [
+      { question: 'How does the business days calculator work?', answer: 'It counts working days between two dates, excluding weekends, so you can plan deadlines and delivery windows accurately.' },
+      { question: 'Are time-zone conversions daylight-saving accurate?', answer: 'Yes — the Time Zone Converter uses the official IANA time-zone database, so it applies the correct offset and DST rules for the exact date you choose.' },
+    ],
+  },
+  {
+    id: 'home', slug: 'home-diy', parentCat: 'other',
+    title: 'Home & DIY Calculators',
+    description: 'Free home and DIY calculators — concrete, paint, tile, mulch, square footage, roof pitch, and tank volume. Estimate materials before you buy.',
+    intro: 'Plan projects and buy the right amount of materials. Estimate concrete, paint, tile, and mulch quantities, measure square footage, work out roof pitch, and calculate tank volume.',
+    faqs: [
+      { question: 'How do I estimate materials for a project?', answer: 'Enter your area or dimensions and the calculator returns the quantity you need — for example bags of concrete, gallons of paint, or boxes of tile — plus a bit of guidance on waste allowance.' },
+      { question: 'What is square footage used for?', answer: 'Square footage drives most material and cost estimates. Use the Square Footage Calculator first, then feed the result into the paint, tile, or flooring estimate.' },
+    ],
+  },
+  {
+    id: 'sci', slug: 'science', parentCat: 'other',
+    title: 'Science & Weather Calculators',
+    description: 'Free science calculators — wind chill, heat index, dew point, half-life, Ohm’s law, and moon phase. Physics, chemistry, and weather made simple.',
+    intro: 'Physics, chemistry, and weather in one place. Calculate wind chill, heat index, and dew point with official formulas, work out half-life and Ohm’s law, and check the moon phase and sunrise or sunset.',
+    faqs: [
+      { question: 'Which formulas do the weather calculators use?', answer: 'The Wind Chill and Heat Index calculators use the official U.S. National Weather Service formulas, so results match what forecasters report.' },
+      { question: 'What can I use Ohm’s law calculator for?', answer: 'It solves for voltage, current, resistance, or power when you know any two — handy for electronics, wiring, and physics homework.' },
+    ],
+  },
+  {
+    id: 'fun', slug: 'lifestyle', parentCat: 'other',
+    title: 'Fun & Lifestyle Calculators',
+    description: 'Free fun calculators — love compatibility, numerology, zodiac sign, dog age, and word count. Playful tools for everyday curiosity.',
+    intro: 'Just-for-fun and everyday-curiosity tools. Check love compatibility, numerology, and your zodiac sign, convert your dog’s age to human years, and count words in any text.',
+    faqs: [
+      { question: 'Are the fun calculators serious?', answer: 'The love, numerology, and zodiac tools are for entertainment. Others, like the Word Count and Dog Age calculators, give genuinely useful results.' },
+      { question: 'How does the dog age calculator work?', answer: 'It converts your dog’s age to human-equivalent years using a modern formula that accounts for breed size, rather than the old “multiply by seven” rule.' },
+    ],
+  },
+]
+
+export function getSiloHub(id: string): SiloHub | undefined {
+  return siloHubs.find(s => s.id === id)
+}
+
+export function getSiloHubBySlug(slug: string): SiloHub | undefined {
+  return siloHubs.find(s => s.slug === slug)
+}
+
+// Calculators in a silo, grouped by hub, in the hub order declared in `silos`.
+export function getSiloCalculators(id: string): { hub: string; items: CalcEntry[] }[] {
+  const meta = getSiloMeta(id)
+  if (!meta) return []
+  const inSilo = Object.entries(siloAssignments).filter(([, v]) => v.silo === id)
+  return meta.hubs
+    .map(hub => ({
+      hub,
+      items: inSilo
+        .filter(([, v]) => v.hub === hub)
+        .map(([s]) => _bySlug[s])
+        .filter(Boolean),
+    }))
+    .filter(g => g.items.length > 0)
 }

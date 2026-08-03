@@ -225,6 +225,22 @@ const pages = [
   { url: '/calculators/url-encode-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/ohms-law-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/square-footage-calculator', priority: '0.85', changefreq: 'monthly' },
+  // Silo hub pages (topical cluster landing pages)
+  { url: '/calculators/loans', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/investing', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/taxes', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/income', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/budgeting', priority: '0.85', changefreq: 'weekly' },
+  { url: '/calculators/body-weight', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/nutrition', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/exercise', priority: '0.85', changefreq: 'weekly' },
+  { url: '/calculators/health', priority: '0.85', changefreq: 'weekly' },
+  { url: '/calculators/core-math', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/statistics', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/date-time', priority: '0.9', changefreq: 'weekly' },
+  { url: '/calculators/home-diy', priority: '0.85', changefreq: 'weekly' },
+  { url: '/calculators/science', priority: '0.85', changefreq: 'weekly' },
+  { url: '/calculators/lifestyle', priority: '0.8', changefreq: 'weekly' },
 ]
 
 export const GET: APIRoute = async () => {
