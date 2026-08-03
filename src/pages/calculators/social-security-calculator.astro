@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  // Estimate uses the 2025 SSA formula. It assumes your entered income
+  // approximates your career-average (indexed) earnings and a Full
+  // Retirement Age of 67 (born 1960 or later). It is an estimate only.
+  const income = parseFloat(inputs.income)
+  const claimAge = parseFloat(inputs.claimAge)
+  const currentAge = parseFloat(inputs.currentAge) || 0
+  if (isNaN(income) || income <= 0) throw new Error('Enter your annual income.')
+  if (isNaN(claimAge) || claimAge < 62 || claimAge > 70) throw new Error('Claiming age must be between 62 and 70.')
+
+  const TAX_MAX = 176100      // 2025 Social Security wage base
+  const B1 = 1226, B2 = 7391  // 2025 PIA bend points
+  const FRA = 67
+
+  const cappedAnnual = Math.min(income, TAX_MAX)
+  const aime = cappedAnnual / 12
+  // Primary Insurance Amount (benefit at Full Retirement Age)
+  const pia =
+    0.90 * Math.min(aime, B1) +
+    0.32 * Math.max(0, Math.min(aime, B2) - B1) +
+    0.15 * Math.max(0, aime - B2)
+
+  // Adjust for claiming age relative to FRA (67)
+  let factor, note
+  if (claimAge < FRA) {
+    const m = Math.round((FRA - claimAge) * 12)
+    const red = (m <= 36 ? m * (5/9) : 36 * (5/9) + (m - 36) * (5/12)) / 100
+    factor = 1 - red
+    note = (red * 100).toFixed(1) + '% reduction for claiming ' + (m) + ' months early'
+  } else if (claimAge > FRA) {
+    const m = Math.round((claimAge - FRA) * 12)
+    const cr = m * (2/3) / 100
+    factor = 1 + cr
+    note = (cr * 100).toFixed(1) + '% delayed-retirement credit for waiting ' + m + ' months'
+  } else {
+    factor = 1
+    note = 'Claiming exactly at Full Retirement Age (67)'
+  }
+
+  const monthly = pia * factor
+  const annual = monthly * 12
+  const stats = [
+    { label: 'Monthly Benefit', value: '$' + Math.round(monthly).toLocaleString() },
+    { label: 'Annual Benefit', value: '$' + Math.round(annual).toLocaleString() },
+    { label: 'Benefit at FRA (67)', value: '$' + Math.round(pia).toLocaleString() + '/mo' },
+    { label: 'Claiming Age', value: String(claimAge) },
+    { label: 'Adjustment', value: (factor >= 1 ? '+' : '') + Math.round((factor - 1) * 100) + '%' },
+  ]
+  if (currentAge > 0 && currentAge < claimAge) {
+    stats.push({ label: 'Years Until Claiming', value: (claimAge - currentAge).toFixed(0) })
+  }
+  const breakdown = [
+    'Income used (capped at $' + TAX_MAX.toLocaleString() + '): $' + cappedAnnual.toLocaleString(),
+    'AIME (avg indexed monthly earnings): $' + Math.round(aime).toLocaleString(),
+    'PIA = 90% of first $' + B1.toLocaleString() + ' + 32% to $' + B2.toLocaleString() + ' + 15% above',
+    'PIA (benefit at 67): $' + Math.round(pia).toLocaleString() + '/mo',
+    '—',
+    note,
+    'Estimated monthly benefit: $' + Math.round(monthly).toLocaleString(),
+    'This is an estimate — see ssa.gov/myaccount for your official figures.',
+  ]
+  return { value: '$' + Math.round(monthly).toLocaleString() + '/mo', gaugeValue: Math.min(claimAge - 62, 8) / 8 * 100, stats, breakdown }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Claim early (62) — smaller checks', color: '#ef4444', from: 0, to: 33 },
+    { label: 'Full Retirement Age (67)', color: '#3b82f6', from: 33, to: 66 },
+    { label: 'Delay to 70 — biggest checks', color: '#22c55e', from: 66, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How is my Social Security benefit calculated?', answer: 'The SSA averages your 35 highest-earning years (indexed for wage growth) into your AIME, then applies bend-point percentages — 90%, 32%, and 15% of successive slices — to get your PIA, the benefit at Full Retirement Age. Claiming earlier or later then adjusts that amount. This calculator applies the 2025 formula to your entered income as an estimate.' },
+  { question: 'What is Full Retirement Age (FRA)?', answer: 'FRA is the age you receive 100% of your benefit. For anyone born in 1960 or later it is 67. Claim before FRA and your monthly check is permanently reduced; claim after and it is permanently increased.' },
+  { question: 'How much less do I get by claiming at 62?', answer: 'About 30% less than at FRA. The reduction is 5/9 of 1% per month for the first 36 months early, plus 5/12 of 1% for each additional month. Sixty months early (age 62) totals a 30% cut — so a $2,000 FRA benefit becomes about $1,400.' },
+  { question: 'How much more do I get by waiting until 70?', answer: 'About 24% more than at FRA. You earn delayed-retirement credits of 2/3 of 1% per month (8% per year) from 67 to 70. There is no benefit to waiting past 70, so 70 is the maximum-benefit age.' },
+  { question: 'Is this the same as the official SSA estimate?', answer: 'No — it is an approximation. The real figure depends on your full 35-year indexed earnings history, which only the SSA has. Treat this as a planning ballpark and check your personal estimate at ssa.gov/myaccount.' }
+]
+---
+<Layout
+  title="Social Security Calculator: Estimate Your Monthly Benefit"
+  description="Estimate your Social Security retirement benefit by income and claiming age (62–70), using the 2025 SSA bend-point formula. Free estimate — not affiliated with SSA."
+  breadcrumbs={getBreadcrumbs('/calculators/social-security-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/investing" class="hover:text-blue-600">Investing &amp; Retirement</a><span>›</span>
+      <span class="text-gray-900">Social Security Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Social Security Calculator"
+          description="Estimate your monthly retirement benefit and how claiming age changes it"
+          formulaId="social-security"
+          formulaFn={formulaFn}
+          resultLabel="Estimated Monthly Benefit"
+          gauge={gauge}
+          inputs={[
+            { id: 'income', label: 'Annual Income ($)', type: 'number', placeholder: '60000', min: 1, defaultValue: 60000 },
+            { id: 'claimAge', label: 'Claiming Age (62–70)', type: 'number', placeholder: '67', min: 62, max: 70, step: 1, defaultValue: 67 },
+            { id: 'currentAge', label: 'Current Age (optional)', type: 'number', placeholder: '40', min: 18, max: 70, defaultValue: 40 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/social-security-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 class="font-bold text-amber-900 mb-2">Estimate only</h3>
+          <p class="text-xs text-amber-800 leading-relaxed">This tool is not affiliated with the Social Security Administration. It applies the 2025 formula to your entered income and assumes a Full Retirement Age of 67. Your official benefit depends on your full earnings record — check <strong>ssa.gov/myaccount</strong>.</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Claiming age at a glance</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div>Age 62 — about 70% of your full benefit</div>
+            <div>Age 67 (FRA) — 100%</div>
+            <div>Age 70 — about 124%</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

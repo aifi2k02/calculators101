@@ -231,6 +231,7 @@ const pages = [
   { url: '/calculators/student-loan-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/personal-loan-calculator', priority: '0.85', changefreq: 'monthly' },
   { url: '/calculators/mortgage-payoff-calculator', priority: '0.85', changefreq: 'monthly' },
+  { url: '/calculators/social-security-calculator', priority: '0.85', changefreq: 'monthly' },
   // Silo hub pages (topical cluster landing pages)
   { url: '/calculators/loans', priority: '0.9', changefreq: 'weekly' },
   { url: '/calculators/investing', priority: '0.9', changefreq: 'weekly' },
