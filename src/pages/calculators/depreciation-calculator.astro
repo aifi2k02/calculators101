@@ -1,0 +1,111 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const cost = parseFloat(inputs.cost)
+  const salvage = parseFloat(inputs.salvage) || 0
+  const life = parseFloat(inputs.life)
+  const method = inputs.method || 'straight'
+  if (isNaN(cost) || cost <= 0) throw new Error('Enter the asset cost.')
+  if (salvage < 0) throw new Error('Salvage value cannot be negative.')
+  if (salvage >= cost) throw new Error('Salvage must be less than cost.')
+  if (isNaN(life) || life <= 0) throw new Error('Enter a useful life in years.')
+  const base = cost - salvage
+  let firstYear, annualLabel, rateNote
+  if (method === 'ddb') {
+    const rate = 2 / life
+    firstYear = Math.min(cost * rate, base)   // never depreciate below salvage
+    annualLabel = 'First-Year Depreciation'
+    rateNote = 'DDB rate = 2 ÷ ' + life + ' = ' + (rate * 100).toFixed(1) + '%'
+  } else {
+    firstYear = base / life
+    annualLabel = 'Annual Depreciation'
+    rateNote = 'Straight-line: (cost − salvage) ÷ life'
+  }
+  const bookAfter1 = cost - firstYear
+  const monthly = firstYear / 12
+  return {
+    value: '$' + Math.round(firstYear).toLocaleString() + '/yr',
+    gaugeValue: Math.min(firstYear / base * 100, 100),
+    stats: [
+      { label: annualLabel, value: '$' + firstYear.toFixed(2) },
+      { label: 'Depreciable Base', value: '$' + Math.round(base).toLocaleString() },
+      { label: 'Book Value After Yr 1', value: '$' + Math.round(bookAfter1).toLocaleString() },
+      { label: 'Monthly Depreciation', value: '$' + monthly.toFixed(2) },
+      { label: 'Method', value: method === 'ddb' ? 'Double Declining' : 'Straight-Line' },
+    ],
+    breakdown: [
+      'Asset cost: $' + cost.toLocaleString(),
+      'Salvage value: $' + salvage.toLocaleString(),
+      'Depreciable base = cost − salvage = $' + Math.round(base).toLocaleString(),
+      'Useful life: ' + life + ' years',
+      rateNote,
+      '—',
+      'First-year depreciation: $' + firstYear.toFixed(2),
+      'Book value after year 1: $' + Math.round(bookAfter1).toLocaleString(),
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '% of base',
+  zones: [
+    { label: 'Slow (long life)', color: '#22c55e', from: 0, to: 15 },
+    { label: 'Moderate', color: '#3b82f6', from: 15, to: 40 },
+    { label: 'Fast (accelerated)', color: '#f59e0b', from: 40, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is the straight-line depreciation formula?', answer: 'Annual depreciation = (cost − salvage value) ÷ useful life. A $10,000 asset with a $1,000 salvage over 5 years depreciates $1,800 per year, every year, until it reaches its salvage value.' },
+  { question: 'What is double-declining-balance (DDB) depreciation?', answer: 'DDB is an accelerated method: it applies twice the straight-line rate (2 ÷ life) to the current book value each year, so more expense is taken early. For a 5-year asset the rate is 40%, so a $10,000 asset depreciates $4,000 in year one. It never drops below salvage value.' },
+  { question: 'Which depreciation method should I use?', answer: 'Straight-line is simplest and spreads cost evenly — common for financial statements. Accelerated methods like DDB (or tax systems like MACRS) front-load deductions, which can defer taxes. The right choice depends on accounting standards and tax rules; ask your accountant.' },
+  { question: 'What is salvage value?', answer: 'Salvage (or residual) value is what you expect the asset to be worth at the end of its useful life. Depreciation only applies to the depreciable base — cost minus salvage — because you do not write off value you expect to recover.' },
+  { question: 'Is this the same as MACRS tax depreciation?', answer: 'No. This calculator covers the classic straight-line and double-declining methods. U.S. tax depreciation (MACRS) uses IRS tables, conventions, and asset classes that differ from book depreciation. Use this for planning and consult a tax professional for filings.' }
+]
+---
+<Layout
+  title="Depreciation Calculator: Straight-Line & Double Declining"
+  description="Calculate asset depreciation with the straight-line or double-declining-balance method. Free depreciation calculator with base, annual expense, and book value."
+  breadcrumbs={getBreadcrumbs('/calculators/depreciation-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/taxes" class="hover:text-blue-600">Taxes</a><span>›</span>
+      <span class="text-gray-900">Depreciation Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Depreciation Calculator"
+          description="Annual depreciation and book value — straight-line or double declining"
+          formulaId="depreciation"
+          formulaFn={formulaFn}
+          resultLabel="Depreciation"
+          gauge={gauge}
+          inputs={[
+            { id: 'cost', label: 'Asset Cost ($)', type: 'number', placeholder: '10000', min: 1, defaultValue: 10000 },
+            { id: 'salvage', label: 'Salvage Value ($)', type: 'number', placeholder: '1000', min: 0, defaultValue: 1000 },
+            { id: 'life', label: 'Useful Life (years)', type: 'number', placeholder: '5', min: 1, max: 50, defaultValue: 5 },
+            { id: 'method', label: 'Method', type: 'select', options: [
+              { value: 'straight', label: 'Straight-Line' },
+              { value: 'ddb', label: 'Double Declining Balance' },
+            ], defaultValue: 'straight' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/depreciation-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">Book vs tax depreciation</h3>
+          <p class="text-xs text-blue-800 leading-relaxed">These are standard book methods. U.S. tax depreciation (MACRS) follows separate IRS tables — use this to plan, and confirm filings with an accountant.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

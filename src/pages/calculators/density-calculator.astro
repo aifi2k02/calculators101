@@ -1,0 +1,116 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const mass = parseFloat(inputs.mass)
+  const massUnit = inputs.massUnit || 'g'
+  const volume = parseFloat(inputs.volume)
+  const volUnit = inputs.volUnit || 'cm3'
+  if (isNaN(mass) || mass <= 0) throw new Error('Enter a mass greater than 0.')
+  if (isNaN(volume) || volume <= 0) throw new Error('Enter a volume greater than 0.')
+  const toGrams = { g: 1, kg: 1000, mg: 0.001, lb: 453.59237, oz: 28.349523 }
+  const toCm3 = { cm3: 1, ml: 1, l: 1000, m3: 1000000, in3: 16.387064, ft3: 28316.846 }
+  const massG = mass * toGrams[massUnit]
+  const volCm3 = volume * toCm3[volUnit]
+  const gcm3 = massG / volCm3
+  const kgm3 = gcm3 * 1000
+  const lbft3 = gcm3 * 62.427961
+  const water = 1.0
+  const floats = gcm3 < water
+  return {
+    value: gcm3.toFixed(4) + ' g/cm³',
+    gaugeValue: Math.min(gcm3 / 20 * 100, 100),
+    stats: [
+      { label: 'Density', value: gcm3.toFixed(4) + ' g/cm³' },
+      { label: 'In kg/m³', value: Math.round(kgm3).toLocaleString() + ' kg/m³' },
+      { label: 'In lb/ft³', value: lbft3.toFixed(2) + ' lb/ft³' },
+      { label: 'vs Water (1 g/cm³)', value: floats ? 'Floats' : 'Sinks' },
+    ],
+    breakdown: [
+      'Mass: ' + mass + ' ' + massUnit + ' = ' + massG.toFixed(3) + ' g',
+      'Volume: ' + volume + ' ' + volUnit + ' = ' + volCm3.toFixed(3) + ' cm³',
+      'Density = mass ÷ volume = ' + massG.toFixed(2) + ' ÷ ' + volCm3.toFixed(2),
+      '= ' + gcm3.toFixed(4) + ' g/cm³ (' + Math.round(kgm3).toLocaleString() + ' kg/m³)',
+      floats ? 'Less dense than water — it floats.' : 'Denser than water — it sinks.',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Light (<1, floats)', color: '#22c55e', from: 0, to: 5 },
+    { label: 'Water to metals', color: '#3b82f6', from: 5, to: 50 },
+    { label: 'Very dense', color: '#f59e0b', from: 50, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'What is the density formula?', answer: 'Density = mass ÷ volume (ρ = m/V). If a 200 g object occupies 50 cm³, its density is 200 ÷ 50 = 4 g/cm³. This calculator handles unit conversions for you and reports the result in g/cm³, kg/m³, and lb/ft³.' },
+  { question: 'What is the density of water?', answer: 'Pure water is about 1 g/cm³ (1,000 kg/m³) at 4°C. It is the reference point for whether something floats: objects less dense than water float, and denser ones sink. Seawater is slightly denser at about 1.025 g/cm³.' },
+  { question: 'How do I convert between density units?', answer: '1 g/cm³ = 1,000 kg/m³ = 62.43 lb/ft³. Grams per cubic centimeter and grams per milliliter are the same thing (1 cm³ = 1 mL). This tool shows all three common units at once.' },
+  { question: 'Why does density matter?', answer: 'Density identifies materials, predicts whether things float or sink, and is used in engineering, chemistry, shipping, and cooking. For example, gold (19.3 g/cm³) is far denser than aluminum (2.7), so density helps spot fakes.' },
+  { question: 'Does temperature affect density?', answer: 'Yes. Most substances expand when heated, so their density decreases as temperature rises (volume grows while mass stays the same). Water is a famous exception near freezing. For precise work, note the temperature of your measurement.' }
+]
+---
+<Layout
+  title="Density Calculator: Mass ÷ Volume (g/cm³, kg/m³, lb/ft³)"
+  description="Calculate density from mass and volume in any units. Free density calculator with g/cm³, kg/m³, and lb/ft³ results, plus a float-or-sink check against water."
+  breadcrumbs={getBreadcrumbs('/calculators/density-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/science" class="hover:text-blue-600">Science &amp; Weather</a><span>›</span>
+      <span class="text-gray-900">Density Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Density Calculator"
+          description="Density from mass and volume — in g/cm³, kg/m³, and lb/ft³"
+          formulaId="density"
+          formulaFn={formulaFn}
+          resultLabel="Density"
+          gauge={gauge}
+          inputs={[
+            { id: 'mass', label: 'Mass', type: 'number', placeholder: '200', min: 0, step: 0.001, defaultValue: 200 },
+            { id: 'massUnit', label: 'Mass Unit', type: 'select', options: [
+              { value: 'g', label: 'grams (g)' },
+              { value: 'kg', label: 'kilograms (kg)' },
+              { value: 'mg', label: 'milligrams (mg)' },
+              { value: 'lb', label: 'pounds (lb)' },
+              { value: 'oz', label: 'ounces (oz)' },
+            ], defaultValue: 'g' },
+            { id: 'volume', label: 'Volume', type: 'number', placeholder: '50', min: 0, step: 0.001, defaultValue: 50 },
+            { id: 'volUnit', label: 'Volume Unit', type: 'select', options: [
+              { value: 'cm3', label: 'cubic cm (cm³)' },
+              { value: 'ml', label: 'milliliters (mL)' },
+              { value: 'l', label: 'liters (L)' },
+              { value: 'm3', label: 'cubic meters (m³)' },
+              { value: 'in3', label: 'cubic inches (in³)' },
+              { value: 'ft3', label: 'cubic feet (ft³)' },
+            ], defaultValue: 'cm3' },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/density-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Common densities (g/cm³)</h3>
+          <div class="text-xs text-blue-800 space-y-1">
+            <div class="flex justify-between"><span>Water</span><span class="font-mono">1.00</span></div>
+            <div class="flex justify-between"><span>Aluminum</span><span class="font-mono">2.70</span></div>
+            <div class="flex justify-between"><span>Iron</span><span class="font-mono">7.87</span></div>
+            <div class="flex justify-between"><span>Lead</span><span class="font-mono">11.34</span></div>
+            <div class="flex justify-between"><span>Gold</span><span class="font-mono">19.30</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

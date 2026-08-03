@@ -1,0 +1,114 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const o1 = parseInt(inputs.o1), o2 = parseInt(inputs.o2), o3 = parseInt(inputs.o3), o4 = parseInt(inputs.o4)
+  const prefix = parseInt(inputs.prefix)
+  const octs = [o1, o2, o3, o4]
+  for (const o of octs) if (isNaN(o) || o < 0 || o > 255) throw new Error('Each octet must be 0–255.')
+  if (isNaN(prefix) || prefix < 0 || prefix > 32) throw new Error('Prefix must be /0 to /32.')
+  const toDotted = x => [ (x>>>24)&255, (x>>>16)&255, (x>>>8)&255, x&255 ].join('.')
+  const ip = ((o1<<24) | (o2<<16) | (o3<<8) | o4) >>> 0
+  const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0
+  const wildcard = (~mask) >>> 0
+  const network = (ip & mask) >>> 0
+  const broadcast = (network | wildcard) >>> 0
+  const totalAddrs = Math.pow(2, 32 - prefix)
+  let usable, firstHost, lastHost
+  if (prefix >= 31) {
+    usable = prefix === 31 ? 2 : 1        // /31 point-to-point, /32 single host
+    firstHost = toDotted(network)
+    lastHost = toDotted(broadcast)
+  } else {
+    usable = totalAddrs - 2
+    firstHost = toDotted((network + 1) >>> 0)
+    lastHost = toDotted((broadcast - 1) >>> 0)
+  }
+  return {
+    value: toDotted(network) + '/' + prefix,
+    gaugeValue: Math.min(prefix / 32 * 100, 100),
+    stats: [
+      { label: 'Network Address', value: toDotted(network) },
+      { label: 'Broadcast Address', value: toDotted(broadcast) },
+      { label: 'Subnet Mask', value: toDotted(mask) },
+      { label: 'Usable Hosts', value: usable.toLocaleString() },
+      { label: 'Host Range', value: firstHost + ' – ' + lastHost },
+      { label: 'Wildcard Mask', value: toDotted(wildcard) },
+    ],
+    breakdown: [
+      'IP address: ' + octs.join('.') + '/' + prefix,
+      'Subnet mask: ' + toDotted(mask) + ' (' + prefix + ' network bits)',
+      'Network (IP AND mask): ' + toDotted(network),
+      'Broadcast (network OR wildcard): ' + toDotted(broadcast),
+      'Total addresses: ' + totalAddrs.toLocaleString() + ' → usable hosts: ' + usable.toLocaleString(),
+      'Usable range: ' + firstHost + ' to ' + lastHost,
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Large network (small /)', color: '#3b82f6', from: 0, to: 60 },
+    { label: 'Typical /24', color: '#22c55e', from: 60, to: 80 },
+    { label: 'Tiny subnet', color: '#f59e0b', from: 80, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I calculate a subnet?', answer: 'Convert the /prefix into a 32-bit mask (that many leading 1s). AND the IP with the mask to get the network address; OR the network with the wildcard (inverted mask) to get the broadcast. Usable hosts = 2^(32−prefix) − 2. This calculator does all of that instantly.' },
+  { question: 'How many hosts are in a /24?', answer: 'A /24 has 256 total addresses and 254 usable hosts (you subtract the network and broadcast addresses). A /25 has 126, a /26 has 62, a /27 has 30, and so on — each extra prefix bit halves the host count.' },
+  { question: 'What are the network and broadcast addresses?', answer: 'The network address is the first address in the block (all host bits 0) and names the subnet. The broadcast address is the last (all host bits 1) and reaches every host on the subnet. Neither can be assigned to a device, which is why usable hosts is total minus 2.' },
+  { question: 'What is a /31 or /32?', answer: 'A /32 is a single host (one address, used for loopbacks and host routes). A /31 has two addresses used for point-to-point links, where by convention both are usable (no separate network/broadcast). This calculator handles those special cases.' },
+  { question: 'What is a wildcard mask?', answer: 'A wildcard mask is the bitwise inverse of the subnet mask (e.g. mask 255.255.255.0 → wildcard 0.0.0.255). It is used in access control lists and routing rules to specify which bits can vary.' }
+]
+---
+<Layout
+  title="IP Subnet Calculator: Network, Broadcast & Host Range"
+  description="Calculate the network address, broadcast, subnet mask, usable hosts, and host range from an IP and CIDR prefix. Free IPv4 subnet calculator."
+  breadcrumbs={getBreadcrumbs('/calculators/ip-subnet-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/statistics" class="hover:text-blue-600">Stats &amp; Numbers</a><span>›</span>
+      <span class="text-gray-900">IP Subnet Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="IP Subnet Calculator"
+          description="Network, broadcast, mask, and usable host range from an IP and prefix"
+          formulaId="ip-subnet"
+          formulaFn={formulaFn}
+          resultLabel="Network"
+          inputs={[
+            { id: 'o1', label: 'Octet 1', type: 'number', placeholder: '192', min: 0, max: 255, defaultValue: 192 },
+            { id: 'o2', label: 'Octet 2', type: 'number', placeholder: '168', min: 0, max: 255, defaultValue: 168 },
+            { id: 'o3', label: 'Octet 3', type: 'number', placeholder: '1', min: 0, max: 255, defaultValue: 1 },
+            { id: 'o4', label: 'Octet 4', type: 'number', placeholder: '10', min: 0, max: 255, defaultValue: 10 },
+            { id: 'prefix', label: 'CIDR Prefix (/0–/32)', type: 'number', placeholder: '24', min: 0, max: 32, defaultValue: 24 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/ip-subnet-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Hosts per prefix</h3>
+          <div class="text-xs text-blue-800 space-y-1 font-mono">
+            <div class="flex justify-between"><span>/24</span><span>254 hosts</span></div>
+            <div class="flex justify-between"><span>/25</span><span>126 hosts</span></div>
+            <div class="flex justify-between"><span>/26</span><span>62 hosts</span></div>
+            <div class="flex justify-between"><span>/27</span><span>30 hosts</span></div>
+            <div class="flex justify-between"><span>/28</span><span>14 hosts</span></div>
+            <div class="flex justify-between"><span>/30</span><span>2 hosts</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

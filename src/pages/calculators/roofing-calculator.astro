@@ -1,0 +1,104 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const length = parseFloat(inputs.length)
+  const width = parseFloat(inputs.width)
+  const rise = parseFloat(inputs.rise)
+  const waste = parseFloat(inputs.waste) || 0
+  if (isNaN(length) || length <= 0) throw new Error('Enter the footprint length in feet.')
+  if (isNaN(width) || width <= 0) throw new Error('Enter the footprint width in feet.')
+  if (isNaN(rise) || rise < 0) throw new Error('Enter the roof pitch rise (per 12).')
+  const footprint = length * width
+  const multiplier = Math.sqrt(rise * rise + 144) / 12   // slope factor from rise/12 pitch
+  let roofArea = footprint * multiplier
+  if (waste > 0) roofArea *= (1 + waste / 100)
+  const squares = roofArea / 100
+  const bundles = Math.ceil(squares * 3)                  // 3 bundles per square (typical 3-tab)
+  const angle = Math.atan2(rise, 12) * 180 / Math.PI
+  return {
+    value: Math.round(roofArea).toLocaleString() + ' sq ft',
+    gaugeValue: Math.min(squares / 40 * 100, 100),
+    stats: [
+      { label: 'Roof Area', value: Math.round(roofArea).toLocaleString() + ' sq ft' },
+      { label: 'Roofing Squares', value: squares.toFixed(1) },
+      { label: 'Shingle Bundles', value: bundles.toLocaleString() },
+      { label: 'Pitch', value: rise + '/12 (' + angle.toFixed(0) + '°)' },
+      { label: 'Slope Factor', value: multiplier.toFixed(4) },
+    ],
+    breakdown: [
+      'Footprint: ' + length + ' × ' + width + ' = ' + footprint.toLocaleString() + ' sq ft',
+      'Pitch ' + rise + '/12 → slope factor = √(' + rise + '² + 12²) ÷ 12 = ' + multiplier.toFixed(4),
+      'Roof area = footprint × slope factor = ' + Math.round(footprint * multiplier).toLocaleString() + ' sq ft',
+      waste > 0 ? 'With ' + waste + '% waste: ' + Math.round(roofArea).toLocaleString() + ' sq ft' : 'No waste allowance added',
+      '1 square = 100 sq ft → ' + squares.toFixed(1) + ' squares',
+      '3 bundles per square → ' + bundles.toLocaleString() + ' bundles of shingles',
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 100, unit: '',
+  zones: [
+    { label: 'Small roof', color: '#22c55e', from: 0, to: 30 },
+    { label: 'Average home', color: '#3b82f6', from: 30, to: 65 },
+    { label: 'Large roof', color: '#f59e0b', from: 65, to: 100 },
+  ]
+}
+
+const faqs = [
+  { question: 'How do I calculate roof area from the footprint?', answer: 'Multiply the building footprint (length × width) by the slope factor for your pitch. The slope factor is √(rise² + 12²) ÷ 12. A 4/12 pitch has a factor of about 1.054, so a 1,200 sq ft footprint has roughly 1,265 sq ft of roof surface.' },
+  { question: 'What is a roofing square?', answer: 'A square is 100 square feet of roof area — the standard unit roofers use to price and order material. A 2,000 sq ft roof is 20 squares. Shingles are usually sold three bundles to the square.' },
+  { question: 'How many bundles of shingles do I need?', answer: 'Most architectural and 3-tab shingles come three bundles per square (100 sq ft). Divide your roof area by 100 to get squares, then multiply by 3, rounding up. Always add 10–15% for waste, hip and ridge caps, and starter courses.' },
+  { question: 'What does roof pitch mean?', answer: 'Pitch is the rise in inches for every 12 inches of horizontal run. A 6/12 pitch rises 6 inches per foot (about 26.6°). Steeper pitches have a larger slope factor, so they need more material than the footprint alone suggests.' },
+  { question: 'How much extra should I order for waste?', answer: 'Add about 10% for a simple gable roof and 15% or more for a complex roof with many hips, valleys, and dormers. The waste field lets you include this. It is cheaper to have a little extra than to run short mid-job.' }
+]
+---
+<Layout
+  title="Roofing Calculator: Roof Area, Squares & Shingle Bundles"
+  description="Calculate roof area, roofing squares, and shingle bundles from your footprint and pitch. Free roofing calculator with slope factor and waste allowance."
+  breadcrumbs={getBreadcrumbs('/calculators/roofing-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/other" class="hover:text-blue-600">Other</a><span>›</span>
+      <a href="/calculators/home-diy" class="hover:text-blue-600">Home &amp; DIY</a><span>›</span>
+      <span class="text-gray-900">Roofing Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Roofing Calculator"
+          description="Roof area, squares, and shingle bundles from footprint and pitch"
+          formulaId="roofing"
+          formulaFn={formulaFn}
+          resultLabel="Roof Area"
+          gauge={gauge}
+          inputs={[
+            { id: 'length', label: 'Footprint Length (ft)', type: 'number', placeholder: '40', min: 0.1, step: 0.1, defaultValue: 40 },
+            { id: 'width', label: 'Footprint Width (ft)', type: 'number', placeholder: '30', min: 0.1, step: 0.1, defaultValue: 30 },
+            { id: 'rise', label: 'Pitch — Rise per 12 (in)', type: 'number', placeholder: '4', min: 0, max: 24, step: 0.5, defaultValue: 4 },
+            { id: 'waste', label: 'Extra for waste (%)', type: 'number', placeholder: '10', min: 0, max: 50, defaultValue: 10 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/roofing-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-3">Slope factors</h3>
+          <div class="text-xs text-blue-800 space-y-1 font-mono">
+            <div class="flex justify-between"><span>3/12</span><span>1.031</span></div>
+            <div class="flex justify-between"><span>4/12</span><span>1.054</span></div>
+            <div class="flex justify-between"><span>6/12</span><span>1.118</span></div>
+            <div class="flex justify-between"><span>9/12</span><span>1.250</span></div>
+            <div class="flex justify-between"><span>12/12</span><span>1.414</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

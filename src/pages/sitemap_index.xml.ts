@@ -238,6 +238,11 @@ const pages = [
   { url: '/calculators/btu-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/gravel-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/matrix-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/debt-consolidation-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/density-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/ip-subnet-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/roofing-calculator', priority: '0.8', changefreq: 'monthly' },
+  { url: '/calculators/depreciation-calculator', priority: '0.8', changefreq: 'monthly' },
   // Silo hub pages (topical cluster landing pages)
   { url: '/calculators/loans', priority: '0.9', changefreq: 'weekly' },
   { url: '/calculators/investing', priority: '0.9', changefreq: 'weekly' },

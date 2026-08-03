@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Calculator from '../../components/Calculator.astro'
+import { getRelated, getBreadcrumbs } from '../../lib/calculators'
+
+const formulaFn = `
+  const balance = parseFloat(inputs.balance)
+  const currentRate = parseFloat(inputs.currentRate)
+  const newRate = parseFloat(inputs.newRate)
+  const years = parseFloat(inputs.years)
+  if (isNaN(balance) || balance <= 0) throw new Error('Enter your total debt balance.')
+  if (isNaN(currentRate) || currentRate < 0) throw new Error('Enter your current average APR.')
+  if (isNaN(newRate) || newRate < 0) throw new Error('Enter the consolidation loan APR.')
+  if (isNaN(years) || years <= 0) throw new Error('Enter the new loan term.')
+  const n = Math.round(years * 12)
+  const pay = rate => { const r = rate/100/12; return r === 0 ? balance/n : (balance*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1) }
+  const newMonthly = pay(newRate)
+  const oldMonthly = pay(currentRate)
+  const newInterest = newMonthly*n - balance
+  const oldInterest = oldMonthly*n - balance
+  const saved = oldInterest - newInterest
+  const monthlyDrop = oldMonthly - newMonthly
+  return {
+    value: '$' + newMonthly.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),
+    gaugeValue: Math.min(newRate, 30),
+    stats: [
+      { label: 'New Monthly Payment', value: '$' + newMonthly.toFixed(2) },
+      { label: 'Total Interest (new)', value: '$' + Math.round(newInterest).toLocaleString() },
+      { label: 'Interest Saved', value: '$' + Math.round(saved).toLocaleString() },
+      { label: 'Monthly Reduction', value: '$' + Math.round(monthlyDrop).toLocaleString() },
+      { label: 'Total Repaid', value: '$' + Math.round(balance + newInterest).toLocaleString() },
+    ],
+    breakdown: [
+      'Total debt consolidated: $' + balance.toLocaleString(),
+      'Term: ' + years + ' years (' + n + ' payments)',
+      'At your current ' + currentRate + '% APR: $' + oldMonthly.toFixed(2) + '/mo, $' + Math.round(oldInterest).toLocaleString() + ' interest',
+      'At the new ' + newRate + '% APR: $' + newMonthly.toFixed(2) + '/mo, $' + Math.round(newInterest).toLocaleString() + ' interest',
+      '—',
+      'Monthly payment drops by $' + Math.round(monthlyDrop).toLocaleString(),
+      'Interest saved over the term: $' + Math.round(saved).toLocaleString(),
+    ]
+  }
+`
+
+const gauge = {
+  min: 0, max: 30, unit: '% APR',
+  zones: [
+    { label: 'Excellent <8%', color: '#22c55e', from: 0, to: 8 },
+    { label: 'Good 8-15%', color: '#3b82f6', from: 8, to: 15 },
+    { label: 'Fair 15-22%', color: '#f59e0b', from: 15, to: 22 },
+    { label: 'High 22%+', color: '#ef4444', from: 22, to: 30 },
+  ]
+}
+
+const faqs = [
+  { question: 'How does debt consolidation save money?', answer: 'It replaces several higher-rate debts (often credit cards at 20%+) with one loan at a lower rate. You pay less interest and make a single fixed payment. Enter your total balance, current average APR, and the new loan rate and term to see the savings.' },
+  { question: 'Does consolidating hurt my credit?', answer: 'There may be a small short-term dip from the hard inquiry and new account, but paying down revolving balances usually lowers your credit utilization, which helps over time — as long as you do not run the old cards back up.' },
+  { question: 'What is a good rate for a consolidation loan?', answer: 'It depends on credit, but anything meaningfully below your current blended APR helps. Personal-loan consolidation commonly ranges 8–20%. If the new rate is not lower than what you pay now, consolidation mainly helps with simplicity, not cost.' },
+  { question: 'Should I choose a longer term for a lower payment?', answer: 'A longer term lowers the monthly payment but can increase total interest even at a lower rate. This calculator compares the same term at both rates so you see the true rate benefit; try different terms to balance monthly cash flow against total cost.' },
+  { question: 'What debts can be consolidated?', answer: 'Commonly credit cards, personal loans, medical bills, and store cards. Consolidation options include a personal loan, a balance-transfer card, or a home-equity loan. Secured options (like home equity) often have lower rates but put an asset at risk.' }
+]
+---
+<Layout
+  title="Debt Consolidation Calculator: Payment & Interest Saved"
+  description="See your new monthly payment and how much interest you save by consolidating debts into one lower-rate loan. Free debt consolidation calculator."
+  breadcrumbs={getBreadcrumbs('/calculators/debt-consolidation-calculator')}
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <nav class="text-xs text-gray-500 mb-6 flex gap-1 items-center flex-wrap">
+      <a href="/" class="hover:text-blue-600">Home</a><span>›</span>
+      <a href="/calculators/financial" class="hover:text-blue-600">Financial</a><span>›</span>
+      <a href="/calculators/loans" class="hover:text-blue-600">Loans &amp; Mortgage</a><span>›</span>
+      <span class="text-gray-900">Debt Consolidation Calculator</span>
+    </nav>
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <Calculator
+          title="Debt Consolidation Calculator"
+          description="Your new payment and interest saved by consolidating to a lower rate"
+          formulaId="debt-consolidation"
+          formulaFn={formulaFn}
+          resultLabel="New Monthly Payment"
+          gauge={gauge}
+          inputs={[
+            { id: 'balance', label: 'Total Debt Balance ($)', type: 'number', placeholder: '20000', min: 1, defaultValue: 20000 },
+            { id: 'currentRate', label: 'Current Average APR (%)', type: 'number', placeholder: '22', min: 0, step: 0.01, defaultValue: 22 },
+            { id: 'newRate', label: 'Consolidation Loan APR (%)', type: 'number', placeholder: '11', min: 0, step: 0.01, defaultValue: 11 },
+            { id: 'years', label: 'New Loan Term (years)', type: 'number', placeholder: '4', min: 1, max: 12, defaultValue: 4 },
+          ]}
+          faqs={faqs}
+          relatedCalcs={getRelated('/calculators/debt-consolidation-calculator')}
+        />
+      </div>
+      <aside class="space-y-5">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <h3 class="font-bold text-blue-900 mb-2">One payment, less interest</h3>
+          <p class="text-xs text-blue-800 leading-relaxed">Consolidation works best when the new rate is well below your current average — and when you avoid re-borrowing on the paid-off accounts.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>
