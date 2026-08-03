@@ -353,7 +353,7 @@ export const siloAssignments: Record<string, { silo: string; hub: string }> = {
   'roth-ira-calculator': { silo: 'invest', hub: 'Retirement' },
   'emergency-fund-calculator': { silo: 'invest', hub: 'Savings & Wealth' },
   'fire-calculator': { silo: 'invest', hub: 'Savings & Wealth' },
-  'lcm-gcd-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'lcm-gcd-calculator': { silo: 'math', hub: 'Arithmetic' },
   'annuity-calculator': { silo: 'invest', hub: 'Retirement' },
   'dividend-calculator': { silo: 'invest', hub: 'Investing & Returns' },
   'rule-of-72-calculator': { silo: 'invest', hub: 'Investing & Returns' },
@@ -367,7 +367,7 @@ export const siloAssignments: Record<string, { silo: string; hub: string }> = {
   'present-value-calculator': { silo: 'invest', hub: 'Investing & Returns' },
   'future-value-calculator': { silo: 'invest', hub: 'Investing & Returns' },
   // Taxes
-  'inflation-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
+  'inflation-calculator': { silo: 'invest', hub: 'Investing & Returns' },
   'break-even-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
   'markup-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
   'income-tax-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
@@ -380,7 +380,7 @@ export const siloAssignments: Record<string, { silo: string; hub: string }> = {
   'self-employment-tax-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
   'creator-tax-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
   'bonus-tax-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
-  'business-days-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
+  'business-days-calculator': { silo: 'date', hub: 'Dates' },
   // Income & Pay
   'salary-calculator': { silo: 'pay', hub: 'Salary & Wages' },
   'paycheck-calculator': { silo: 'pay', hub: 'Salary & Wages' },
@@ -782,5 +782,24 @@ export function getSiloCalculators(id: string): { hub: string; items: CalcEntry[
         .map(([s]) => _bySlug[s])
         .filter(Boolean),
     }))
+    .filter(g => g.items.length > 0)
+}
+
+// A category page's own calculators, grouped into silo sections (silo order),
+// each linking to its hub page. Used to give category pages topical structure
+// and top-down links into the hubs.
+export function getCategorySilos(
+  catSlug: string
+): { id: string; name: string; hubSlug: string; items: CalcEntry[] }[] {
+  const cat = getCategoryBySlug(catSlug)
+  if (!cat) return []
+  return silos
+    .map(s => {
+      const hub = getSiloHub(s.id)
+      const items = cat.calculators.filter(
+        e => siloAssignments[e.href.replace('/calculators/', '')]?.silo === s.id
+      )
+      return { id: s.id, name: s.name, hubSlug: hub ? hub.slug : cat.slug, items }
+    })
     .filter(g => g.items.length > 0)
 }

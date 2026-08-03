@@ -1,9 +1,17 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import CalcIcon from '../../components/CalcIcon.astro'
-import { getCategoryBySlug } from '../../lib/calculators'
+import { getCategoryBySlug, getCategorySilos } from '../../lib/calculators'
 
 const cat = getCategoryBySlug('math')!
+const groups = getCategorySilos(cat.slug)
+const COLORS = {
+  blue: { icon: 'bg-blue-600 group-hover:bg-blue-700 shadow-blue-200', card: 'hover:border-blue-300', name: 'group-hover:text-blue-700', link: 'text-blue-600 hover:text-blue-700' },
+  green: { icon: 'bg-green-600 group-hover:bg-green-700 shadow-green-200', card: 'hover:border-green-300', name: 'group-hover:text-green-700', link: 'text-green-600 hover:text-green-700' },
+  purple: { icon: 'bg-purple-600 group-hover:bg-purple-700 shadow-purple-200', card: 'hover:border-purple-300', name: 'group-hover:text-purple-700', link: 'text-purple-600 hover:text-purple-700' },
+  amber: { icon: 'bg-amber-500 group-hover:bg-amber-600 shadow-amber-200', card: 'hover:border-amber-300', name: 'group-hover:text-amber-700', link: 'text-amber-600 hover:text-amber-700' },
+}
+const C = COLORS[cat.color as keyof typeof COLORS] ?? COLORS.blue
 ---
 
 <Layout
@@ -28,30 +36,30 @@ const cat = getCategoryBySlug('math')!
       <p class="text-gray-600 max-w-2xl leading-relaxed">{cat.intro}</p>
     </div>
 
-    <section class="mb-12">
-      <h2 class="text-lg font-semibold text-gray-800 mb-4">Available Calculators</h2>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cat.calculators.map(calc => (
-          <a
-            href={calc.href}
-            class="bg-white border border-gray-200 hover:border-purple-300 hover:shadow-md rounded-xl p-5 transition-all group"
-          >
-            <div class="flex items-start gap-3">
-              <div class="w-12 h-12 rounded-2xl bg-purple-600 group-hover:bg-purple-700 flex items-center justify-center shrink-0 transition-colors shadow-sm shadow-purple-200">
-                <CalcIcon icon={calc.icon} size={22} class="text-white" />
-              </div>
-              <div>
-                <div class="font-semibold text-gray-900 group-hover:text-purple-700 text-sm mb-1">{calc.name}</div>
-                <div class="text-xs text-gray-500 leading-relaxed">{calc.description}</div>
-              </div>
-            </div>
-          </a>
-        ))}
-        <div class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-5 flex items-center justify-center">
-          <p class="text-xs text-gray-400 text-center">More calculators coming soon</p>
+    <!-- Calculators grouped by topic silo -->
+    {groups.map(group => (
+      <section class="mb-10">
+        <div class="flex items-baseline justify-between gap-3 mb-4">
+          <h2 id={group.id} class="text-lg font-semibold text-gray-800 scroll-mt-20">{group.name}</h2>
+          <a href={`/calculators/${group.hubSlug}`} class={`text-xs font-medium whitespace-nowrap ${C.link}`}>View all &rarr;</a>
         </div>
-      </div>
-    </section>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {group.items.map(calc => (
+            <a href={calc.href} class={`bg-white border border-gray-200 ${C.card} hover:shadow-md rounded-xl p-5 transition-all group`}>
+              <div class="flex items-start gap-3">
+                <div class={`w-12 h-12 rounded-2xl ${C.icon} flex items-center justify-center shrink-0 transition-colors shadow-sm`}>
+                  <CalcIcon icon={calc.icon} size={22} class="text-white" />
+                </div>
+                <div>
+                  <div class={`font-semibold text-gray-900 ${C.name} text-sm mb-1`}>{calc.name}</div>
+                  <div class="text-xs text-gray-500 leading-relaxed">{calc.description}</div>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
 
     <section class="mb-12">
       <h2 class="text-lg font-semibold text-gray-800 mb-4">Other Categories</h2>
