@@ -399,8 +399,8 @@ export const siloAssignments: Record<string, { silo: string; hub: string }> = {
   'future-value-calculator': { silo: 'invest', hub: 'Investing & Returns' },
   // Taxes
   'inflation-calculator': { silo: 'invest', hub: 'Investing & Returns' },
-  'break-even-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
-  'markup-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
+  'break-even-calculator': { silo: 'pay', hub: 'Gig & Creator Economy' },
+  'markup-calculator': { silo: 'pay', hub: 'Gig & Creator Economy' },
   'income-tax-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
   'capital-gains-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
   'sales-tax-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
@@ -479,7 +479,7 @@ export const siloAssignments: Record<string, { silo: string; hub: string }> = {
   'period-calculator': { silo: 'health', hub: 'Pregnancy & Cycle' },
   'height-converter-calculator': { silo: 'health', hub: 'Wellness & Body' },
   'shoe-size-calculator': { silo: 'health', hub: 'Wellness & Body' },
-  'carbon-footprint-calculator': { silo: 'health', hub: 'Wellness & Body' },
+  'carbon-footprint-calculator': { silo: 'sci', hub: 'Physics & Space' },
   'life-expectancy-calculator': { silo: 'health', hub: 'Wellness & Body' },
   // Core Math
   'percentage-calculator': { silo: 'math', hub: 'Arithmetic' },
