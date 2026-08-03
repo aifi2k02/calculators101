@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
-import { getBreadcrumbs } from '../../lib/calculators'
+import { getBreadcrumbs, getRelated } from '../../lib/calculators'
+const related = getRelated('/calculators/scientific-calculator')
 
 const faqs = [
   { question: 'How do I use the scientific calculator?', answer: 'Build an expression using the buttons or your keyboard, then press = or Enter to evaluate it. It follows the correct order of operations (PEMDAS), supports parentheses, exponents, roots, logarithms, and trigonometric functions, and shows your running expression above the result. Press AC to clear or the backspace key to delete the last entry.' },
@@ -147,6 +148,18 @@ const faqSchema = {
         </div>
       </aside>
     </div>
+
+    <!-- Related calculators (silo-scoped) -->
+    {related.length > 0 && (
+      <div class="mt-10 max-w-2xl">
+        <h2 class="text-base font-semibold text-gray-800 mb-3">Related Calculators</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {related.map(rc => (
+            <a href={rc.href} class="bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:text-blue-700 transition-colors font-medium">{rc.name}</a>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
 </Layout>
 
