@@ -1,4 +1,5 @@
 ---
+import siteConfig from '../lib/siteConfig'
 export interface CalcInput {
   id: string
   label: string
@@ -68,6 +69,7 @@ const appSchema = {
   operatingSystem: 'Any',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   browserRequirements: 'Requires JavaScript',
+  dateModified: lastUpdated ?? siteConfig.siteUpdated,
 }
 
 // FAQPage schema

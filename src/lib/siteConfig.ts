@@ -9,6 +9,8 @@ const siteConfig = {
     'Free online calculators for finance, fitness, math, and everyday life. Mortgage, BMI, calorie, loan, TDEE, and 190+ more — fast, accurate, no sign-up.',
   twitterHandle: '@supercalculator',
   locale: 'en_US',
+  // Site-wide last substantive update (freshness signal). Bump on real changes.
+  siteUpdated: '2026-08-03',
   defaultOgType: 'website' as const,
 } as const
 
