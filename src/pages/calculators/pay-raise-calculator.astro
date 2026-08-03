@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const salary = parseFloat(inputs.salary) || 0
@@ -119,14 +120,7 @@ const faqs = [
           disclaimer="After-tax figures are a federal estimate (marginal bracket + 7.65% FICA) and exclude state income tax. Inflation defaults to the ~3.3% 2026 rate — adjust as needed. 2026 brackets per IRS Rev. Proc. 2025-32."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
-            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
-            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
-            { name: 'Inflation Calculator', href: '/calculators/inflation-calculator' },
-            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
-            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/pay-raise-calculator')}
         />
       </div>
       <aside class="space-y-5">

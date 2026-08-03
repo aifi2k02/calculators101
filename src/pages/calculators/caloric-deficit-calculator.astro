@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const tdee = parseFloat(inputs.tdee)
@@ -88,12 +89,7 @@ const gauge = {
             { id: 'targetWeight', label: 'Target Weight (optional)', type: 'number', placeholder: '165', min: 0, defaultValue: 0 },
           ]}
           gauge={gauge}
-          relatedCalcs={[
-            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
-            { name: 'Macro Calculator', href: '/calculators/macro-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/caloric-deficit-calculator')}
           faqs={[
             { question: 'What is a caloric deficit?', answer: 'A caloric deficit means eating fewer calories than your TDEE. Since your body needs energy, it draws on stored fat to make up the difference. A deficit of 3,500 calories over time leads to approximately 1 lb of fat loss.' },
             { question: 'How big should my caloric deficit be?', answer: 'A 500 cal/day deficit (1 lb/week) is the standard recommendation — aggressive enough for results, conservative enough to preserve muscle and sustain long-term. A 20–25% deficit is the practical safe maximum for most people.' },

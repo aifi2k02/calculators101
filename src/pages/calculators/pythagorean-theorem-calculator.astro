@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const a = inputs.a === '' || inputs.a == null ? null : parseFloat(inputs.a)
@@ -86,12 +87,7 @@ const faqs = [
             { id: 'c', label: 'Side c (hypotenuse)', type: 'number', placeholder: 'leave blank to solve', min: 0, step: 'any' },
           ]}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Triangle Calculator', href: '/calculators/triangle-calculator' },
-            { name: 'Law of Cosines Calculator', href: '/calculators/law-of-cosines-calculator' },
-            { name: 'Area Calculator', href: '/calculators/area-calculator' },
-            { name: 'Square Root Calculator', href: '/calculators/square-root-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/pythagorean-theorem-calculator')}
         />
       </div>
       <aside class="space-y-5">

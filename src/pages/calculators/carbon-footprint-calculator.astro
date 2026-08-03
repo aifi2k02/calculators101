@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const miles = parseFloat(inputs.miles) || 0
@@ -95,12 +96,7 @@ const faqs = [
           intro="This carbon footprint calculator estimates your annual CO₂ emissions in tons from the four biggest sources: driving, home electricity, air travel, and diet. Compare your result to the U.S. average (~16 tons) and the global average (~4 tons) to see where you stand."
           disclaimer="This is a simplified estimate using average U.S. emission factors. Your real footprint also depends on your local electricity grid, home heating, and consumption of goods."
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Gas Mileage Calculator', href: '/calculators/gas-mileage-calculator' },
-            { name: 'Electricity Calculator', href: '/calculators/electricity-calculator' },
-            { name: 'Fuel Cost Calculator', href: '/calculators/fuel-cost-calculator' },
-            { name: 'Distance Calculator', href: '/calculators/distance-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/carbon-footprint-calculator')}
         />
       </div>
       <aside class="space-y-5">

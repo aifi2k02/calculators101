@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const age = parseInt(inputs.age) || 0
@@ -103,14 +104,7 @@ const faqs = [
           disclaimer="A planning estimate using constant real-return and withdrawal-rate assumptions. Real markets are volatile and sequence-of-returns risk applies. Not investment advice — consult a financial planner for personal decisions."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'FIRE Calculator', href: '/calculators/fire-calculator' },
-            { name: 'Retirement Calculator', href: '/calculators/retirement-calculator' },
-            { name: 'Compound Interest', href: '/calculators/compound-interest-calculator' },
-            { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
-            { name: '401k Calculator', href: '/calculators/401k-calculator' },
-            { name: 'Net Worth Calculator', href: '/calculators/net-worth-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/coast-fire-calculator')}
         />
       </div>
       <aside class="space-y-5">

@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const budget = parseFloat(inputs.budget) || 0
@@ -85,12 +86,7 @@ const faqs = [
           intro="This wedding budget calculator splits your total budget across the standard categories couples plan for — venue and catering, photography, attire, flowers, music, rings, and extras — and shows your cost per guest so you can right-size the guest list."
           disclaimer="Percentages are industry averages and will shift with your priorities. Always add a 5–10% buffer for taxes, gratuity, and surprises."
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
-            { name: 'Savings Calculator', href: '/calculators/savings-calculator' },
-            { name: 'Tip Calculator', href: '/calculators/tip-calculator' },
-            { name: 'Loan Calculator', href: '/calculators/loan-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/wedding-budget-calculator')}
         />
       </div>
       <aside class="space-y-5">

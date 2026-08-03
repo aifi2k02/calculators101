@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const roomL = parseFloat(inputs.roomL) || 0
@@ -92,12 +93,7 @@ const faqs = [
           intro="This tile calculator tells you how many tiles and boxes to buy for a floor or wall. Enter the room size in feet and the tile size in inches, choose a waste allowance for your layout, and it rounds up to full tiles and boxes."
           disclaimer="Always buy a little extra from the same dye lot for future repairs. Subtract large openings (islands, windows) from the area for big rooms."
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Area Calculator', href: '/calculators/area-calculator' },
-            { name: 'Paint Calculator', href: '/calculators/paint-calculator' },
-            { name: 'Concrete Calculator', href: '/calculators/concrete-calculator' },
-            { name: 'Mulch Calculator', href: '/calculators/mulch-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/tile-calculator')}
         />
       </div>
       <aside class="space-y-5">

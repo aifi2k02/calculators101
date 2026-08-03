@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const gender = inputs.gender || 'male'
@@ -112,14 +113,7 @@ const faqs = [
           disclaimer="Screening estimate only — the circumference method can over-estimate for very muscular builds and is not a substitute for DEXA or an official measurement. The same formula is used by the Navy, Marines, and Air Force; only the pass limits differ."
           lastUpdated="2026-07-18"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Body Fat Calculator', href: '/calculators/body-fat-calculator' },
-            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
-            { name: 'Lean Body Mass', href: '/calculators/lean-body-mass-calculator' },
-            { name: 'Ideal Weight', href: '/calculators/ideal-weight-calculator' },
-            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
-            { name: 'Waist-to-Hip Ratio', href: '/calculators/waist-hip-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/army-body-fat-calculator')}
         />
       </div>
       <aside class="space-y-5">

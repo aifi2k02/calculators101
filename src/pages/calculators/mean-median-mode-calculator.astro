@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const raw = (inputs.data || '').trim()
@@ -78,12 +79,7 @@ const faqs = [
             { id: 'data', label: 'Numbers (comma or space separated)', type: 'textarea', placeholder: '4, 8, 15, 16, 23, 42', rows: 4, defaultValue: '4, 8, 15, 16, 23, 42' },
           ]}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Standard Deviation Calculator', href: '/calculators/standard-deviation-calculator' },
-            { name: 'Average Calculator', href: '/calculators/average-calculator' },
-            { name: 'Z-Score Calculator', href: '/calculators/z-score-calculator' },
-            { name: 'Grade Calculator', href: '/calculators/grade-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/mean-median-mode-calculator')}
         />
       </div>
       <aside class="space-y-5">

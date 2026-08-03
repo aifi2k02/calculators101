@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const monthly = parseFloat(inputs.monthly) || 0
@@ -96,14 +97,7 @@ const faqs = [
           disclaimer="The invested figure assumes a constant annual return (default 7%) compounded monthly for 10 years; actual returns vary. This is an illustration of opportunity cost, not investment advice."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Budget Calculator', href: '/calculators/budget-calculator' },
-            { name: 'Compound Interest', href: '/calculators/compound-interest-calculator' },
-            { name: 'Savings Calculator', href: '/calculators/savings-calculator' },
-            { name: 'Investment Calculator', href: '/calculators/investment-calculator' },
-            { name: 'Inflation Calculator', href: '/calculators/inflation-calculator' },
-            { name: 'Emergency Fund', href: '/calculators/emergency-fund-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/subscription-cost-calculator')}
         />
       </div>
       <aside class="space-y-5">

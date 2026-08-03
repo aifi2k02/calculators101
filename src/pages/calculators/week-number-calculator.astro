@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const dStr = inputs.date
@@ -92,14 +93,7 @@ const faqs = [
           disclaimer="Reports ISO 8601 week numbers (Monday start, first-Thursday rule), the standard in business and software. The US Sunday-start convention can differ by one week near the start and end of the year."
           lastUpdated="2026-07-26"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Date Calculator', href: '/calculators/date-calculator' },
-            { name: 'Day of the Week', href: '/calculators/day-of-week-calculator' },
-            { name: 'Business Days', href: '/calculators/business-days-calculator' },
-            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
-            { name: 'Age Calculator', href: '/calculators/age-calculator' },
-            { name: 'Time Zone Converter', href: '/calculators/time-zone-converter' },
-          ]}
+          relatedCalcs={getRelated('/calculators/week-number-calculator')}
         />
       </div>
       <aside class="space-y-5">

@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const miles = parseFloat(inputs.miles) || 0
@@ -82,12 +83,7 @@ const faqs = [
           intro="This gas mileage calculator finds your vehicle's fuel economy in MPG from the miles driven and gallons used. Add the fuel price to also see your cost per mile and the total fuel cost of the trip, plus metric km/L and L/100km."
           disclaimer="Real-world MPG varies with driving style, terrain, load, and weather. For best accuracy, measure over a full tank on similar roads."
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Fuel Cost Calculator', href: '/calculators/fuel-cost-calculator' },
-            { name: 'Speed Calculator', href: '/calculators/speed-calculator' },
-            { name: 'Distance Calculator', href: '/calculators/distance-calculator' },
-            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/gas-mileage-calculator')}
         />
       </div>
       <aside class="space-y-5">

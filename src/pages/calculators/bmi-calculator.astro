@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const unit = inputs.unit
@@ -105,14 +106,7 @@ const gauge = {
             { id: 'heightCm', label: 'Height (cm)', type: 'number', placeholder: '178', min: 50, max: 250 },
             { id: 'weight', label: 'Weight (lbs or kg)', type: 'number', placeholder: '160', min: 1, defaultValue: 160 },
           ]}
-          relatedCalcs={[
-            { name: 'Body Fat Calculator', href: '/calculators/body-fat-calculator' },
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-            { name: 'Ideal Weight Calculator', href: '/calculators/ideal-weight-calculator' },
-            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
-            { name: 'Waist-to-Hip Ratio', href: '/calculators/waist-hip-calculator' },
-            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/bmi-calculator')}
           faqs={[
             { question: 'What is BMI and how is it calculated?', answer: 'BMI (Body Mass Index) = weight(kg) ÷ height(m)². For example, 70 kg at 1.75 m = 70 ÷ 3.0625 = 22.9. In imperial: BMI = (lbs × 703) ÷ inches². It\'s a quick screening tool used by WHO and CDC.' },
             { question: 'What is a healthy BMI for adults?', answer: 'WHO defines healthy BMI as 18.5–24.9. Under 18.5 = underweight, 25–29.9 = overweight, 30+ = obese. Note: some Asian populations use lower thresholds (23 for overweight).' },

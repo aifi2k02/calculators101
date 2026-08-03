@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const dStr = inputs.date
@@ -102,14 +103,7 @@ const faqs = [
           disclaimer="Uses the mean 29.53-day lunar cycle. Phase names are reliable for any date; illumination is accurate to within a few percent and can differ by a few hours from precise ephemeris tables."
           lastUpdated="2026-07-26"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Sunrise & Sunset', href: '/calculators/sunrise-sunset-calculator' },
-            { name: 'Date Calculator', href: '/calculators/date-calculator' },
-            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
-            { name: 'Age Calculator', href: '/calculators/age-calculator' },
-            { name: 'Zodiac Calculator', href: '/calculators/zodiac-calculator' },
-            { name: 'Day of the Week', href: '/calculators/day-of-week-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/moon-phase-calculator')}
         />
       </div>
       <aside class="space-y-5">

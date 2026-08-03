@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const people = parseInt(inputs.people) || 0
@@ -92,12 +93,7 @@ const faqs = [
           intro="This pizza calculator tells you exactly how many pizzas to order for a party. Enter your headcount, pick an appetite level and pizza size, and it figures out the number of pies, total slices, and any leftovers — using the classic 3-slices-per-person rule."
           disclaimer="Order a little extra for hungry crowds and always include a vegetarian option. Reduce to 2 slices per person if serving lots of sides."
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Tip Calculator', href: '/calculators/tip-calculator' },
-            { name: 'Cooking Converter', href: '/calculators/cooking-calculator' },
-            { name: 'Discount Calculator', href: '/calculators/discount-calculator' },
-            { name: 'Sales Tax Calculator', href: '/calculators/sales-tax-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/pizza-calculator')}
         />
       </div>
       <aside class="space-y-5">

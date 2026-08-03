@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const wage = parseFloat(inputs.wage) || 0
@@ -83,12 +84,7 @@ const faqs = [
           intro="This hourly-to-salary calculator converts an hourly wage into weekly, bi-weekly, monthly, and annual pay. Adjust hours per week and weeks per year to match your real schedule. Results show gross pay before taxes."
           disclaimer="Figures are gross pay before taxes and deductions. Actual take-home pay depends on your tax bracket, state, and benefits."
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
-            { name: 'Overtime Calculator', href: '/calculators/overtime-calculator' },
-            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
-            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/hourly-to-salary-calculator')}
         />
       </div>
       <aside class="space-y-5">

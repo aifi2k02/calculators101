@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -80,12 +81,7 @@ const faqs = [
             ]
           }}
           faqs={faqs}
-          relatedCalcs={[
-            { name: "Combination Calculator", href: "/calculators/combination-calculator" },
-            { name: "Probability (Percentage)", href: "/calculators/percentage-calculator" },
-            { name: "Z-Score Calculator", href: "/calculators/z-score-calculator" },
-            { name: "Password Calculator", href: "/calculators/password-calculator" },
-          ]}
+          relatedCalcs={getRelated('/calculators/random-number-calculator')}
         />
       </div>
       <aside class="space-y-5">

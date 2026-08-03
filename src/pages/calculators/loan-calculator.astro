@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const principal = parseFloat(inputs.principal)
@@ -78,13 +79,7 @@ const gauge = {
             ], defaultValue: '5' },
           ]}
           gauge={gauge}
-          relatedCalcs={[
-            { name: 'Mortgage Calculator', href: '/calculators/mortgage-calculator' },
-            { name: 'Auto Loan Calculator', href: '/calculators/auto-loan-calculator' },
-            { name: 'Debt Payoff Calculator', href: '/calculators/debt-payoff-calculator' },
-            { name: 'Debt-to-Income Calculator', href: '/calculators/debt-to-income-calculator' },
-            { name: 'Amortization Calculator', href: '/calculators/amortization-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/loan-calculator')}
           faqs={[
             { question: 'How is a loan payment calculated?', answer: 'Monthly payment = P × [r(1+r)ⁿ] / [(1+r)ⁿ−1], where P = principal, r = monthly interest rate (annual ÷ 12), n = number of payments. This is standard amortization math.' },
             { question: 'Does paying extra principal save money?', answer: 'Yes, significantly. Extra principal payments reduce the balance faster, meaning less interest accrues. Even one extra payment per year on a 5-year loan can save 4–6 months of interest and shorten the term.' },

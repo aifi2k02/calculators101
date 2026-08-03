@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const dStr = inputs.date
@@ -79,14 +80,7 @@ const faqs = [
           disclaimer="Uses the standard Gregorian calendar with correct leap-year handling. Weekdays are accurate for dates from 1583 onward in regions using the Gregorian system."
           lastUpdated="2026-07-26"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Age Calculator', href: '/calculators/age-calculator' },
-            { name: 'Date Calculator', href: '/calculators/date-calculator' },
-            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
-            { name: 'Week Number', href: '/calculators/week-number-calculator' },
-            { name: 'Business Days', href: '/calculators/business-days-calculator' },
-            { name: 'Zodiac Calculator', href: '/calculators/zodiac-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/day-of-week-calculator')}
         />
       </div>
       <aside class="space-y-5">

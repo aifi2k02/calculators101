@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -83,12 +84,7 @@ const faqs = [
             ]
           }}
           faqs={faqs}
-          relatedCalcs={[
-            { name: "NPV Calculator", href: "/calculators/npv-calculator" },
-            { name: "Investment Calculator", href: "/calculators/investment-calculator" },
-            { name: "Annuity Calculator", href: "/calculators/annuity-calculator" },
-            { name: "Interest Calculator", href: "/calculators/interest-calculator" },
-          ]}
+          relatedCalcs={getRelated('/calculators/bond-yield-calculator')}
         />
       </div>
       <aside class="space-y-5">

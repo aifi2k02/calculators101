@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const unit = inputs.unit
@@ -90,13 +91,7 @@ const gauge = {
             ], defaultValue: '1.375' },
           ]}
           gauge={gauge}
-          relatedCalcs={[
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
-            { name: 'Caloric Deficit Calculator', href: '/calculators/caloric-deficit-calculator' },
-            { name: 'Macro Calculator', href: '/calculators/macro-calculator' },
-            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/tdee-calculator')}
           faqs={[
             { question: 'What is TDEE?', answer: 'TDEE (Total Daily Energy Expenditure) is the total number of calories you burn in a day, including your basal metabolic rate (BMR) plus all physical activity. It is the most important number for setting your calorie target.' },
             { question: 'What is the difference between BMR and TDEE?', answer: 'BMR is the calories your body burns at complete rest — just to keep organs functioning. TDEE multiplies your BMR by an activity factor (1.2–1.9) to account for movement. TDEE is what you actually burn in a day.' },

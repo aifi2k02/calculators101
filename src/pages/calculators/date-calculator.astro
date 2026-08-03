@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const type = inputs.type || 'diff'
@@ -94,12 +95,7 @@ const faqs = [
             ]
           }}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Age Calculator', href: '/calculators/age-calculator' },
-            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
-            { name: 'Time Calculator', href: '/calculators/time-calculator' },
-            { name: 'Due Date Calculator', href: '/calculators/due-date-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/date-calculator')}
         />
       </div>
       <aside class="space-y-5">

@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const mean = parseFloat(inputs.mean)
@@ -84,12 +85,7 @@ const faqs = [
             ] },
           ]}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Sample Size Calculator', href: '/calculators/sample-size-calculator' },
-            { name: 'Standard Deviation Calculator', href: '/calculators/standard-deviation-calculator' },
-            { name: 'Z-Score Calculator', href: '/calculators/z-score-calculator' },
-            { name: 'Mean, Median, Mode Calculator', href: '/calculators/mean-median-mode-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/confidence-interval-calculator')}
         />
       </div>
       <aside class="space-y-5">

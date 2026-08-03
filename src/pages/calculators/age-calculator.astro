@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const birth = new Date(inputs.birthdate)
@@ -76,12 +77,7 @@ const gauge = {
             { id: 'birthdate', label: 'Date of Birth', type: 'date', defaultValue: '1994-01-01' },
           ]}
           gauge={gauge}
-          relatedCalcs={[
-            { name: 'Date Calculator', href: '/calculators/date-calculator' },
-            { name: 'Time Calculator', href: '/calculators/time-calculator' },
-            { name: 'Birthday Calculator', href: '/calculators/birthday' },
-            { name: 'Zodiac Sign Calculator', href: '/calculators/zodiac-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/age-calculator')}
           faqs={[
             { question: 'How is exact age calculated?', answer: 'Age = current date minus birth date, computed as full years, remaining months, then remaining days. Days-in-month and leap years are handled precisely, so your age is accurate to the day.' },
             { question: 'Why might my age differ by one day?', answer: 'Your age updates at midnight on your birthday in the local timezone. Checking around midnight or across timezone boundaries may show a difference of one day.' },

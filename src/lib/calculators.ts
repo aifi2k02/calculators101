@@ -294,3 +294,272 @@ export const categories: Category[] = [
 export function getCategoryBySlug(slug: string): Category | undefined {
   return categories.find(c => c.slug === slug)
 }
+
+// ─── Topical silos: SEO clustering for internal linking. URLs are UNCHANGED. ───
+// Each calculator keeps its flat /calculators/{slug} URL; silos only drive
+// related-link clustering, hub pages, and breadcrumbs.
+export interface SiloMeta { id: string; name: string; hubs: string[] }
+
+export const silos: SiloMeta[] = [
+  { id: 'loans', name: 'Loans & Mortgage', hubs: ['Mortgage & Home', 'Auto & Personal Loans', 'Debt & Credit'] },
+  { id: 'invest', name: 'Investing & Retirement', hubs: ['Retirement', 'Investing & Returns', 'Savings & Wealth'] },
+  { id: 'tax', name: 'Taxes', hubs: ['Income & Sales Tax', 'Business & Self-Employed Tax', 'Refunds & Deductions'] },
+  { id: 'pay', name: 'Income & Pay', hubs: ['Salary & Wages', 'Raises & Bonuses', 'Gig & Creator Economy'] },
+  { id: 'budget', name: 'Budget & Spending', hubs: ['Everyday Money', 'Bills & Running Costs'] },
+  { id: 'body', name: 'Body & Weight', hubs: ['Body Composition', 'Weight Goals'] },
+  { id: 'nutri', name: 'Nutrition & Diet', hubs: ['Calories & Macros', 'Diets & Food'] },
+  { id: 'exer', name: 'Exercise & Cardio', hubs: ['Running & Cardio', 'Strength & Vitals'] },
+  { id: 'health', name: 'Health & Life', hubs: ['Pregnancy & Cycle', 'Wellness & Body'] },
+  { id: 'math', name: 'Core Math', hubs: ['Arithmetic', 'Algebra', 'Geometry', 'Grades & GPA'] },
+  { id: 'stats', name: 'Stats & Numbers', hubs: ['Statistics', 'Number Systems', 'Developer Tools'] },
+  { id: 'date', name: 'Date & Time', hubs: ['Dates', 'Time'] },
+  { id: 'home', name: 'Home & DIY', hubs: ['Construction', 'Materials'] },
+  { id: 'sci', name: 'Science & Weather', hubs: ['Weather', 'Physics & Space'] },
+  { id: 'fun', name: 'Fun & Lifestyle', hubs: ['Fun', 'Utilities'] },
+]
+
+// slug (href without the /calculators/ prefix) → its silo + hub
+export const siloAssignments: Record<string, { silo: string; hub: string }> = {
+  // Loans & Mortgage
+  'mortgage-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'loan-calculator': { silo: 'loans', hub: 'Auto & Personal Loans' },
+  'auto-loan-calculator': { silo: 'loans', hub: 'Auto & Personal Loans' },
+  'interest-calculator': { silo: 'loans', hub: 'Debt & Credit' },
+  'credit-card-calculator': { silo: 'loans', hub: 'Debt & Credit' },
+  'debt-payoff-calculator': { silo: 'loans', hub: 'Debt & Credit' },
+  'amortization-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'house-affordability-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'refinance-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'down-payment-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'rent-vs-buy-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'apr-calculator': { silo: 'loans', hub: 'Auto & Personal Loans' },
+  'car-lease-calculator': { silo: 'loans', hub: 'Auto & Personal Loans' },
+  'home-equity-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'mortgage-points-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'pmi-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'escrow-calculator': { silo: 'loans', hub: 'Mortgage & Home' },
+  'debt-to-income-calculator': { silo: 'loans', hub: 'Debt & Credit' },
+  'simple-interest-calculator': { silo: 'loans', hub: 'Debt & Credit' },
+  // Investing & Retirement
+  'compound-interest-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'savings-calculator': { silo: 'invest', hub: 'Savings & Wealth' },
+  'retirement-calculator': { silo: 'invest', hub: 'Retirement' },
+  'investment-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'roi-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'net-worth-calculator': { silo: 'invest', hub: 'Savings & Wealth' },
+  '401k-calculator': { silo: 'invest', hub: 'Retirement' },
+  'cd-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'stock-profit-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'roth-ira-calculator': { silo: 'invest', hub: 'Retirement' },
+  'emergency-fund-calculator': { silo: 'invest', hub: 'Savings & Wealth' },
+  'fire-calculator': { silo: 'invest', hub: 'Savings & Wealth' },
+  'lcm-gcd-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'annuity-calculator': { silo: 'invest', hub: 'Retirement' },
+  'dividend-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'rule-of-72-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'npv-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'payback-period-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'dca-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'bond-yield-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'college-savings-calculator': { silo: 'invest', hub: 'Retirement' },
+  'crypto-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'coast-fire-calculator': { silo: 'invest', hub: 'Savings & Wealth' },
+  'present-value-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  'future-value-calculator': { silo: 'invest', hub: 'Investing & Returns' },
+  // Taxes
+  'inflation-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
+  'break-even-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
+  'markup-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
+  'income-tax-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
+  'capital-gains-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
+  'sales-tax-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
+  'gst-vat-calculator': { silo: 'tax', hub: 'Income & Sales Tax' },
+  'tax-refund-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
+  '1099-tax-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
+  'quarterly-tax-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
+  'self-employment-tax-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
+  'creator-tax-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
+  'bonus-tax-calculator': { silo: 'tax', hub: 'Refunds & Deductions' },
+  'business-days-calculator': { silo: 'tax', hub: 'Business & Self-Employed Tax' },
+  // Income & Pay
+  'salary-calculator': { silo: 'pay', hub: 'Salary & Wages' },
+  'paycheck-calculator': { silo: 'pay', hub: 'Salary & Wages' },
+  'hourly-to-salary-calculator': { silo: 'pay', hub: 'Salary & Wages' },
+  'overtime-calculator': { silo: 'pay', hub: 'Salary & Wages' },
+  'time-card-calculator': { silo: 'pay', hub: 'Salary & Wages' },
+  'pay-raise-calculator': { silo: 'pay', hub: 'Raises & Bonuses' },
+  'cost-of-living-raise-calculator': { silo: 'pay', hub: 'Raises & Bonuses' },
+  'commission-calculator': { silo: 'pay', hub: 'Salary & Wages' },
+  'subscription-cost-calculator': { silo: 'pay', hub: 'Gig & Creator Economy' },
+  'screen-time-calculator': { silo: 'pay', hub: 'Gig & Creator Economy' },
+  'creator-earnings-calculator': { silo: 'pay', hub: 'Gig & Creator Economy' },
+  'freelance-rate-calculator': { silo: 'pay', hub: 'Gig & Creator Economy' },
+  'side-hustle-calculator': { silo: 'pay', hub: 'Gig & Creator Economy' },
+  'nurse-pay-calculator': { silo: 'pay', hub: 'Raises & Bonuses' },
+  // Budget & Spending
+  'budget-calculator': { silo: 'budget', hub: 'Everyday Money' },
+  'currency-calculator': { silo: 'budget', hub: 'Everyday Money' },
+  'tip-calculator': { silo: 'budget', hub: 'Everyday Money' },
+  'discount-calculator': { silo: 'budget', hub: 'Everyday Money' },
+  'fuel-cost-calculator': { silo: 'budget', hub: 'Bills & Running Costs' },
+  'electricity-calculator': { silo: 'budget', hub: 'Bills & Running Costs' },
+  'wedding-budget-calculator': { silo: 'budget', hub: 'Everyday Money' },
+  'gas-mileage-calculator': { silo: 'budget', hub: 'Bills & Running Costs' },
+  'percent-off-calculator': { silo: 'budget', hub: 'Everyday Money' },
+  // Body & Weight
+  'bmi-calculator': { silo: 'body', hub: 'Body Composition' },
+  'tdee-calculator': { silo: 'body', hub: 'Weight Goals' },
+  'body-fat-calculator': { silo: 'body', hub: 'Body Composition' },
+  'ideal-weight-calculator': { silo: 'body', hub: 'Weight Goals' },
+  'waist-hip-calculator': { silo: 'body', hub: 'Body Composition' },
+  'bmr-calculator': { silo: 'body', hub: 'Body Composition' },
+  'lean-body-mass-calculator': { silo: 'body', hub: 'Body Composition' },
+  'caloric-deficit-calculator': { silo: 'body', hub: 'Weight Goals' },
+  'pregnancy-weight-calculator': { silo: 'body', hub: 'Weight Goals' },
+  'body-surface-area-calculator': { silo: 'body', hub: 'Body Composition' },
+  'army-body-fat-calculator': { silo: 'body', hub: 'Body Composition' },
+  // Nutrition & Diet
+  'calorie-calculator': { silo: 'nutri', hub: 'Calories & Macros' },
+  'macro-calculator': { silo: 'nutri', hub: 'Calories & Macros' },
+  'water-intake-calculator': { silo: 'nutri', hub: 'Calories & Macros' },
+  'calories-burned-calculator': { silo: 'nutri', hub: 'Calories & Macros' },
+  'protein-calculator': { silo: 'nutri', hub: 'Calories & Macros' },
+  'keto-calculator': { silo: 'nutri', hub: 'Diets & Food' },
+  'intermittent-fasting-calculator': { silo: 'nutri', hub: 'Diets & Food' },
+  'cooking-calculator': { silo: 'nutri', hub: 'Diets & Food' },
+  'pizza-calculator': { silo: 'nutri', hub: 'Diets & Food' },
+  // Exercise & Cardio
+  'heart-rate-calculator': { silo: 'exer', hub: 'Running & Cardio' },
+  'pace-calculator': { silo: 'exer', hub: 'Running & Cardio' },
+  'sleep-calculator': { silo: 'exer', hub: 'Strength & Vitals' },
+  'one-rep-max-calculator': { silo: 'exer', hub: 'Strength & Vitals' },
+  'bac-calculator': { silo: 'exer', hub: 'Strength & Vitals' },
+  'speed-calculator': { silo: 'exer', hub: 'Running & Cardio' },
+  'steps-to-miles-calculator': { silo: 'exer', hub: 'Running & Cardio' },
+  'vo2max-calculator': { silo: 'exer', hub: 'Running & Cardio' },
+  'running-calorie-calculator': { silo: 'exer', hub: 'Running & Cardio' },
+  'distance-calculator': { silo: 'exer', hub: 'Running & Cardio' },
+  // Health & Life
+  'due-date-calculator': { silo: 'health', hub: 'Pregnancy & Cycle' },
+  'ovulation-calculator': { silo: 'health', hub: 'Pregnancy & Cycle' },
+  'height-converter-calculator': { silo: 'health', hub: 'Wellness & Body' },
+  'shoe-size-calculator': { silo: 'health', hub: 'Wellness & Body' },
+  'carbon-footprint-calculator': { silo: 'health', hub: 'Wellness & Body' },
+  'life-expectancy-calculator': { silo: 'health', hub: 'Wellness & Body' },
+  // Core Math
+  'percentage-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'average-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'fraction-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'ratio-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'area-calculator': { silo: 'math', hub: 'Geometry' },
+  'volume-calculator': { silo: 'math', hub: 'Geometry' },
+  'triangle-calculator': { silo: 'math', hub: 'Geometry' },
+  'exponent-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'square-root-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'logarithm-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'quadratic-calculator': { silo: 'math', hub: 'Algebra' },
+  'factorial-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'slope-calculator': { silo: 'math', hub: 'Algebra' },
+  'rounding-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'modulo-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'gpa-calculator': { silo: 'math', hub: 'Grades & GPA' },
+  'grade-calculator': { silo: 'math', hub: 'Grades & GPA' },
+  'final-grade-calculator': { silo: 'math', hub: 'Grades & GPA' },
+  'percentage-error-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'circle-calculator': { silo: 'math', hub: 'Geometry' },
+  'law-of-cosines-calculator': { silo: 'math', hub: 'Geometry' },
+  'angle-converter-calculator': { silo: 'math', hub: 'Geometry' },
+  'basic-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'scientific-calculator': { silo: 'math', hub: 'Arithmetic' },
+  'pythagorean-theorem-calculator': { silo: 'math', hub: 'Geometry' },
+  'number-sequence-calculator': { silo: 'math', hub: 'Algebra' },
+  'square-footage-calculator': { silo: 'math', hub: 'Geometry' },
+  // Stats & Numbers
+  'random-number-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'binary-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'scientific-notation-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'combination-calculator': { silo: 'stats', hub: 'Statistics' },
+  'prime-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'sig-figs-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'roman-numeral-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'password-calculator': { silo: 'stats', hub: 'Developer Tools' },
+  'z-score-calculator': { silo: 'stats', hub: 'Statistics' },
+  'color-converter-calculator': { silo: 'stats', hub: 'Developer Tools' },
+  'number-to-words-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'number-base-calculator': { silo: 'stats', hub: 'Number Systems' },
+  'hash-calculator': { silo: 'stats', hub: 'Developer Tools' },
+  'standard-deviation-calculator': { silo: 'stats', hub: 'Statistics' },
+  'mean-median-mode-calculator': { silo: 'stats', hub: 'Statistics' },
+  'probability-calculator': { silo: 'stats', hub: 'Statistics' },
+  'confidence-interval-calculator': { silo: 'stats', hub: 'Statistics' },
+  'sample-size-calculator': { silo: 'stats', hub: 'Statistics' },
+  'base64-calculator': { silo: 'stats', hub: 'Developer Tools' },
+  'url-encode-calculator': { silo: 'stats', hub: 'Developer Tools' },
+  // Home & DIY
+  'unit-converter-calculator': { silo: 'home', hub: 'Materials' },
+  'paint-calculator': { silo: 'home', hub: 'Materials' },
+  'concrete-calculator': { silo: 'home', hub: 'Construction' },
+  'roof-pitch-calculator': { silo: 'home', hub: 'Construction' },
+  'tank-volume-calculator': { silo: 'home', hub: 'Construction' },
+  'tile-calculator': { silo: 'home', hub: 'Materials' },
+  'mulch-calculator': { silo: 'home', hub: 'Materials' },
+  // Date & Time
+  'age-calculator': { silo: 'date', hub: 'Dates' },
+  'date-calculator': { silo: 'date', hub: 'Dates' },
+  'time-calculator': { silo: 'date', hub: 'Time' },
+  'military-time-calculator': { silo: 'date', hub: 'Time' },
+  'days-until-calculator': { silo: 'date', hub: 'Dates' },
+  'day-of-week-calculator': { silo: 'date', hub: 'Dates' },
+  'week-number-calculator': { silo: 'date', hub: 'Dates' },
+  'time-zone-converter': { silo: 'date', hub: 'Time' },
+  // Fun & Lifestyle
+  'word-count-calculator': { silo: 'fun', hub: 'Utilities' },
+  'zodiac-calculator': { silo: 'fun', hub: 'Fun' },
+  'numerology-calculator': { silo: 'fun', hub: 'Fun' },
+  'love-calculator': { silo: 'fun', hub: 'Fun' },
+  'dog-age-calculator': { silo: 'fun', hub: 'Fun' },
+  // Science & Weather
+  'sunrise-sunset-calculator': { silo: 'sci', hub: 'Physics & Space' },
+  'moon-phase-calculator': { silo: 'sci', hub: 'Physics & Space' },
+  'wind-chill-calculator': { silo: 'sci', hub: 'Weather' },
+  'heat-index-calculator': { silo: 'sci', hub: 'Weather' },
+  'dew-point-calculator': { silo: 'sci', hub: 'Weather' },
+  'half-life-calculator': { silo: 'sci', hub: 'Physics & Space' },
+  'ohms-law-calculator': { silo: 'sci', hub: 'Physics & Space' },
+}
+
+// Flat slug → entry lookup, built once from the category lists above.
+const _bySlug: Record<string, CalcEntry> = Object.fromEntries(
+  categories.flatMap(c => c.calculators).map(e => [e.href.replace('/calculators/', ''), e])
+)
+
+function _slugOf(href: string): string {
+  return href.replace('/calculators/', '').replace(/^\/+|\/+$/g, '')
+}
+
+export function getSiloOf(href: string): { silo: string; hub: string } | undefined {
+  return siloAssignments[_slugOf(href)]
+}
+
+export function getSiloMeta(id: string): SiloMeta | undefined {
+  return silos.find(s => s.id === id)
+}
+
+/**
+ * Related calculators for a page, scoped to its topical silo.
+ * Order: same hub first (tightest match), then rest of the silo. Only ever
+ * returns live, existing pages — never invents a URL.
+ */
+export function getRelated(href: string, limit = 6): { name: string; href: string }[] {
+  const slug = _slugOf(href)
+  const me = siloAssignments[slug]
+  if (!me) return []
+  const others = Object.entries(siloAssignments).filter(
+    ([s]) => s !== slug && _bySlug[s]?.live
+  )
+  const sameHub = others.filter(([, v]) => v.silo === me.silo && v.hub === me.hub)
+  const sameSilo = others.filter(([, v]) => v.silo === me.silo && v.hub !== me.hub)
+  return [...sameHub, ...sameSilo]
+    .slice(0, limit)
+    .map(([s]) => ({ name: _bySlug[s].name, href: _bySlug[s].href }))
+}

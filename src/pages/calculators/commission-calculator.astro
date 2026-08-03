@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const sales = parseFloat(inputs.sales) || 0
@@ -95,14 +96,7 @@ const faqs = [
           disclaimer="Assumes a single flat commission rate on commissionable sales. Tiered or accelerator plans that raise the rate at higher volumes require a custom calculation."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
-            { name: 'Bonus Tax Calculator', href: '/calculators/bonus-tax-calculator' },
-            { name: 'Pay Raise Calculator', href: '/calculators/pay-raise-calculator' },
-            { name: 'Markup Calculator', href: '/calculators/markup-calculator' },
-            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
-            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/commission-calculator')}
         />
       </div>
       <aside class="space-y-5">

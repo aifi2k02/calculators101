@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const weight = parseFloat(inputs.weight)
@@ -80,12 +81,7 @@ const gauge = {
             { id: 'age', label: 'Age', type: 'number', placeholder: '30', min: 15, max: 100, defaultValue: 30 },
           ]}
           gauge={gauge}
-          relatedCalcs={[
-            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-            { name: 'Caloric Deficit Calculator', href: '/calculators/caloric-deficit-calculator' },
-            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/bmr-calculator')}
           faqs={[
             { question: 'What is BMR?', answer: 'BMR (Basal Metabolic Rate) is the number of calories your body needs at complete rest to maintain vital functions — breathing, circulation, organ function, temperature regulation. It accounts for 60–70% of total calorie burn.' },
             { question: 'Which BMR formula is most accurate?', answer: 'The Mifflin-St Jeor formula (1990) is the most accurate for most adults, validated by the Academy of Nutrition and Dietetics. The Harris-Benedict formula (1919, revised 1984) is slightly less accurate but widely used.' },

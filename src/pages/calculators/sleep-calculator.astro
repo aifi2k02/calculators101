@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const type = inputs.type || 'wake'
@@ -108,11 +109,7 @@ const faqs = [
             ]
           }}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
-            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
-            { name: 'Age Calculator', href: '/calculators/age-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/sleep-calculator')}
         />
       </div>
       <aside class="space-y-5">

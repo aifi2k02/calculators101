@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const wage = parseFloat(inputs.wage) || 0
@@ -87,12 +88,7 @@ const faqs = [
           intro="This overtime calculator shows your extra earnings from overtime hours at time-and-a-half (1.5×) or double time (2×), plus your total weekly pay. Enter your regular wage, regular hours, and overtime hours to see the breakdown."
           disclaimer="Overtime rules vary by state and employment type. This is an estimate — check your local labor laws and employment agreement for exact eligibility."
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
-            { name: 'Time Card Calculator', href: '/calculators/time-card-calculator' },
-            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
-            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/overtime-calculator')}
         />
       </div>
       <aside class="space-y-5">

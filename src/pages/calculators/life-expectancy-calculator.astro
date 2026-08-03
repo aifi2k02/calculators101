@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const sex = inputs.sex || 'male'
@@ -123,14 +124,7 @@ const faqs = [
           disclaimer="Educational estimate only — based on population averages and a few lifestyle factors. It cannot predict any individual's lifespan and does not account for genetics, medical history, or environment. Not medical advice."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
-            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
-            { name: 'Age Calculator', href: '/calculators/age-calculator' },
-            { name: 'Screen Time Calculator', href: '/calculators/screen-time-calculator' },
-            { name: 'Sleep Calculator', href: '/calculators/sleep-calculator' },
-            { name: 'BAC Calculator', href: '/calculators/bac-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/life-expectancy-calculator')}
         />
       </div>
       <aside class="space-y-5">

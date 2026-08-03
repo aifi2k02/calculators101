@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const lat = parseFloat(inputs.lat)
@@ -124,14 +125,7 @@ const faqs = [
           disclaimer="Accurate to ~1 minute using the NOAA equations at sea level. Enter coordinates in decimal degrees and your UTC offset (add 1 hour if daylight saving time applies on that date). High altitude and local terrain can shift real observed times slightly."
           lastUpdated="2026-07-26"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Moon Phase Calculator', href: '/calculators/moon-phase-calculator' },
-            { name: 'Time Zone Converter', href: '/calculators/time-zone-converter' },
-            { name: 'Day of the Week', href: '/calculators/day-of-week-calculator' },
-            { name: 'Date Calculator', href: '/calculators/date-calculator' },
-            { name: 'Time Calculator', href: '/calculators/time-calculator' },
-            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/sunrise-sunset-calculator')}
         />
       </div>
       <aside class="space-y-5">

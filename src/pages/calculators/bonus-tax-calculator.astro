@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const bonus = parseFloat(inputs.bonus) || 0
@@ -98,14 +99,7 @@ const faqs = [
           disclaimer="Shows federal WITHHOLDING (flat 22% supplemental method) + FICA + optional state — not your final tax. Your real tax is settled when you file; over-withholding comes back as a refund. 2026 Social Security wage base $184,500."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Paycheck Calculator', href: '/calculators/paycheck-calculator' },
-            { name: 'Pay Raise Calculator', href: '/calculators/pay-raise-calculator' },
-            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
-            { name: 'Income Tax Calculator', href: '/calculators/income-tax-calculator' },
-            { name: 'Commission Calculator', href: '/calculators/commission-calculator' },
-            { name: 'Overtime Calculator', href: '/calculators/overtime-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/bonus-tax-calculator')}
         />
       </div>
       <aside class="space-y-5">

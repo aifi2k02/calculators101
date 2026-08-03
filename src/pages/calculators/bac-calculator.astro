@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const weight = parseFloat(inputs.weight)
@@ -100,11 +101,7 @@ const gauge = {
             { id: 'drinks', label: 'Standard Drinks Consumed', type: 'number', placeholder: '3', min: 0, step: 0.5, defaultValue: 3 },
             { id: 'hours', label: 'Hours Since First Drink', type: 'number', placeholder: '2', min: 0, step: 0.5, defaultValue: 2 },
           ]}
-          relatedCalcs={[
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
-            { name: 'Body Fat Calculator', href: '/calculators/body-fat-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/bac-calculator')}
           faqs={[
             { question: 'What is a standard drink?', answer: 'A standard drink in the US contains 14 grams of pure alcohol: 12 oz regular beer (5%), 5 oz wine (12%), or 1.5 oz distilled spirits (40%). A pint of strong craft beer may count as 1.5–2 standard drinks.' },
             { question: 'How does the body metabolize alcohol?', answer: 'The liver metabolizes about 0.015% BAC per hour (roughly one standard drink per hour for an average person). This rate is fairly constant — coffee, food, exercise, or water cannot speed it up significantly.' },

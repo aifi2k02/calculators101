@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const g = k => (inputs[k] === '' || inputs[k] == null || isNaN(parseFloat(inputs[k]))) ? null : parseFloat(inputs[k])
@@ -74,11 +75,7 @@ const faqs = [
             { id: 'p', label: 'Power — P (watts)', type: 'number', placeholder: 'leave blank', min: 0, step: 'any' },
           ]}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Electricity Cost Calculator', href: '/calculators/electricity-calculator' },
-            { name: 'Scientific Calculator', href: '/calculators/scientific-calculator' },
-            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/ohms-law-calculator')}
         />
       </div>
       <aside class="space-y-5">

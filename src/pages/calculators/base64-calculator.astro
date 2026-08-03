@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const text = inputs.text || ''
@@ -72,12 +73,7 @@ const faqs = [
             { id: 'text', label: 'Text', type: 'textarea', placeholder: 'Type or paste text here…', rows: 5, defaultValue: 'Hello, world!' },
           ]}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'URL Encode / Decode', href: '/calculators/url-encode-calculator' },
-            { name: 'Hash Calculator', href: '/calculators/hash-calculator' },
-            { name: 'Number Base Converter', href: '/calculators/number-base-calculator' },
-            { name: 'Word Count Calculator', href: '/calculators/word-count-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/base64-calculator')}
         />
       </div>
       <aside class="space-y-5">

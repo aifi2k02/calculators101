@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const hours = parseFloat(inputs.hours) || 0
@@ -94,14 +95,7 @@ const faqs = [
           disclaimer="A cumulative time visualization based on a constant daily average and your life expectancy. It expresses total hours as equivalent 24-hour days — you are not awake for all of it, so the waking-hours percentage is also shown."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Sleep Calculator', href: '/calculators/sleep-calculator' },
-            { name: 'Age Calculator', href: '/calculators/age-calculator' },
-            { name: 'Time Calculator', href: '/calculators/time-calculator' },
-            { name: 'Days Until Calculator', href: '/calculators/days-until-calculator' },
-            { name: 'Subscription Cost', href: '/calculators/subscription-cost-calculator' },
-            { name: 'Date Calculator', href: '/calculators/date-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/screen-time-calculator')}
         />
       </div>
       <aside class="space-y-5">

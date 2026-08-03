@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const unit = inputs.unit
@@ -108,14 +109,7 @@ const gauge = {
             ], defaultValue: 'maintain' },
           ]}
           gauge={gauge}
-          relatedCalcs={[
-            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
-            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
-            { name: 'Macro Calculator', href: '/calculators/macro-calculator' },
-            { name: 'Caloric Deficit Calculator', href: '/calculators/caloric-deficit-calculator' },
-            { name: 'BMR Calculator', href: '/calculators/bmr-calculator' },
-            { name: 'Keto Calculator', href: '/calculators/keto-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/calorie-calculator')}
           faqs={[
             { question: 'What formula does this calorie calculator use?', answer: 'The Mifflin-St Jeor equation, validated in 2005 by the Academy of Nutrition and Dietetics as the most accurate for estimating BMR in most adults. BMR × activity factor = TDEE (total daily energy expenditure).' },
             { question: 'How many calories should I eat to lose weight?', answer: 'A deficit of 500 calories/day creates ~1 lb/week of fat loss (since 1 lb fat ≈ 3,500 calories). A 250 cal/day deficit = 0.5 lb/week, which is more sustainable long-term. Never go below 1,200 cal/day (women) or 1,500 cal/day (men) without medical supervision.' },

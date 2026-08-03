@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   let temp = parseFloat(inputs.temp)
@@ -85,11 +86,7 @@ const faqs = [
             { id: 'rh', label: 'Relative humidity (%)', type: 'number', placeholder: '60', min: 1, max: 100, step: 'any', defaultValue: 60 },
           ]}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Heat Index Calculator', href: '/calculators/heat-index-calculator' },
-            { name: 'Wind Chill Calculator', href: '/calculators/wind-chill-calculator' },
-            { name: 'Unit Converter', href: '/calculators/unit-converter-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/dew-point-calculator')}
         />
       </div>
       <aside class="space-y-5">

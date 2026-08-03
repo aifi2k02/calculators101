@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const takeHome = parseFloat(inputs.takehome) || 0
@@ -100,14 +101,7 @@ const faqs = [
           disclaimer="An estimate to find your rate floor. Tax set-aside is a simplified percentage — your real self-employment plus income tax depends on your income and state. Consult a tax professional for exact figures."
           lastUpdated="2026-07-25"
           faqs={faqs}
-          relatedCalcs={[
-            { name: '1099 / Freelancer Tax', href: '/calculators/1099-tax-calculator' },
-            { name: 'Self-Employment Tax', href: '/calculators/self-employment-tax-calculator' },
-            { name: 'Side Hustle Profit', href: '/calculators/side-hustle-calculator' },
-            { name: 'Hourly to Salary', href: '/calculators/hourly-to-salary-calculator' },
-            { name: 'Influencer Earnings', href: '/calculators/creator-earnings-calculator' },
-            { name: 'Salary Calculator', href: '/calculators/salary-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/freelance-rate-calculator')}
         />
       </div>
       <aside class="space-y-5">

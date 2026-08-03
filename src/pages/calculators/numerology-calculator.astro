@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
 
@@ -90,12 +91,7 @@ const faqs = [
             ]
           }}
           faqs={faqs}
-          relatedCalcs={[
-            { name: "Zodiac Calculator", href: "/calculators/zodiac-calculator" },
-            { name: "Love Calculator", href: "/calculators/love-calculator" },
-            { name: "Age Calculator", href: "/calculators/age-calculator" },
-            { name: "Date Calculator", href: "/calculators/date-calculator" },
-          ]}
+          relatedCalcs={getRelated('/calculators/numerology-calculator')}
         />
       </div>
       <aside class="space-y-5">

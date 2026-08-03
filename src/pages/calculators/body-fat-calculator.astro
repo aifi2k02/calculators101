@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const sex = inputs.sex
@@ -102,13 +103,7 @@ const gaugeMale = {
             { id: 'waist', label: 'Waist Circumference (at navel)', type: 'number', placeholder: '34', min: 1, step: 0.5, defaultValue: 34 },
             { id: 'hip', label: 'Hip Circumference (women only)', type: 'number', placeholder: '0', min: 0, step: 0.5, defaultValue: 0 },
           ]}
-          relatedCalcs={[
-            { name: 'BMI Calculator', href: '/calculators/bmi-calculator' },
-            { name: 'Ideal Weight Calculator', href: '/calculators/ideal-weight-calculator' },
-            { name: 'Lean Body Mass', href: '/calculators/lean-body-mass-calculator' },
-            { name: 'Waist-to-Hip Ratio', href: '/calculators/waist-hip-calculator' },
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/body-fat-calculator')}
           faqs={[
             { question: 'How does the US Navy body fat formula work?', answer: 'The Navy method uses circumference measurements and height to estimate body density, then converts to body fat %. For men: uses waist and neck. For women: waist, hip, and neck. It\'s accurate to within 3–4% of DEXA scans.' },
             { question: 'Where exactly do I measure?', answer: 'Neck: just below the larynx (Adam\'s apple), slight downward slope forward. Waist: at the navel level, not the narrowest point. Hip (women): at the widest point around the buttocks. Measure in the morning, before eating.' },

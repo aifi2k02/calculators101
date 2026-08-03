@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const age = parseFloat(inputs.age)
@@ -75,12 +76,7 @@ const gauge = {
             { id: 'age', label: 'Age', type: 'number', placeholder: '30', min: 10, max: 100, defaultValue: 30 },
             { id: 'restingHR', label: 'Resting Heart Rate (morning pulse)', type: 'number', placeholder: '60', min: 30, max: 100, defaultValue: 60 },
           ]}
-          relatedCalcs={[
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
-            { name: 'VO2 Max Calculator', href: '/calculators/vo2max-calculator' },
-            { name: 'Running Calorie Calculator', href: '/calculators/running-calorie-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/heart-rate-calculator')}
           faqs={[
             { question: 'How is maximum heart rate calculated?', answer: 'The standard formula is 220 − age. This is an estimate with ~10–12 bpm standard deviation. The most accurate method is a supervised graded exercise test. The Tanaka formula (208 − 0.7 × age) is also widely used for athletes.' },
             { question: 'What is the Karvonen formula?', answer: 'Karvonen uses your Heart Rate Reserve (max HR − resting HR) to personalize zones. Zone target = resting HR + (HRR × zone %). A fit person with a low resting HR gets higher absolute zone values than someone less fit at the same age.' },

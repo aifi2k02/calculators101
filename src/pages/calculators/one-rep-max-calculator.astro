@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Calculator from '../../components/Calculator.astro'
+import { getRelated } from '../../lib/calculators'
 
 const formulaFn = `
   const weight = parseFloat(inputs.weight) || 0
@@ -88,12 +89,7 @@ const faqs = [
             ]
           }}
           faqs={faqs}
-          relatedCalcs={[
-            { name: 'Calorie Calculator', href: '/calculators/calorie-calculator' },
-            { name: 'TDEE Calculator', href: '/calculators/tdee-calculator' },
-            { name: 'Body Fat Calculator', href: '/calculators/body-fat-calculator' },
-            { name: 'Protein Calculator', href: '/calculators/protein-calculator' },
-          ]}
+          relatedCalcs={getRelated('/calculators/one-rep-max-calculator')}
         />
       </div>
       <aside class="space-y-5">
