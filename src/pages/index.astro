@@ -45,12 +45,6 @@ const webAppSchema = {
     'Works in any browser',
     'Free to use',
   ],
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    ratingCount: '1250',
-    bestRating: '5',
-  },
 }
 
 const popularCalcs = [
@@ -332,6 +326,14 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
   }
 
   searchBtn?.addEventListener('click', goToFirstMatch)
+
+  // Make the SearchAction target (/?q=…) real: if a query is present in the
+  // URL, run the search so the sitelinks searchbox / shared links work.
+  const initialQ = new URLSearchParams(window.location.search).get('q')
+  if (initialQ && input) {
+    input.value = initialQ
+    goToFirstMatch()
+  }
 
   input?.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') dropdown?.classList.add('hidden')
