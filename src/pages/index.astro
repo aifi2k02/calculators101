@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import CalcIcon from '../components/CalcIcon.astro'
-import { categories } from '../lib/calculators'
+import { categories, siloHubs, getSiloMeta } from '../lib/calculators'
 import siteConfig from '../lib/siteConfig'
 
 const websiteSchema = {
@@ -188,6 +188,19 @@ const allCalcs = categories.flatMap(c => c.calculators.filter(calc => calc.live)
               <span class="text-xs bg-white/80 border border-gray-200/80 rounded-full px-2.5 py-0.5 text-gray-600 font-medium shadow-sm">{c.name.replace(' Calculator', '')}</span>
             ))}
           </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- Browse by Topic (silo hubs) -->
+  <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <h2 class="text-xl font-bold text-gray-900 mb-1.5">Browse by Topic</h2>
+    <p class="text-sm text-gray-500 mb-6">Focused hubs that group related calculators by subject.</p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {siloHubs.map(hub => (
+        <a href={`/calculators/${hub.slug}`} class="bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md rounded-xl px-4 py-3 text-sm font-medium text-gray-800 hover:text-blue-700 transition-all">
+          {getSiloMeta(hub.id)?.name}
         </a>
       ))}
     </div>
