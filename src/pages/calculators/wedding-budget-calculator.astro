@@ -18,7 +18,7 @@ const formulaFn = `
   const rings = budget * 0.05
   const other = budget * 0.19
   return {
-    value: '$' + Math.round(perGuest).toLocaleString() + '/guest',
+    value: '$' + Math.round(perGuest).toLocaleString() + ' per guest',
     gaugeValue: Math.min(perGuest / 5, 100),
     stats: [
       { label: 'Per Guest', value: '$' + Math.round(perGuest).toLocaleString() },
@@ -73,7 +73,7 @@ const faqs = [
             { id: 'guests', label: 'Number of Guests', type: 'number', placeholder: '100', min: 1, max: 1000, unit: 'guests', defaultValue: 100 },
           ]}
           gauge={{
-            min: 0, max: 100, unit: '/guest×5',
+            min: 0, max: 100, unit: 'per-guest level',
             zones: [
               { label: 'Modest', color: '#22c55e', from: 0, to: 30 },
               { label: 'Average', color: '#3b82f6', from: 30, to: 60 },

@@ -1,0 +1,36 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+<Layout
+  title="Page Not Found (404)"
+  description="The page you were looking for doesn't exist. Browse 190+ free calculators for finance, fitness, math, and everyday life."
+  noindex={true}
+  noSchema={true}
+  pageType="home"
+>
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+    <div class="text-7xl font-extrabold text-blue-600 mb-2">404</div>
+    <h1 class="text-2xl font-bold text-gray-900 mb-3">Page not found</h1>
+    <p class="text-gray-600 mb-8">
+      The page you're looking for doesn't exist or may have moved. Try one of the
+      categories below, or head back to the homepage to search 190+ free calculators.
+    </p>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      {[
+        ['Financial', '/calculators/financial'],
+        ['Fitness', '/calculators/fitness'],
+        ['Math', '/calculators/math'],
+        ['Other', '/calculators/other'],
+      ].map(([label, href]) => (
+        <a href={href} class="bg-gray-50 border border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:text-blue-700 transition-colors">
+          {label}
+        </a>
+      ))}
+    </div>
+
+    <a href="/" class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl px-6 py-3 transition-colors">
+      ← Back to homepage
+    </a>
+  </div>
+</Layout>

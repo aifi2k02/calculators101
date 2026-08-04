@@ -14,11 +14,12 @@ interface Props {
   ogType?: 'website' | 'article'
   breadcrumbs?: BreadcrumbItem[]
   noSchema?: boolean
+  noindex?: boolean      // per-page opt-out (e.g. the 404 page)
   lastUpdated?: string   // ISO date e.g. '2026-06-29'
   pageType?: 'tool' | 'article' | 'category' | 'home'
 }
 
-const { title, description, canonical, ogType = 'website', breadcrumbs, noSchema, lastUpdated, pageType = 'tool' } = Astro.props
+const { title, description, canonical, ogType = 'website', breadcrumbs, noSchema, noindex, lastUpdated, pageType = 'tool' } = Astro.props
 
 const { siteUrl, siteName, allowIndexing, twitterHandle, locale, siteUpdated } = siteConfig
 
@@ -30,7 +31,7 @@ const modifiedDate = lastUpdated ?? siteUpdated
 const withSlash = (u: string) => (u.endsWith('/') ? u : u + '/')
 const pageUrl = withSlash(canonical ?? (siteUrl + Astro.url.pathname))
 const fullTitle = `${title} | ${siteName}`
-const robotsContent = allowIndexing ? 'index, follow' : 'noindex, nofollow'
+const robotsContent = (allowIndexing && !noindex) ? 'index, follow' : 'noindex, nofollow'
 
 // BreadcrumbList JSON-LD
 const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0
