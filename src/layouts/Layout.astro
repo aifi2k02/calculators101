@@ -31,7 +31,7 @@ const modifiedDate = lastUpdated ?? siteUpdated
 const withSlash = (u: string) => (u.endsWith('/') ? u : u + '/')
 const pageUrl = withSlash(canonical ?? (siteUrl + Astro.url.pathname))
 const fullTitle = `${title} | ${siteName}`
-const robotsContent = (allowIndexing && !noindex) ? 'index, follow' : 'noindex, nofollow'
+const robotsContent = !allowIndexing ? 'noindex, nofollow' : (noindex ? 'noindex, follow' : 'index, follow')
 
 // BreadcrumbList JSON-LD
 const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0

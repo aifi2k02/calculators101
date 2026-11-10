@@ -250,22 +250,10 @@ const pages = [
   { url: '/calculators/molarity-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/stair-calculator', priority: '0.8', changefreq: 'monthly' },
   { url: '/calculators/period-calculator', priority: '0.8', changefreq: 'monthly' },
-  // Silo hub pages (topical cluster landing pages)
-  { url: '/calculators/loans', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/investing', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/taxes', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/income', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/budgeting', priority: '0.85', changefreq: 'weekly' },
-  { url: '/calculators/body-weight', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/nutrition', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/exercise', priority: '0.85', changefreq: 'weekly' },
-  { url: '/calculators/health', priority: '0.85', changefreq: 'weekly' },
-  { url: '/calculators/core-math', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/statistics', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/date-time', priority: '0.9', changefreq: 'weekly' },
-  { url: '/calculators/home-diy', priority: '0.85', changefreq: 'weekly' },
-  { url: '/calculators/science', priority: '0.85', changefreq: 'weekly' },
-  { url: '/calculators/lifestyle', priority: '0.8', changefreq: 'weekly' },
+  // NOTE: 15 silo hub pages (loans, investing, core-math, …) are intentionally
+  // noindex + excluded from the sitemap — thin navigational hubs (nobody searches
+  // "core math calculators"); keeping them out concentrates crawl budget on the
+  // calculators + 4 main category pages. They still work as on-site nav links.
 ]
 
 export const GET: APIRoute = async () => {
