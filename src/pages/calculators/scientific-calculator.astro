@@ -122,6 +122,46 @@ const faqSchema = {
             ))}
           </div>
         </div>
+
+        <div class="mt-10 max-w-2xl">
+          <h2 class="text-lg font-semibold text-gray-800 mb-3">Worked Examples</h2>
+          <p class="text-sm text-gray-600 mb-4">Type any of these to see how the calculator handles trigonometry, logs, powers, factorials, and percentages. Trig examples assume DEG mode.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+              <thead class="bg-gray-50"><tr>
+                <th class="text-left px-4 py-2.5 font-semibold text-gray-700">You type</th>
+                <th class="text-right px-4 py-2.5 font-semibold text-gray-700">Result</th>
+                <th class="text-left px-4 py-2.5 font-semibold text-gray-700">Why</th>
+              </tr></thead>
+              <tbody class="divide-y divide-gray-100 font-mono text-xs">
+                {[
+                  ['sin(30)', '0.5', 'sine of 30°'],
+                  ['cos(60)', '0.5', 'cosine of 60°'],
+                  ['tan(45)', '1', 'tangent of 45°'],
+                  ['log(1000)', '3', 'base-10 log: 10³ = 1000'],
+                  ['ln(e)', '1', 'natural log of e'],
+                  ['sqrt(225)', '15', '15 × 15 = 225'],
+                  ['5!', '120', '5×4×3×2×1'],
+                  ['2^10', '1024', '2 to the 10th power'],
+                  ['2^3^2', '512', 'powers right-to-left: 2^(3²) = 2⁹'],
+                  ['-2^2', '-4', 'power before the minus sign: −(2²)'],
+                  ['80*15%', '12', '15% of 80'],
+                  ['(2+3)*4', '20', 'parentheses first'],
+                ].map(([inp, res, why]) => (
+                  <tr>
+                    <td class="px-4 py-2 text-gray-900">{inp}</td>
+                    <td class="px-4 py-2 text-right font-semibold text-blue-700">{res}</td>
+                    <td class="px-4 py-2 text-gray-500 font-sans">{why}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-5 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-900">
+            <h3 class="font-semibold mb-1">Order of operations (PEMDAS)</h3>
+            <p class="text-xs leading-relaxed">The calculator evaluates <strong>parentheses → exponents → × and ÷ → + and −</strong>. Exponents are read right-to-left, so <span class="font-mono">2^3^2 = 512</span>, not 64. A minus sign applies after the power, so <span class="font-mono">−2^2 = −4</span>. Use parentheses whenever you want a different order.</p>
+          </div>
+        </div>
       </div>
 
       <aside class="space-y-5">
